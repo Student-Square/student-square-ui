@@ -1,0 +1,24 @@
+.aurora-container {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  /* On small devices, only cover a portion of the screen height
+     so the aurora feels lighter and less dominant */
+  height: 65%;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.aurora-container canvas {
+  position: absolute;
+  inset: 0;
+  width: 100% !important;
+  height: 100% !important;
+}
+
+/* From tablet upwards, keep the full-height aurora as before */
+@media (min-width: 768px) {
+  .aurora-container {
+    height: 100%;
+  }
+}
