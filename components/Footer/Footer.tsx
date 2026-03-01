@@ -66,6 +66,25 @@ export default function Footer() {
       ),
     },
     {
+      name: "Twitter",
+      href: "https://twitter.com/studentsquarebd",
+      icon: (
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M18.901 1.153h3.68l-8.04 9.19L24 22.847h-7.406l-5.8-7.584-6.638 7.584H.474l8.6-9.83L0 1.154h7.594l5.243 6.932L18.9 1.153Zm-1.29 19.493h2.04L6.485 3.24H4.298l13.313 17.406Z" />
+        </svg>
+      ),
+    },
+    {
+      name: "Email",
+      href: "mailto:studentsquarebd@gmail.com",
+      icon: (
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <rect x="3" y="5" width="18" height="14" rx="2" />
+          <path d="m3 7 9 6 9-6" />
+        </svg>
+      ),
+    },
+    {
       name: "WhatsApp",
       href: "https://wa.me/8801711455858",
       icon: (
@@ -207,11 +226,14 @@ export default function Footer() {
         </motion.div>
 
         {/* Bottom Section */}
-        <div className="pt-8 sm:pt-10 flex flex-col sm:flex-row items-center justify-between gap-6">
-          <div className="text-xs sm:text-sm text-muted-foreground text-center sm:text-left">
-            © {currentYear} Student Square. All rights reserved.
+        <div className="pt-8 sm:pt-10 grid grid-cols-1 sm:grid-cols-3 items-center gap-5 sm:gap-4">
+          <div className="flex flex-nowrap items-center justify-center sm:justify-start text-xs sm:text-sm text-muted-foreground">
+            <span className="whitespace-nowrap">© {currentYear} Student Square. All rights reserved.</span>
           </div>
-          <div className="flex flex-wrap items-center justify-center gap-6 text-xs">
+          <div className="flex items-center justify-center text-center text-xs sm:text-sm text-muted-foreground">
+            <span className="whitespace-nowrap">Registered under The Trust Act 1908 in Bangladesh</span>
+          </div>
+          <div className="flex flex-wrap items-center justify-center sm:justify-end gap-6 text-xs">
             {links.legal.map((link) => (
               <Link key={link.label} href={link.href} className="text-muted-foreground hover:text-emerald-600 transition-colors">
                 {link.label}
@@ -223,3 +245,5 @@ export default function Footer() {
     </footer>
   )
 }
+
+

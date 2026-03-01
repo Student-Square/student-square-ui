@@ -5,7 +5,6 @@ import Features from "@/components/Features/Features";
 import OurProjects from "@/components/Projects/OurProjects";
 import Video from "@/components/Video/Video";
 import News from "@/components/News/News";
-import Partners from "@/components/Partners/Partners";
 import { TestimonialsSection } from "@/components/Testimonials/TestimonialsSection";
 import BlogSection from "@/components/Blog/BlogSection";
 import ExpandableCards from "@/components/ExpandableCards/ExpandableCards";
@@ -28,7 +27,6 @@ export default function Home() {
         <BlogSection />
         <ExpandableCards />
         <TestimonialsSection />
-        <Partners />
         <Contact />
         <Footer />
       </div>

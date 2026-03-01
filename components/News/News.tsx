@@ -46,17 +46,17 @@ export default function News() {
         </motion.div>
 
         {/* News Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8">
-          {/* Main Featured News */}
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 sm:gap-8 lg:gap-4">
+          {/* Main Featured News - left card, rounded left only on desktop */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
             viewport={{ once: true }}
-            className="lg:col-span-2"
+            className="lg:col-span-3"
           >
             <Link href="#" className="group block h-full">
-              <div className="relative w-full h-48 sm:h-96 md:h-[420px] lg:h-[500px] rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300">
+              <div className="relative w-full h-56 sm:h-96 md:h-[450px] lg:h-[520px] rounded-2xl lg:rounded-l-2xl lg:rounded-r-none overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300">
                 <Image
                   src={newsData[0].image || "/placeholder.svg"}
                   alt={newsData[0].title}
@@ -70,18 +70,9 @@ export default function News() {
                 {/* Content overlay */}
                 <div className="absolute bottom-0 left-0 right-0 p-4 sm:p-8 md:p-10">
                   <div className="space-y-2 sm:space-y-4">
-                    {/* Category & Date Row */}
-                    <div className="flex items-center gap-2 sm:gap-4">
-                      {newsData[0].category && (
-                        <span className="inline-block px-2 sm:px-4 py-1 sm:py-2 text-[10px] sm:text-sm font-semibold bg-emerald-600/90 hover:bg-emerald-600 text-white rounded-full backdrop-blur-sm transition-colors duration-300">
-                          {newsData[0].category}
-                        </span>
-                      )}
-                      <span className="text-[10px] sm:text-sm text-white/70 font-medium tracking-wide">
-                        {newsData[0].date}
-                      </span>
-                    </div>
-
+                    <span className="text-[10px] sm:text-sm text-white/70 font-medium tracking-wide">
+                      {newsData[0].date}
+                    </span>
                     {/* Title */}
                     <div>
                       <h3 className="text-sm sm:text-2xl md:text-3xl lg:text-4xl font-bold text-white leading-tight group-hover:text-emerald-200 transition-colors duration-300 text-balance">
@@ -97,8 +88,8 @@ export default function News() {
             </Link>
           </motion.div>
 
-          {/* Side News Cards */}
-          <div className="lg:col-span-1 flex flex-col gap-6 sm:gap-8">
+          {/* Side News Cards - right cards, rounded right only on desktop */}
+          <div className="lg:col-span-2 flex flex-col gap-4 lg:gap-4">
             {newsData.slice(1, 3).map((news, index) => (
               <motion.div
                 key={news.id}
@@ -109,7 +100,7 @@ export default function News() {
                 className="group"
               >
                 <Link href="#" className="block h-full">
-                  <div className="relative w-full h-48 sm:h-56 rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300">
+                  <div className="relative w-full h-48 sm:h-64 lg:h-[252px] rounded-xl lg:rounded-r-2xl lg:rounded-l-none overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300">
                     <Image
                       src={news.image || "/placeholder.svg"}
                       alt={news.title}
