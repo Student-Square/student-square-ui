@@ -29,7 +29,7 @@ export default function OurProjects() {
 
         {/* Project Carousel */}
         <motion.div
-          className="flex justify-center mb-8 sm:mb-10 md:mb-12"
+          className="relative left-1/2 mb-8 w-screen -translate-x-1/2 sm:mb-10 md:mb-12"
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.2 }}

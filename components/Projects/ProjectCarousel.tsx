@@ -44,9 +44,9 @@ const ProjectCarousel = ({ projects = projectsData }: ProjectCarouselProps) => {
   }, [activeIndex, paused, soundOn]);
 
   return (
-    <div className="w-full max-w-[1600px]">
+    <div className="w-full">
       <motion.div
-        className="flex flex-col gap-1.5 overflow-hidden rounded-sm lg:h-[520px] lg:flex-row"
+        className="flex flex-col gap-1 overflow-hidden rounded-md lg:h-[520px] lg:flex-row"
         initial={{ opacity: 0, y: 14 }}
         whileInView={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.55 }}
@@ -60,8 +60,10 @@ const ProjectCarousel = ({ projects = projectsData }: ProjectCarouselProps) => {
             <article
               key={project.id}
               className={cn(
-                "group relative min-h-[220px] overflow-hidden rounded-[2px] border border-white/20 transition-[flex] duration-500 ease-out lg:min-h-0 lg:basis-0",
-                isActive ? "lg:flex-[3]" : "lg:flex-1"
+                "group relative overflow-hidden rounded-md border border-white/20 transition-[height,flex] duration-500 ease-out lg:min-h-0 lg:basis-0",
+                isActive
+                  ? "h-[340px] sm:h-[420px] lg:h-auto lg:flex-[3]"
+                  : "h-[82px] sm:h-[104px] lg:h-auto lg:flex-1"
               )}
             >
               <video
@@ -83,14 +85,30 @@ const ProjectCarousel = ({ projects = projectsData }: ProjectCarouselProps) => {
 
               <div className="relative z-20 flex h-full flex-col justify-end p-4 sm:p-5 lg:p-8">
                 <div className="max-w-3xl">
-                  <h3
-                    className={cn(
-                      "font-heading font-semibold text-white transition-all duration-300",
-                      isActive ? "text-3xl sm:text-4xl" : "text-xl sm:text-3xl lg:text-3xl"
+                  <div className={cn("flex items-end justify-between gap-3", !isActive && "items-center")}>
+                    <h3
+                      className={cn(
+                        "font-heading font-semibold text-white transition-all duration-300",
+                        isActive ? "text-xl sm:text-2xl lg:text-2xl" : "text-lg sm:text-xl lg:text-xl"
+                      )}
+                    >
+                      {project.title}
+                    </h3>
+                    {!isActive && (
+                      <button
+                        type="button"
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          setActiveIndex(index);
+                          setPaused(false);
+                        }}
+                        className="relative z-30 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-cyan-400/80 text-cyan-300 transition-colors hover:bg-cyan-500/20"
+                        aria-label={`Expand ${project.title}`}
+                      >
+                        <Plus className="h-4 w-4" />
+                      </button>
                     )}
-                  >
-                    {project.title}
-                  </h3>
+                  </div>
 
                   <p
                     className={cn(
@@ -102,8 +120,8 @@ const ProjectCarousel = ({ projects = projectsData }: ProjectCarouselProps) => {
                   </p>
                 </div>
 
-                <div className="mt-6 flex items-center justify-between gap-3">
-                  {isActive ? (
+                {isActive && (
+                  <div className="mt-6 flex items-center justify-between gap-3">
                     <div className="flex flex-wrap items-center gap-3">
                       <Link
                         href={videoHref}
@@ -113,22 +131,7 @@ const ProjectCarousel = ({ projects = projectsData }: ProjectCarouselProps) => {
                         <ArrowUpRight className="h-3.5 w-3.5" />
                       </Link>
                     </div>
-                  ) : (
-                    <button
-                      type="button"
-                      onClick={(event) => {
-                        event.stopPropagation();
-                        setActiveIndex(index);
-                        setPaused(false);
-                      }}
-                      className="relative z-30 inline-flex h-8 w-8 items-center justify-center rounded-full border border-cyan-400/80 text-cyan-300 transition-colors hover:bg-cyan-500/20"
-                      aria-label={`Expand ${project.title}`}
-                    >
-                      <Plus className="h-4 w-4" />
-                    </button>
-                  )}
 
-                  {isActive && (
                     <div className="flex items-center gap-2">
                       <button
                         type="button"
@@ -153,8 +156,8 @@ const ProjectCarousel = ({ projects = projectsData }: ProjectCarouselProps) => {
                         {soundOn ? <Volume2 className="h-4 w-4" /> : <VolumeX className="h-4 w-4" />}
                       </button>
                     </div>
-                  )}
-                </div>
+                  </div>
+                )}
               </div>
             </article>
           );
