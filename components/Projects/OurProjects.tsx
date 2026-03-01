@@ -20,7 +20,7 @@ export default function OurProjects() {
             🚀 Our Projects
           </div>
           <h2 className="font-heading text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold text-balance text-foreground mb-4 sm:mb-6 leading-tight">
-            Our Amazing Projects
+            Our Visionary Projects
           </h2>
           <p className="text-sm sm:text-base md:text-lg text-muted-foreground max-w-3xl mx-auto font-light leading-relaxed px-2 sm:px-4">
             Explore our portfolio of initiatives that showcase our commitment to student support, advocacy, and community engagement.

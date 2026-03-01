@@ -1,7 +1,7 @@
 "use client";
 
 import { ProgressiveBlur } from "@/components/ui/progressive-blur";
-import { motion } from "motion/react";
+import { AnimatePresence, motion } from "motion/react";
 import Image from "next/image";
 import { useState, useEffect } from "react";
 import { cardData } from "@/data/cardData";
@@ -61,14 +61,27 @@ const FeatureCard = ({
     }`}
   >
     <div className="absolute inset-0 z-10 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-    <Image
-      src={image || "/placeholder.svg"}
-      alt={title}
-      fill
-      className="object-cover transition-transform duration-700 ease-out group-hover:scale-105"
-      priority={isMain}
-      sizes={isMain ? "(max-width: 768px) 100vw, 66vw" : "(max-width: 768px) 100vw, 33vw"}
-    />
+    <div className="absolute inset-0">
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={image}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 1.2, ease: [0.25, 0.46, 0.45, 0.94] }}
+          className="absolute inset-0"
+        >
+          <Image
+            src={image || "/placeholder.svg"}
+            alt={title}
+            fill
+            className="object-cover transition-transform duration-[1200ms] ease-[cubic-bezier(0.25,0.46,0.45,0.94)] group-hover:scale-[1.03]"
+            priority={isMain}
+            sizes={isMain ? "(max-width: 768px) 100vw, 66vw" : "(max-width: 768px) 100vw, 33vw"}
+          />
+        </motion.div>
+      </AnimatePresence>
+    </div>
     <ProgressiveBlur
       className="pointer-events-none absolute bottom-0 left-0 h-[25%] w-full sm:h-[30%]"
       blurIntensity={1.5}
@@ -103,7 +116,7 @@ const FeatureCard = ({
     {isMain && <ProgressIndicator duration={7000} />}
     
     {/* Hover border effect */}
-    <div className="pointer-events-none absolute inset-0 rounded-2xl border border-white/0 transition-colors duration-300 group-hover:border-white/20 sm:rounded-3xl" />
+    <div className="pointer-events-none absolute inset-0 rounded-2xl border border-white/0 transition-all duration-500 ease-out group-hover:border-white/20 sm:rounded-3xl" />
   </motion.div>
 );
 
@@ -144,7 +157,7 @@ const HeroCards = () => {
             key={mainFeature.id}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ duration: 0.5 }}
+            transition={{ duration: 1, ease: [0.25, 0.46, 0.45, 0.94] }}
             className="h-full"
           >
             <FeatureCard

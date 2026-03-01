@@ -8,6 +8,7 @@ import News from "@/components/News/News";
 import Partners from "@/components/Partners/Partners";
 import { TestimonialsSection } from "@/components/Testimonials/TestimonialsSection";
 import BlogSection from "@/components/Blog/BlogSection";
+import ExpandableCards from "@/components/ExpandableCards/ExpandableCards";
 import Contact from "@/components/Contact/Contact";
 import Footer from "@/components/Footer/Footer";
 import SectionDivider from "@/components/ui/section-divider";
@@ -25,6 +26,7 @@ export default function Home() {
         <OurProjects />
         <News />
         <BlogSection />
+        <ExpandableCards />
         <TestimonialsSection />
         <Partners />
         <Contact />

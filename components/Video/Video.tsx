@@ -58,7 +58,7 @@ export default function Video() {
           viewport={{ once: true }}
         >
           <h2 className="font-heading text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold text-balance text-foreground mb-4 sm:mb-3">
-            We're Ready to Help
+            See How Your're Bringing Change
           </h2>
           <p className="text-sm sm:text-base md:text-lg text-muted-foreground max-w-3xl mx-auto font-light leading-relaxed px-2 sm:px-4">
             Discover how Student Square's comprehensive approach can support your journey toward success and wellbeing.
