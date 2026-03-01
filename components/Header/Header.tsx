@@ -2,9 +2,9 @@
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { useTheme } from "next-themes";
-import { Search, Sun, Moon, X, Heart, ChevronDown, Menu, ArrowRight } from "lucide-react";
+import { Search, Sun, Moon, X, Heart, ChevronDown, Menu, CalendarDays, Languages } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import menuData from "./menuData";
 
@@ -16,15 +16,61 @@ const Header = () => {
   const { theme, setTheme, resolvedTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
   const [donateRipple, setDonateRipple] = useState(false);
+  const [scrollProgress, setScrollProgress] = useState(0);
+  const [languageMenuOpen, setLanguageMenuOpen] = useState(false);
+  const [language, setLanguage] = useState<"EN" | "BN">("EN");
+  const languageMenuRef = useRef<HTMLDivElement>(null);
   const pathname = usePathname();
 
-  const handleStickyNavbar = useCallback(() => {
-    setSticky(window.scrollY >= 80);
+  // Close language dropdown when clicking outside
+  useEffect(() => {
+    if (!languageMenuOpen) return;
+    const handleClickOutside = (e: MouseEvent | TouchEvent) => {
+      if (languageMenuRef.current && !languageMenuRef.current.contains(e.target as Node)) {
+        setLanguageMenuOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener("touchstart", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("touchstart", handleClickOutside);
+    };
+  }, [languageMenuOpen]);
+
+  useEffect(() => {
+    try {
+      const saved = window.localStorage.getItem("ss_language");
+      if (saved === "EN" || saved === "BN") setLanguage(saved);
+    } catch {
+      // ignore
+    }
   }, []);
+
+  const handleStickyNavbar = useCallback(() => {
+    const scrollTop = window.scrollY || document.documentElement.scrollTop;
+    const scrollableHeight = document.documentElement.scrollHeight - window.innerHeight;
+
+    setSticky(scrollTop >= 80);
+
+    if (pathname === "/") {
+      const progress = scrollableHeight > 0 ? (scrollTop / scrollableHeight) * 100 : 0;
+      setScrollProgress(Math.min(100, Math.max(0, progress)));
+      return;
+    }
+
+    setScrollProgress(0);
+  }, [pathname]);
 
   useEffect(() => {
     window.addEventListener("scroll", handleStickyNavbar);
-    return () => window.removeEventListener("scroll", handleStickyNavbar);
+    window.addEventListener("resize", handleStickyNavbar);
+    handleStickyNavbar();
+
+    return () => {
+      window.removeEventListener("scroll", handleStickyNavbar);
+      window.removeEventListener("resize", handleStickyNavbar);
+    };
   }, [handleStickyNavbar]);
 
   useEffect(() => {
@@ -36,6 +82,7 @@ const Header = () => {
     setNavbarOpen(false);
     setOpenIndex(-1);
     setOpenSubIndex(-1);
+    setLanguageMenuOpen(false);
   }, [pathname]);
 
   // Prevent body scroll when mobile menu is open
@@ -258,12 +305,75 @@ const Header = () => {
               </motion.button>
             )}
 
+            {/* Calendar - icon only, matches Search/Theme */}
+            <Link
+              href="/calendar"
+              className="hidden h-9 w-9 items-center justify-center rounded-lg border border-border/50 bg-background/50 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground sm:flex sm:h-10 sm:w-10 sm:rounded-xl 2xl:h-12 2xl:w-12"
+              aria-label="Calendar"
+            >
+              <CalendarDays className="h-4 w-4" />
+            </Link>
+
+            {/* Language - compact text pill, minimal style */}
+            <div ref={languageMenuRef} className="relative hidden sm:block">
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={() => setLanguageMenuOpen((v) => !v)}
+                className="flex h-9 items-center gap-1 rounded-lg px-2.5 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground sm:h-10 sm:px-3"
+                aria-label="Language"
+              >
+                <Languages className="h-3.5 w-3.5" />
+                <span>{language}</span>
+                <ChevronDown className={`h-3.5 w-3.5 transition-transform ${languageMenuOpen ? "rotate-180" : ""}`} />
+              </motion.button>
+              <AnimatePresence>
+                {languageMenuOpen && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 6, scale: 0.98 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: 6, scale: 0.98 }}
+                    transition={{ duration: 0.15 }}
+                    className="absolute right-0 top-full z-50 mt-2 w-28 overflow-hidden rounded-xl border border-border/50 bg-popover/95 shadow-xl backdrop-blur-xl"
+                  >
+                    {(["EN", "BN"] as const).map((lng) => (
+                      <button
+                        key={lng}
+                        type="button"
+                        onClick={() => {
+                          setLanguage(lng);
+                          setLanguageMenuOpen(false);
+                          try {
+                            window.localStorage.setItem("ss_language", lng);
+                          } catch {}
+                        }}
+                        className={`flex w-full items-center justify-between px-3 py-2.5 text-sm transition-colors hover:bg-accent ${
+                          language === lng ? "font-semibold text-foreground" : "text-muted-foreground"
+                        }`}
+                      >
+                        <span>{lng}</span>
+                        {language === lng && <span className="text-emerald-500">✓</span>}
+                      </button>
+                    ))}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+
+            {/* Login - outlined CTA, stands out before Donate */}
+            <Link
+              href="/login"
+              className="hidden h-8 items-center rounded-full border-2 border-emerald-500/70 px-3 text-xs font-semibold text-emerald-600 transition-all duration-300 hover:bg-emerald-500/15 hover:border-emerald-500 dark:text-emerald-400 dark:hover:bg-emerald-500/20 sm:inline-flex sm:h-9 sm:px-4 sm:text-sm"
+            >
+              Login
+            </Link>
+
           {/* Donate Button - Hidden on small mobile, show on tablet and above */}
           <div className="hidden md:flex ml-2 mr-2 lg:mr-3 xl:ml-3 xl:mr-0 2xl:ml-4 relative z-30">
             <button
               className="donate-animated relative flex items-center justify-center rounded-full 
-                         px-2.5 py-1.5 md:px-4 md:py-2 lg:px-3.5 lg:py-1.5 xl:px-3.5 xl:py-1.5 2xl:px-3.5 2xl:py-1.5 h-8 md:h-10 lg:h-9 xl:h-9 2xl:h-9
-                         shadow-lg text-xs md:text-sm lg:text-xs xl:text-xs 
+                         px-2.5 py-1.5 md:px-4 md:py-2 lg:px-4 lg:py-2.5 xl:px-5 xl:py-3 2xl:px-3.5 2xl:py-1.5 h-8 md:h-10 lg:h-11 xl:h-12 2xl:h-9
+                         shadow-lg text-xs md:text-sm lg:text-sm xl:text-base 
                          2xl:text-xs font-semibold tracking-wide 
                          transition-all duration-300 hover:scale-105 
                          group overflow-hidden text-white
@@ -283,16 +393,16 @@ const Header = () => {
               </span>
 
               {/* Separator Line */}
-              <span className="mx-1 h-3 w-px bg-white/40 group-hover:bg-white/70 transition-colors duration-300 lg:h-3.5 xl:h-3.5 2xl:h-3.5" />
+              <span className="mx-1 h-3 w-px bg-white/40 group-hover:bg-white/70 transition-colors duration-300 lg:h-4 xl:h-5 2xl:h-3.5" />
 
               {/* Icon */}
               <span className="relative flex items-center justify-center">
                 {donateRipple && (
-                  <span className="absolute h-3 w-3 md:h-3.5 md:w-3.5 lg:h-3 lg:w-3 xl:h-3 xl:w-3 2xl:h-3 2xl:w-3
+                  <span className="absolute h-3 w-3 md:h-3.5 md:w-3.5 lg:h-4 lg:w-4 xl:h-5 xl:w-5 2xl:h-3 2xl:w-3
                                    rounded-full bg-emerald-400/50 animate-ping" />
                 )}
                 <Heart
-                  className="relative z-10 h-3 w-3 md:h-3.5 md:w-3.5 lg:h-3 lg:w-3 xl:h-3 xl:w-3 2xl:h-3 2xl:w-3
+                  className="relative z-10 h-3 w-3 md:h-3.5 md:w-3.5 lg:h-4 lg:w-4 xl:h-5 xl:w-5 2xl:h-3 2xl:w-3
                              fill-white group-hover:fill-emerald-200 
                              transition-transform duration-300 group-hover:scale-125 
                              animate-pulse"
@@ -338,6 +448,14 @@ const Header = () => {
           </div>
         </div>
       </div>
+      {pathname === "/" && (
+        <div className="pointer-events-none absolute bottom-0 left-0 h-[2px] w-full bg-transparent">
+          <div
+            className="h-full bg-black dark:bg-gray-400 transition-[width] duration-150 ease-out"
+            style={{ width: `${scrollProgress}%` }}
+          />
+        </div>
+      )}
 
       {/* Mobile Menu Overlay */}
       <AnimatePresence>
@@ -486,9 +604,40 @@ const Header = () => {
 
               {/* Mobile Menu Footer */}
               <div className="border-t border-border/50 p-4">
+                <div className="mb-3 flex gap-2">
+                  <Link
+                    href="/calendar"
+                    onClick={() => setNavbarOpen(false)}
+                    className="flex flex-1 items-center justify-center gap-2 rounded-lg border border-border/50 bg-muted/50 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+                  >
+                    <CalendarDays className="h-4 w-4" />
+                    <span>Calendar</span>
+                  </Link>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const next = language === "EN" ? "BN" : "EN";
+                      setLanguage(next);
+                      try {
+                        window.localStorage.setItem("ss_language", next);
+                      } catch {}
+                    }}
+                    className="flex flex-1 items-center justify-center gap-1.5 rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+                  >
+                    <Languages className="h-4 w-4" />
+                    <span>{language}</span>
+                  </button>
+                  <Link
+                    href="/login"
+                    onClick={() => setNavbarOpen(false)}
+                    className="flex flex-1 items-center justify-center rounded-full border-2 border-emerald-500/70 py-2 text-sm font-semibold text-emerald-600 transition-colors hover:bg-emerald-500/15 dark:text-emerald-400"
+                  >
+                    Login
+                  </Link>
+                </div>
                 <motion.button
                   whileTap={{ scale: 0.98 }}
-                  className="flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-primary text-sm font-medium text-primary-foreground shadow-lg"
+                  className="flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 text-sm font-semibold text-white shadow-lg transition-colors hover:bg-emerald-700"
                 >
                   <Heart className="h-4 w-4" />
                   <span>Donate Now</span>
