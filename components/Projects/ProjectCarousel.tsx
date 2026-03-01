@@ -1,165 +1,165 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import Image from "next/image";
-import { projectsData, type Project } from "@/data/projectsData"
+import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
+import { motion } from "motion/react";
+import { ArrowUpRight, Pause, Play, Plus, Volume2, VolumeX } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { projectsData, type Project } from "@/data/projectsData";
 
 interface ProjectCarouselProps {
   projects?: Project[];
 }
 
 const ProjectCarousel = ({ projects = projectsData }: ProjectCarouselProps) => {
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [isAutoPlaying, setIsAutoPlaying] = useState(true);
+  const [activeIndex, setActiveIndex] = useState(0);
+  const [soundOn, setSoundOn] = useState(false);
+  const [paused, setPaused] = useState(false);
+  const videoRefs = useRef<Array<HTMLVideoElement | null>>([]);
 
-  // Auto-play functionality
   useEffect(() => {
-    if (!isAutoPlaying) return;
-    
-    const interval = setInterval(() => {
-      setCurrentIndex((prevIndex) => 
-        prevIndex === projects.length - 1 ? 0 : prevIndex + 1
-      );
-    }, 4000);
+    videoRefs.current.forEach((video, index) => {
+      if (!video) return;
 
-    return () => clearInterval(interval);
-  }, [isAutoPlaying, projects.length]);
+      const isActive = index === activeIndex;
+      video.muted = !isActive || !soundOn;
 
-  const goToSlide = (index: number) => {
-    setCurrentIndex(index);
-    setIsAutoPlaying(false);
-  };
+      if (!isActive) {
+        video.pause();
+        return;
+      }
 
-  const goToPrevious = () => {
-    setCurrentIndex(currentIndex === 0 ? projects.length - 1 : currentIndex - 1);
-    setIsAutoPlaying(false);
-  };
+      if (paused) {
+        video.pause();
+        return;
+      }
 
-  const goToNext = () => {
-    setCurrentIndex(currentIndex === projects.length - 1 ? 0 : currentIndex + 1);
-    setIsAutoPlaying(false);
-  };
-
-  const handleProjectClick = (project: Project) => {
-    // You can implement navigation logic here
-    // Example: router.push(project.link);
-  };
+      const playPromise = video.play();
+      if (playPromise) {
+        playPromise.catch(() => {
+          // Ignore autoplay failures (browser policy).
+        });
+      }
+      });
+  }, [activeIndex, paused, soundOn]);
 
   return (
-    <div className="relative w-full max-w-5xl mx-auto px-2 sm:px-4">
-      {/* Main Carousel Container */}
-      <div className="relative overflow-hidden rounded-lg sm:rounded-2xl">
-        <div 
-          className="flex transition-transform duration-500 ease-in-out"
-          style={{ transform: `translateX(-${currentIndex * 100}%)` }}
-        >
-          {projects.map((project, index) => (
-            <div key={project.id} className="w-full flex-shrink-0">
-              <div 
-                className="relative cursor-pointer group"
-                onClick={() => handleProjectClick(project)}
-              >
-                <div className="relative aspect-[16/9] sm:aspect-[16/10] w-full">
-                  <Image
-                    src={project.image || "/placeholder.svg"}
-                    alt={project.title}
-                    fill
-                    className="object-cover transition-transform duration-300 group-hover:scale-105"
-                  />
-                  
-                  {/* Dark gradient overlay */}
-                  <div className="absolute bottom-0 left-0 right-0 h-[25%] sm:h-[30%]">
-                    <div 
-                      className="absolute inset-0"
-                      style={{
-                        background: 'linear-gradient(to top, rgba(0,0,0,0.75) 0%, rgba(0,0,0,0.65) 20%, rgba(0,0,0,0.45) 60%, rgba(0,0,0,0.2) 85%, transparent 100%)',
-                      }}
-                    />
-                    <div 
-                      className="absolute inset-0"
-                      style={{
-                        backdropFilter: 'blur(8px)',
-                        WebkitBackdropFilter: 'blur(8px)',
-                        maskImage: 'linear-gradient(to top, black 0%, black 25%, transparent 100%)',
-                        WebkitMaskImage: 'linear-gradient(to top, black 0%, black 25%, transparent 100%)',
-                      }}
-                    />
-                  </div>
-                  
-                  {/* Project Info */}
-                  <div className="absolute bottom-0 left-0 right-0 p-3 sm:p-6 md:p-8 text-white z-10">
-                    <div className="mb-1 sm:mb-3">
-                      <span className="inline-block px-1.5 sm:px-3 py-0.5 sm:py-1 text-[10px] sm:text-sm font-semibold bg-emerald-600 rounded-full">
-                        {project.category}
-                      </span>
+    <div className="w-full max-w-[1600px]">
+      <motion.div
+        className="flex flex-col gap-1.5 overflow-hidden rounded-sm lg:h-[520px] lg:flex-row"
+        initial={{ opacity: 0, y: 14 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.55 }}
+        viewport={{ once: true }}
+      >
+        {projects.map((project, index) => {
+          const isActive = index === activeIndex;
+          const videoHref = `/projects/${project.slug}/video`;
+
+          return (
+            <article
+              key={project.id}
+              className={cn(
+                "group relative min-h-[220px] overflow-hidden rounded-[2px] border border-white/20 transition-[flex] duration-500 ease-out lg:min-h-0 lg:basis-0",
+                isActive ? "lg:flex-[3]" : "lg:flex-1"
+              )}
+            >
+              <video
+                ref={(node) => {
+                  videoRefs.current[index] = node;
+                }}
+                className="pointer-events-none absolute inset-0 h-full w-full object-cover"
+                src={project.videoSrc}
+                poster={project.poster}
+                autoPlay
+                loop
+                playsInline
+                preload="metadata"
+                muted
+              />
+
+              <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[#012b49]/90 via-[#012b49]/65 to-black/35" />
+              <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_15%_20%,rgba(37,99,235,0.15),transparent_45%)]" />
+
+              <div className="relative z-20 flex h-full flex-col justify-end p-4 sm:p-5 lg:p-8">
+                <div className="max-w-3xl">
+                  <h3
+                    className={cn(
+                      "font-heading font-semibold text-white transition-all duration-300",
+                      isActive ? "text-3xl sm:text-4xl" : "text-xl sm:text-3xl lg:text-3xl"
+                    )}
+                  >
+                    {project.title}
+                  </h3>
+
+                  <p
+                    className={cn(
+                      "mt-3 max-w-3xl text-white/90 transition-all duration-300",
+                      isActive ? "max-h-28 opacity-100 text-sm sm:text-base" : "max-h-0 opacity-0"
+                    )}
+                  >
+                    {project.summary}
+                  </p>
+                </div>
+
+                <div className="mt-6 flex items-center justify-between gap-3">
+                  {isActive ? (
+                    <div className="flex flex-wrap items-center gap-3">
+                      <Link
+                        href={videoHref}
+                        className="inline-flex items-center gap-1.5 border-b border-white/70 pb-1 text-sm font-semibold text-white transition-colors hover:text-cyan-300"
+                      >
+                        Learn More...
+                        <ArrowUpRight className="h-3.5 w-3.5" />
+                      </Link>
                     </div>
-                    <h3 className="text-sm sm:text-2xl md:text-3xl font-bold mb-1 sm:mb-2 transition-colors duration-300">
-                      {project.title}
-                    </h3>
-                    <p className="hidden sm:block text-[10px] sm:text-sm md:text-base opacity-90 line-clamp-2">
-                      {project.description}
-                    </p>
-                  </div>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        setActiveIndex(index);
+                        setPaused(false);
+                      }}
+                      className="relative z-30 inline-flex h-8 w-8 items-center justify-center rounded-full border border-cyan-400/80 text-cyan-300 transition-colors hover:bg-cyan-500/20"
+                      aria-label={`Expand ${project.title}`}
+                    >
+                      <Plus className="h-4 w-4" />
+                    </button>
+                  )}
+
+                  {isActive && (
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          setPaused((prev) => !prev);
+                        }}
+                        className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-white/50 bg-black/35 text-white transition-colors hover:bg-black/55"
+                        aria-label={paused ? "Play video" : "Pause video"}
+                      >
+                        {paused ? <Play className="h-4 w-4" /> : <Pause className="h-4 w-4" />}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          setSoundOn((prev) => !prev);
+                        }}
+                        className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-white/50 bg-black/35 text-white transition-colors hover:bg-black/55"
+                        aria-label={soundOn ? "Mute active video" : "Unmute active video"}
+                      >
+                        {soundOn ? <Volume2 className="h-4 w-4" /> : <VolumeX className="h-4 w-4" />}
+                      </button>
+                    </div>
+                  )}
                 </div>
               </div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Navigation Arrows - Hidden on mobile, visible on sm and up */}
-      <button
-        onClick={goToPrevious}
-        className="absolute left-4 top-1/2 -translate-y-1/2 z-10 bg-white/80 hover:bg-white text-gray-800 rounded-full p-3 shadow-lg transition-all duration-300 hover:scale-110 hidden sm:flex"
-        aria-label="Previous project"
-      >
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-          <path d="M15 18l-6-6 6-6"/>
-        </svg>
-      </button>
-      
-      <button
-        onClick={goToNext}
-        className="absolute right-4 top-1/2 -translate-y-1/2 z-10 bg-white/80 hover:bg-white text-gray-800 rounded-full p-3 shadow-lg transition-all duration-300 hover:scale-110 hidden sm:flex"
-        aria-label="Next project"
-      >
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-          <path d="M9 18l6-6-6-6"/>
-        </svg>
-      </button>
-
-      {/* Dots Indicator */}
-      <div className="flex justify-center mt-4 sm:mt-6 space-x-1.5 sm:space-x-2">
-        {projects.map((_, index) => (
-          <button
-            key={index}
-            onClick={() => goToSlide(index)}
-            className={`rounded-full transition-all duration-300 ${
-              index === currentIndex 
-                ? 'bg-emerald-600 scale-125 w-3 h-3 sm:w-3.5 sm:h-3.5' 
-                : 'bg-gray-300 hover:bg-gray-400 w-2 h-2 sm:w-2.5 sm:h-2.5'
-            }`}
-            aria-label={`Go to project ${index + 1}`}
-          />
-        ))}
-      </div>
-
-      {/* Play/Pause Button */}
-      <button
-        onClick={() => setIsAutoPlaying(!isAutoPlaying)}
-        className="absolute top-4 right-4 z-10 bg-white/80 hover:bg-white text-gray-800 rounded-full p-2 shadow-lg transition-all duration-300"
-        aria-label={isAutoPlaying ? "Pause slideshow" : "Play slideshow"}
-      >
-        {isAutoPlaying ? (
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z"/>
-          </svg>
-        ) : (
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M8 5v14l11-7z"/>
-          </svg>
-        )}
-      </button>
+            </article>
+          );
+        })}
+      </motion.div>
     </div>
   );
 };
