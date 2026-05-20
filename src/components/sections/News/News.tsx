@@ -55,7 +55,7 @@ export default function News() {
             viewport={{ once: true }}
             className="lg:col-span-3"
           >
-            <Link href="#" className="group block h-full">
+            <Link href={`/news/${newsData[0].id}`} className="group block h-full">
               <div className="relative w-full h-56 sm:h-96 md:h-[450px] lg:h-[520px] rounded-2xl lg:rounded-l-2xl lg:rounded-r-none overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300">
                 <Image
                   src={newsData[0].image || "/placeholder.svg"}
@@ -99,7 +99,7 @@ export default function News() {
                 viewport={{ once: true }}
                 className="group"
               >
-                <Link href="#" className="block h-full">
+                <Link href={`/news/${news.id}`} className="block h-full">
                   <div className="relative w-full h-48 sm:h-64 lg:h-[252px] rounded-xl lg:rounded-r-2xl lg:rounded-l-none overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300">
                     <Image
                       src={news.image || "/placeholder.svg"}
@@ -148,7 +148,7 @@ export default function News() {
                   viewport={{ once: true }}
                   className="group"
                 >
-                  <Link href="#" className="block h-full">
+                  <Link href={`/news/${news.id}`} className="block h-full">
                     <div className="relative w-full h-40 sm:h-48 rounded-lg sm:rounded-xl overflow-hidden shadow-md hover:shadow-lg transition-all duration-300">
                       <Image
                         src={news.image || "/placeholder.svg"}
@@ -181,7 +181,7 @@ export default function News() {
           viewport={{ once: true }}
         >
           <Link
-            href="#"
+            href="/news"
             className="inline-flex items-center justify-center gap-1.5 h-9 sm:h-12 px-4 sm:px-10 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs sm:text-lg shadow-lg hover:shadow-xl transition-all duration-300 group"
           >
             <span>View All News & Updates</span>

@@ -10,7 +10,7 @@ const cardsData = [
   {
     id: "magazine",
     title: "Magazine",
-    href: "#",
+    href: "/blog",
     image: "/images/emergency-tran-bitoron-activities-2.jpg",
     tintClass: "bg-gradient-to-br from-blue-900/90 via-blue-700/70 to-cyan-500/40",
     footerLabel: "Magazine",
@@ -21,7 +21,7 @@ const cardsData = [
   {
     id: "education",
     title: "Education",
-    href: "#",
+    href: "/blog",
     image: "/images/relation-will-be-cooperative-for-social-building.jpg",
     tintClass: "bg-gradient-to-br from-teal-950/85 via-emerald-900/70 to-black/55",
     footerLabel: "Education",
@@ -32,7 +32,7 @@ const cardsData = [
   {
     id: "career-blog",
     title: "Career\nBlog",
-    href: "#",
+    href: "/blog",
     image: "/images/student-square-16th-group-counselling-workshop-godagari-rajshahi.jpg",
     tintClass: "bg-gradient-to-br from-orange-950/90 via-amber-900/70 to-red-900/45",
     footerLabel: "Career Blog",
@@ -43,7 +43,7 @@ const cardsData = [
   {
     id: "coming-soon",
     title: "Real life\nstories",
-    href: "#",
+    href: "/stories",
     image: "/images/brain-battle-prize-ceremony.jpg",
     tintClass: "bg-gradient-to-br from-violet-950/90 via-purple-900/70 to-indigo-700/50",
     footerLabel: "Real life stories",
@@ -133,7 +133,7 @@ export default function ExpandableCards() {
             viewport={{ once: true }}
           >
             <Link
-              href="#"
+              href="/blog"
               className="inline-flex items-center justify-center gap-2 px-6 sm:px-8 py-3 sm:py-3.5 rounded-lg border-2 border-emerald-600 text-emerald-600 font-medium text-sm sm:text-base hover:bg-emerald-600 hover:text-white transition-colors"
             >
               View All Changes

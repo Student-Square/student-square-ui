@@ -15,7 +15,7 @@ export default function SingleBlogCard({ blog, index }: { blog: Blog; index: num
       transition={{ duration: 0.6, delay: index * 0.1 }}
       viewport={{ once: true }}
     >
-      <Link href="#" className="group block h-full">
+      <Link href={`/blog/${blog.id}`} className="group block h-full">
         <div className="relative h-full flex flex-col overflow-hidden rounded-2xl border border-border/30 bg-background/50 backdrop-blur-sm transition-all duration-300 hover:border-emerald-500/50 hover:shadow-lg hover:shadow-emerald-500/10 hover:-translate-y-1">
           {/* Image Container */}
           <div className="relative w-full h-48 sm:h-56 md:h-64 overflow-hidden bg-muted">

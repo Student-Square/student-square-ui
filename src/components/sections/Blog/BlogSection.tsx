@@ -67,7 +67,7 @@ export default function BlogSection() {
           viewport={{ once: true }}
         >
           <Link
-            href="#"
+            href="/blog"
             className="inline-flex items-center justify-center gap-1.5 px-4 sm:px-8 py-2 sm:py-3.5 text-xs sm:text-base font-medium border border-emerald-600 text-emerald-600 hover:bg-emerald-600 hover:text-white rounded-lg transition-all duration-300 group"
           >
             <span>Explore All Articles</span>

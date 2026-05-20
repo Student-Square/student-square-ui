@@ -1,6 +1,7 @@
 ﻿"use client"
 
 import { motion } from "motion/react"
+import Link from "next/link"
 import { storiesData } from "@/data/stories"
 import StoryCard from "./StoryCard"
 
@@ -55,12 +56,12 @@ export default function Stories() {
           viewport={{ once: true }}
           className="mt-8 sm:mt-10 md:mt-12 flex justify-center"
         >
-          <button
-            type="button"
-            className="inline-flex items-center justify-center rounded-full border border-emerald-500/70 px-5 py-2.5 text-sm font-semibold text-emerald-700 hover:bg-emerald-500 hover:text-white hover:border-emerald-600 transition-colors cursor-pointer sm:px-7 sm:py-3 sm:text-base"
+          <Link
+            href="/stories"
+            className="inline-flex items-center justify-center rounded-full border border-emerald-500/70 px-5 py-2.5 text-sm font-semibold text-emerald-700 hover:bg-emerald-500 hover:text-white hover:border-emerald-600 transition-colors sm:px-7 sm:py-3 sm:text-base"
           >
             View More Stories
-          </button>
+          </Link>
         </motion.div>
       </div>
     </section>
