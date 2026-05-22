@@ -43,7 +43,7 @@ const cardsData = [
   {
     id: "coming-soon",
     title: "Real life\nstories",
-    href: "/stories",
+    href: "/blog/real-life-stories",
     image: "/images/brain-battle-prize-ceremony.jpg",
     tintClass: "bg-gradient-to-br from-violet-950/90 via-purple-900/70 to-indigo-700/50",
     footerLabel: "Real life stories",

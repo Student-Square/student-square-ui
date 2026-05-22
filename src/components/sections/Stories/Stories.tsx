@@ -16,16 +16,15 @@ export default function Stories() {
           transition={{ duration: 0.8 }}
           viewport={{ once: true }}
         >
-          <h2 className="mb-5 text-balance text-3xl font-bold tracking-tight text-gray-900 dark:text-white sm:text-4xl md:text-5xl lg:text-5xl xl:text-6xl">
+          <h2 className="mb-4 text-balance text-2xl font-bold tracking-tight text-gray-900 dark:text-white sm:text-3xl md:text-4xl lg:text-4xl xl:text-5xl">
             Hundreds of{" "}
             <span className="bg-clip-text text-transparent bg-gradient-to-r from-emerald-600 via-teal-500 to-emerald-400 dark:from-emerald-400 dark:via-teal-300 dark:to-emerald-200">
               Real Life Stories
             </span>
           </h2>
 
-          <p className="mx-auto max-w-2xl text-sm leading-relaxed text-gray-600 dark:text-gray-400 sm:text-base md:text-lg">
-            Discover the transformative journeys of students who have grown, learned, and made a difference through
-            Student Square&apos;s programs.
+          <p className="mx-auto max-w-2xl text-sm leading-relaxed text-gray-600 dark:text-gray-400 sm:text-sm md:text-base">
+            Transformative journeys from students across Bangladesh shaped by Student Square&apos;s programs.
           </p>
         </motion.div>
 
@@ -57,7 +56,7 @@ export default function Stories() {
           className="mt-8 sm:mt-10 md:mt-12 flex justify-center"
         >
           <Link
-            href="/stories"
+            href="/blog/real-life-stories"
             className="inline-flex items-center justify-center rounded-full border border-emerald-500/70 px-5 py-2.5 text-sm font-semibold text-emerald-700 hover:bg-emerald-500 hover:text-white hover:border-emerald-600 transition-colors sm:px-7 sm:py-3 sm:text-base"
           >
             View More Stories

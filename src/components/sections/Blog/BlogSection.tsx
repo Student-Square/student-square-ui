@@ -8,7 +8,7 @@ import { useMediaQuery } from "@/hooks/use-media-query"
 
 export default function BlogSection() {
   const isMobile = useMediaQuery("(max-width: 639px)")
-  const displayedBlogs = isMobile ? blogData.slice(0, 3) : blogData
+  const displayedBlogs = isMobile ? blogData.slice(0, 3) : blogData.slice(0, 6)
   return (
     <section className="relative w-full py-10 sm:py-12 md:py-16 px-4 sm:px-6 md:px-8 overflow-hidden">
       <div className="container relative z-10 w-full max-w-7xl mx-auto 2xl:max-w-[1600px] 3xl:max-w-[1800px] 4xl:max-w-[2000px]">
@@ -34,7 +34,7 @@ export default function BlogSection() {
           </div>
 
           {/* Title */}
-          <h2 className="font-heading text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-foreground mb-4 sm:mb-6 leading-tight text-balance">
+          <h2 className="font-heading text-2xl sm:text-3xl md:text-3xl lg:text-4xl xl:text-5xl font-bold text-foreground mb-4 sm:mb-6 leading-tight text-balance">
             Student Square
             <br />
             <span className="relative inline-block">
@@ -46,8 +46,8 @@ export default function BlogSection() {
           </h2>
 
           {/* Subtitle */}
-          <p className="text-sm sm:text-base md:text-lg text-muted-foreground max-w-2xl mx-auto px-2 font-normal leading-relaxed mt-4 sm:mt-8">
-            Discover insights, stories, and updates from our community. Learn about education, counselling, and initiatives transforming lives.
+          <p className="text-sm sm:text-base text-muted-foreground max-w-xl mx-auto px-2 font-normal leading-relaxed mt-4 sm:mt-6">
+            Insights and updates from our community.
           </p>
         </motion.div>
 

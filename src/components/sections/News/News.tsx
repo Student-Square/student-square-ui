@@ -29,7 +29,7 @@ export default function News() {
           </div>
           
           {/* Main Title */}
-          <h2 className="font-heading text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-foreground mb-4 leading-tight text-balance sm:mb-3">
+          <h2 className="font-heading text-2xl sm:text-3xl md:text-3xl lg:text-4xl xl:text-5xl font-bold text-foreground mb-4 leading-tight text-balance sm:mb-3">
             Student Square
             <br />
             <span className="relative inline-block">
@@ -75,7 +75,7 @@ export default function News() {
                     </span>
                     {/* Title */}
                     <div>
-                      <h3 className="text-sm sm:text-2xl md:text-3xl lg:text-4xl font-bold text-white leading-tight group-hover:text-emerald-200 transition-colors duration-300 text-balance">
+                      <h3 className="text-base sm:text-xl md:text-2xl lg:text-3xl font-bold text-white leading-tight group-hover:text-emerald-200 transition-colors duration-300 text-balance">
                         {newsData[0].title}
                       </h3>
                     </div>

@@ -44,7 +44,7 @@ const StartSectionPipeline = () => {
           <div className="inline-flex items-center px-3 sm:px-4 py-1.5 sm:py-2 rounded-full bg-emerald-500/10 border border-emerald-500/30 backdrop-blur-sm text-emerald-700 dark:text-emerald-300 text-xs sm:text-sm font-medium mb-4 sm:mb-6">
             ✨ Student Square — What We Do
           </div>
-          <h2 className="font-heading text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold text-balance text-foreground mb-4 sm:mb-6 leading-tight">
+          <h2 className="font-heading text-2xl sm:text-3xl md:text-3xl lg:text-4xl xl:text-5xl font-bold text-balance text-foreground mb-4 sm:mb-6 leading-tight">
             <span className="bg-clip-text text-transparent bg-gradient-to-b from-foreground to-muted-foreground">
               Your Changes
             </span>
@@ -53,7 +53,7 @@ const StartSectionPipeline = () => {
               <TextAnimate
                 text="Start Here"
                 type="fadeInUp"
-                className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-semibold text-emerald-600 dark:text-emerald-400 inline-block"
+                className="text-2xl sm:text-3xl md:text-3xl lg:text-4xl xl:text-5xl font-semibold text-emerald-600 dark:text-emerald-400 inline-block"
                 duration={0.6}
                 delay={0.3}
               />
@@ -61,7 +61,7 @@ const StartSectionPipeline = () => {
               <StarPopIn size="lg" />
             </span>
           </h2>
-          <p className="text-sm sm:text-base md:text-lg text-muted-foreground max-w-3xl mx-auto font-light leading-relaxed px-2 sm:px-4">
+          <p className="text-sm sm:text-sm md:text-base text-muted-foreground max-w-3xl mx-auto font-light leading-relaxed px-2 sm:px-4">
           All you need is real time dataand real-life stories to shape your career.
           </p>
         </motion.div>

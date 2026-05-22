@@ -113,14 +113,14 @@ const Stats = () => {
               Our Impact in Numbers
             </span>
           </motion.div> */}
-          <h2 className="font-heading mb-4 px-4 text-2xl font-bold leading-tight text-foreground sm:mb-6 sm:text-3xl md:text-4xl lg:text-5xl">
+          <h2 className="font-heading mb-4 px-4 text-2xl font-bold leading-tight text-foreground sm:mb-6 sm:text-3xl md:text-3xl lg:text-4xl xl:text-5xl">
             A Strong Community of
             <br />
             <span className="bg-gradient-to-r from-emerald-600 via-emerald-500 to-teal-500 bg-clip-text text-transparent dark:from-emerald-400 dark:via-emerald-300 dark:to-teal-400">
               5000+ Students
             </span>
           </h2>
-          <p className="mx-auto max-w-2xl px-4 text-sm font-light leading-relaxed text-muted-foreground sm:text-base md:text-lg">
+          <p className="mx-auto max-w-2xl px-4 text-sm font-light leading-relaxed text-muted-foreground sm:text-sm md:text-base">
             Making a difference in students&apos; lives through counselling, advocacy, and community support
           </p>
         </motion.div>
@@ -194,11 +194,11 @@ const Stats = () => {
                   <stat.icon className={`h-6 w-6 sm:h-7 sm:w-7 md:h-8 md:w-8 ${stat.iconColor}`} />
                 </motion.div>
 
-                <div className={`mb-2 bg-gradient-to-br bg-clip-text text-3xl font-bold text-transparent transition-all duration-300 sm:mb-3 sm:text-4xl lg:text-5xl xl:text-6xl ${stat.accent}`}>
+                <div className={`mb-2 bg-gradient-to-br bg-clip-text text-3xl font-bold text-transparent transition-all duration-300 sm:mb-3 sm:text-3xl md:text-4xl lg:text-4xl xl:text-5xl ${stat.accent}`}>
                   <AnimatedCounter value={stat.number} suffix={stat.suffix} />
                 </div>
 
-                <p className="text-sm leading-relaxed text-muted-foreground transition-colors duration-300 group-hover:text-foreground sm:text-base lg:text-lg">
+                <p className="text-sm leading-relaxed text-muted-foreground transition-colors duration-300 group-hover:text-foreground sm:text-sm md:text-base lg:text-base">
                   {stat.description}
                 </p>
 

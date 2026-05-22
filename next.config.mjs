@@ -16,6 +16,20 @@ const nextConfig = {
       },
     ],
   },
+  async redirects() {
+    return [
+      {
+        source: '/stories',
+        destination: '/blog/real-life-stories',
+        permanent: true,
+      },
+      {
+        source: '/stories/:id',
+        destination: '/blog/real-life-stories/:id',
+        permanent: true,
+      },
+    ]
+  },
 }
 
 export default nextConfig

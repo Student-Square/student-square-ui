@@ -3,8 +3,10 @@
 import { ProgressiveBlur } from "@/components/ui/progressive-blur";
 import { AnimatePresence, motion } from "motion/react";
 import Image from "next/image";
-import { useState, useEffect } from "react";
-import { cardData } from "@/data/cards";
+import Link from "next/link";
+import { ArrowUpRight } from "lucide-react";
+import { useMemo, useState, useEffect } from "react";
+import { getActiveCardsForSlot } from "@/data/cards";
 import { useMediaQuery } from "@/hooks/use-media-query";
 
 
@@ -44,6 +46,7 @@ const FeatureCard = ({
   title,
   titleBn,
   category,
+  href,
   isMain = false,
   delay = 0,
 }: {
@@ -51,6 +54,7 @@ const FeatureCard = ({
   title: string;
   titleBn?: string;
   category: string;
+  href?: string;
   isMain?: boolean;
   delay?: number;
 }) => (
@@ -146,95 +150,123 @@ const FeatureCard = ({
     </div>
 
     {isMain && <ProgressIndicator duration={7000} />}
+
+    {/* Hover affordance — arrow in top-right corner */}
+    {href && (
+      <span
+        aria-hidden
+        className="absolute top-3 right-3 sm:top-4 sm:right-4 z-30 flex items-center justify-center w-7 h-7 sm:w-9 sm:h-9 rounded-full bg-white/15 backdrop-blur-md border border-white/20 text-white opacity-0 -translate-y-1 group-hover:opacity-100 group-hover:translate-y-0 group-focus-within:opacity-100 group-focus-within:translate-y-0 transition-all duration-300"
+      >
+        <ArrowUpRight className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+      </span>
+    )}
+
+    {/* Click overlay — covers the whole card */}
+    {href && (
+      <Link
+        href={href}
+        aria-label={title}
+        className="absolute inset-0 z-40 rounded-2xl sm:rounded-3xl focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-500"
+      />
+    )}
   </motion.div>
 );
 
 const HeroCards = () => {
+  // Resolve published cards per slot (will become an API call in phase 2).
+  const mainCards = useMemo(() => getActiveCardsForSlot("main_carousel"), []);
+  const secondaryFeature = useMemo(() => getActiveCardsForSlot("secondary")[0], []);
+  const thirdFeature = useMemo(() => getActiveCardsForSlot("third")[0], []);
+  const blog1 = useMemo(() => getActiveCardsForSlot("blog_1")[0], []);
+  const blog2 = useMemo(() => getActiveCardsForSlot("blog_2")[0], []);
+
   const [currentMainIndex, setCurrentMainIndex] = useState(0);
-  const [imageIndex, setImageIndex] = useState(0);
   const isMobile = useMediaQuery("(max-width: 639px)");
 
   useEffect(() => {
+    if (mainCards.length <= 1) return;
     const mainInterval = setInterval(() => {
-      setCurrentMainIndex((prev) => (prev + 1) % cardData.mainFeature.length);
+      setCurrentMainIndex((prev) => (prev + 1) % mainCards.length);
     }, 7000);
+    return () => clearInterval(mainInterval);
+  }, [mainCards.length]);
 
-    const imageInterval = setInterval(() => {
-      setImageIndex((prev) => prev + 1);
-    }, 3000);
-
-    return () => {
-      clearInterval(mainInterval);
-      clearInterval(imageInterval);
-    };
-  }, []);
-
-  const mainFeature = cardData.mainFeature[currentMainIndex];
-  const mainImage = mainFeature.images[imageIndex % mainFeature.images.length];
-  const secondaryFeature = cardData.secondaryFeature[0];
-  const thirdFeature = cardData.thirdFeature[0];
-  const blog1 = cardData.blogCard1[0];
-  const blog2 = cardData.blogCard2[0];
+  const mainFeature = mainCards[currentMainIndex];
 
   return (
     <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 2xl:max-w-[1600px] 3xl:max-w-[1800px] 4xl:max-w-[2000px]">
       {/* Main Grid */}
       <div className="grid grid-cols-2 gap-3 sm:gap-4 md:gap-5 lg:grid-cols-3 lg:grid-rows-2 lg:gap-6">
         {/* Main Feature - Large Card */}
-        <div className="col-span-2 lg:col-span-2 lg:row-span-2">
-          <motion.div
-            key={mainFeature.id}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 1, ease: [0.25, 0.46, 0.45, 0.94] }}
-            className="h-full"
-          >
-            <FeatureCard
-              image={mainImage}
-              title={mainFeature.title}
-              titleBn={mainFeature.titleBn}
-              category={mainFeature.category}
-              isMain
-            />
-          </motion.div>
-        </div>
+        {mainFeature && (
+          <div className="col-span-2 lg:col-span-2 lg:row-span-2">
+            <motion.div
+              key={mainFeature.id}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 1, ease: [0.25, 0.46, 0.45, 0.94] }}
+              className="h-full"
+            >
+              <FeatureCard
+                image={mainFeature.image}
+                title={mainFeature.title}
+                titleBn={mainFeature.titleBn}
+                category={mainFeature.category}
+                href={mainFeature.href}
+                isMain
+              />
+            </motion.div>
+          </div>
+        )}
 
         {/* Secondary Feature */}
-        <div className="lg:col-span-1">
-          <FeatureCard
-            image={secondaryFeature.images[0]}
-            title={secondaryFeature.title}
-            category={secondaryFeature.category}
-            delay={0.1}
-          />
-        </div>
+        {secondaryFeature && (
+          <div className="lg:col-span-1">
+            <FeatureCard
+              image={secondaryFeature.image}
+              title={secondaryFeature.title}
+              category={secondaryFeature.category}
+              href={secondaryFeature.href}
+              delay={0.1}
+            />
+          </div>
+        )}
 
         {/* Third Feature */}
-        <div className="lg:col-span-1">
-          <FeatureCard
-            image={thirdFeature.images[0]}
-            title={thirdFeature.title}
-            category={thirdFeature.category}
-            delay={0.2}
-          />
-        </div>
+        {thirdFeature && (
+          <div className="lg:col-span-1">
+            <FeatureCard
+              image={thirdFeature.image}
+              title={thirdFeature.title}
+              category={thirdFeature.category}
+              href={thirdFeature.href}
+              delay={0.2}
+            />
+          </div>
+        )}
       </div>
 
       {/* Bottom Row - Blog Cards (Stories & Scholarships) - Hidden on mobile */}
-      {!isMobile && (
+      {!isMobile && (blog1 || blog2) && (
         <div className="mt-3 grid gap-3 sm:mt-4 sm:gap-4 md:mt-5 md:grid-cols-2 md:gap-5 lg:mt-6 lg:gap-6">
-          <FeatureCard
-            image={blog1.image}
-            title={blog1.title}
-            category={blog1.category}
-            delay={0.3}
-          />
-          <FeatureCard
-            image={blog2.image}
-            title={blog2.title}
-            category={blog2.category}
-            delay={0.4}
-          />
+          {blog1 && (
+            <FeatureCard
+              image={blog1.image}
+              title={blog1.title}
+              category={blog1.category}
+              href={blog1.href}
+              delay={0.3}
+            />
+          )}
+          {blog2 && (
+            <FeatureCard
+              image={blog2.image}
+              title={blog2.title}
+              category={blog2.category}
+              href={blog2.href}
+              delay={0.4}
+            />
+          )}
         </div>
       )}
     </div>
