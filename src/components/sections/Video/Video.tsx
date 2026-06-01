@@ -21,7 +21,7 @@ export default function Video() {
           transition={{ duration: 0.8 }}
           viewport={{ once: true }}
         >
-          <h2 className="font-heading text-2xl sm:text-3xl md:text-3xl lg:text-4xl xl:text-5xl font-bold text-balance text-foreground mb-4 sm:mb-3">
+          <h2 className="font-heading text-3xl sm:text-4xl md:text-4xl lg:text-5xl xl:text-6xl font-bold tracking-[0.02em] text-balance text-foreground mb-4 sm:mb-3">
             See How Your're Bringing Change
           </h2>
           <p className="text-sm sm:text-sm md:text-base text-muted-foreground max-w-3xl mx-auto font-light leading-relaxed px-2 sm:px-4">

@@ -34,7 +34,7 @@ export default function BlogSection() {
           </div>
 
           {/* Title */}
-          <h2 className="font-heading text-2xl sm:text-3xl md:text-3xl lg:text-4xl xl:text-5xl font-bold text-foreground mb-4 sm:mb-6 leading-tight text-balance">
+          <h2 className="font-heading text-3xl sm:text-4xl md:text-[48px] lg:text-[48px] xl:text-[48px] font-bold tracking-[0.02em] text-foreground mb-4 sm:mb-6 leading-tight text-balance">
             Student Square
             <br />
             <span className="relative inline-block">

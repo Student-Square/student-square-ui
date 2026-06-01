@@ -113,7 +113,7 @@ const Stats = () => {
               Our Impact in Numbers
             </span>
           </motion.div> */}
-          <h2 className="font-heading mb-4 px-4 text-2xl font-bold leading-tight text-foreground sm:mb-6 sm:text-3xl md:text-3xl lg:text-4xl xl:text-5xl">
+          <h2 className="font-heading mb-4 px-4 text-3xl font-bold tracking-[0.02em] leading-tight text-foreground sm:mb-6 sm:text-4xl md:text-4xl lg:text-5xl xl:text-6xl">
             A Strong Community of
             <br />
             <span className="bg-gradient-to-r from-emerald-600 via-emerald-500 to-teal-500 bg-clip-text text-transparent dark:from-emerald-400 dark:via-emerald-300 dark:to-teal-400">

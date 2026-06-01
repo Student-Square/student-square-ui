@@ -38,7 +38,7 @@ export default function Contact() {
           >
             {/* Contact Info */}
             <div>
-              <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-foreground mb-3 sm:mb-6">Get in Touch</h2>
+              <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-[0.02em] text-foreground mb-3 sm:mb-6">Get in Touch</h2>
               <p className="text-sm sm:text-base md:text-lg text-muted-foreground font-light leading-relaxed max-w-md mb-6">
                 Connect with our strategic investment team to discuss ventures, partnerships, or institutional
                 inquiries.

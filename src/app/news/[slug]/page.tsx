@@ -1,20 +1,39 @@
 'use client';
 
 import { useParams } from "next/navigation";
-import { redirect } from "next/navigation";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import Header from "@/components/common/Header/Header";
 import Footer from "@/components/common/Footer/Footer";
 import { motion } from "motion/react";
-import { newsData } from "@/data/news";
 import { ChevronRight, ArrowRight } from "lucide-react";
+import { useGetBlogBySlugQuery, useGetBlogsQuery } from "@/redux/features/blogs/blogsApi";
+
+const PLACEHOLDER = "/images/emergency-tran-bitoron-activities-4.jpg";
+
+const formatDate = (iso: string | null) => {
+  if (!iso) return "";
+  return new Date(iso).toLocaleDateString("en-GB", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  });
+};
 
 export default function NewsDetailPage() {
-  const { id } = useParams<{ id: string }>();
-  const item = newsData.find((n) => n.id === Number(id));
-  if (!item) redirect("/news");
+  const { slug } = useParams<{ slug: string }>();
+  const router = useRouter();
 
-  const related = newsData.filter((n) => n.id !== item.id).slice(0, 2);
+  const { data: item, isLoading, isError } = useGetBlogBySlugQuery(slug);
+  const { data: allNews } = useGetBlogsQuery({ categorySlug: "news", limit: 4 });
+
+  if (isError) {
+    router.replace("/news");
+    return null;
+  }
+
+  const related = allNews?.data?.filter((n) => n.slug !== slug).slice(0, 2) ?? [];
 
   return (
     <main className="min-h-screen">
@@ -22,22 +41,30 @@ export default function NewsDetailPage() {
 
       {/* Hero */}
       <section className="relative mt-12 sm:mt-14 lg:mt-16 h-[40vh] min-h-[240px] w-full overflow-hidden">
-        <img
-          src={item.image}
-          alt={item.title}
-          className="absolute inset-0 h-full w-full object-cover"
-        />
+        {isLoading ? (
+          <div className="absolute inset-0 bg-gray-200 dark:bg-gray-800 animate-pulse" />
+        ) : (
+          <Image
+            src={item?.coverImage?.url ?? PLACEHOLDER}
+            alt={item?.title ?? "News"}
+            fill
+            className="object-cover"
+            priority
+          />
+        )}
         <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/35 to-black/10" />
-        <div className="absolute bottom-0 left-0 px-6 pb-8 sm:px-10 lg:px-16 max-w-3xl">
-          <motion.h1
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white leading-snug"
-          >
-            {item.title}
-          </motion.h1>
-        </div>
+        {item && (
+          <div className="absolute bottom-0 left-0 px-6 pb-8 sm:px-10 lg:px-16 max-w-3xl">
+            <motion.h1
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6 }}
+              className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white leading-snug"
+            >
+              {item.title}
+            </motion.h1>
+          </div>
+        )}
       </section>
 
       {/* Content */}
@@ -48,7 +75,7 @@ export default function NewsDetailPage() {
           <div className="flex items-center gap-2 text-xs text-muted-foreground flex-wrap">
             <Link href="/news" className="hover:text-emerald-600 transition-colors">News</Link>
             <ChevronRight className="h-3 w-3" />
-            <span className="text-foreground line-clamp-1">{item.title}</span>
+            <span className="text-foreground line-clamp-1">{item?.title}</span>
           </div>
 
           {/* Meta */}
@@ -58,25 +85,35 @@ export default function NewsDetailPage() {
             transition={{ duration: 0.5 }}
             className="flex items-center gap-3 flex-wrap"
           >
-            {item.category && (
+            {item?.category && (
               <span className="text-[10px] font-semibold uppercase tracking-wide px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
-                {item.category}
+                {item.category.name}
               </span>
             )}
-            <span className="text-xs text-muted-foreground">{item.date}</span>
+            {item?.publishedAt && (
+              <span className="text-xs text-muted-foreground">{formatDate(item.publishedAt)}</span>
+            )}
           </motion.div>
 
           {/* Body */}
-          <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.1 }}
-            className="space-y-4"
-          >
-            {item.body.map((para, i) => (
-              <p key={i} className="text-sm text-foreground leading-relaxed">{para}</p>
-            ))}
-          </motion.div>
+          {isLoading ? (
+            <div className="space-y-3 animate-pulse">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <div key={i} className="h-4 bg-gray-200 dark:bg-gray-800 rounded w-full" />
+              ))}
+            </div>
+          ) : (
+            <motion.div
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.1 }}
+              className="space-y-4"
+            >
+              {item?.body?.split("\n\n").map((para, i) => (
+                <p key={i} className="text-sm text-foreground leading-relaxed">{para}</p>
+              ))}
+            </motion.div>
+          )}
 
           {/* Related */}
           {related.length > 0 && (
@@ -91,14 +128,16 @@ export default function NewsDetailPage() {
                 {related.map((r) => (
                   <Link
                     key={r.id}
-                    href={`/news/${r.id}`}
+                    href={`/news/${r.slug}`}
                     className="group block bg-card border border-border rounded-xl overflow-hidden hover:shadow-md transition-shadow"
                   >
-                    <div className="aspect-[4/3] overflow-hidden bg-muted">
-                      <img
-                        src={r.image}
+                    <div className="aspect-[4/3] overflow-hidden bg-muted relative">
+                      <Image
+                        src={r.coverImage?.url ?? PLACEHOLDER}
                         alt={r.title}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        fill
+                        className="object-cover group-hover:scale-105 transition-transform duration-300"
+                        sizes="(max-width: 640px) 100vw, 50vw"
                       />
                     </div>
                     <div className="p-3 flex items-end justify-between gap-2">

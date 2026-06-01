@@ -1,11 +1,26 @@
-﻿"use client"
+"use client"
 
 import { motion } from "motion/react"
 import Link from "next/link"
-import { storiesData } from "@/data/stories"
 import StoryCard from "./StoryCard"
+import { useGetStoriesQuery } from "@/redux/features/stories/storiesApi"
+
+const SkeletonCard = () => (
+  <div className="rounded-2xl border border-border overflow-hidden animate-pulse bg-card">
+    <div className="aspect-[16/10] bg-muted" />
+    <div className="p-5 space-y-3">
+      <div className="h-2.5 bg-muted rounded w-2/5" />
+      <div className="h-3 bg-muted rounded w-full" />
+      <div className="h-3 bg-muted rounded w-5/6" />
+      <div className="h-3 bg-muted rounded w-4/6" />
+    </div>
+  </div>
+)
 
 export default function Stories() {
+  const { data, isLoading } = useGetStoriesQuery({ limit: 6 })
+  const stories = data?.data ?? []
+
   return (
     <section id="stories" className="relative w-full py-12 sm:py-16 md:py-20 lg:py-24 px-4 sm:px-6 md:px-8 overflow-hidden">
       <div className="container relative z-10 w-full max-w-7xl mx-auto 2xl:max-w-[1600px] 3xl:max-w-[1800px] 4xl:max-w-[2000px]">
@@ -16,7 +31,7 @@ export default function Stories() {
           transition={{ duration: 0.8 }}
           viewport={{ once: true }}
         >
-          <h2 className="mb-4 text-balance text-2xl font-bold tracking-tight text-gray-900 dark:text-white sm:text-3xl md:text-4xl lg:text-4xl xl:text-5xl">
+          <h2 className="mb-4 text-balance text-3xl font-bold tracking-[0.02em] text-gray-900 dark:text-white sm:text-4xl md:text-[48px] lg:text-[48px] xl:text-[48px]">
             Hundreds of{" "}
             <span className="bg-clip-text text-transparent bg-gradient-to-r from-emerald-600 via-teal-500 to-emerald-400 dark:from-emerald-400 dark:via-teal-300 dark:to-emerald-200">
               Real Life Stories
@@ -28,25 +43,22 @@ export default function Stories() {
           </p>
         </motion.div>
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.2 }}
-          viewport={{ once: true }}
-          className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-x-2 sm:gap-x-3 md:gap-x-4 lg:gap-x-6 xl:gap-x-8 gap-y-5 sm:gap-y-6 md:gap-y-7 lg:gap-y-8"
-        >
-          {storiesData.map((story, index) => (
-            <motion.div
-              key={story.id}
-              initial={{ opacity: 0, y: 40 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: index * 0.1 }}
-              viewport={{ once: true }}
-            >
-              <StoryCard story={story} />
-            </motion.div>
-          ))}
-        </motion.div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6 lg:gap-8">
+          {isLoading
+            ? Array.from({ length: 6 }).map((_, i) => <SkeletonCard key={i} />)
+            : stories.map((story, index) => (
+                <motion.div
+                  key={story.id}
+                  initial={{ opacity: 0, y: 24 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.4, delay: index * 0.05 }}
+                  viewport={{ once: true }}
+                  className="flex"
+                >
+                  <StoryCard story={story} />
+                </motion.div>
+              ))}
+        </div>
 
         <motion.div
           initial={{ opacity: 0, y: 20 }}

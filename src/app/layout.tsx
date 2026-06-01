@@ -1,14 +1,22 @@
 ﻿import React from "react"
 import type { Metadata, Viewport } from "next";
-import { Saira, JetBrains_Mono, Space_Grotesk, DM_Sans, Pacifico } from "next/font/google";
+import { Saira, JetBrains_Mono, Space_Grotesk, DM_Sans, Pacifico, Oswald } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
 import { ThemeProvider } from "@/components/common/theme-provider";
+import { Providers } from "@/components/common/Providers";
+import { Toaster } from "@/components/ui/sonner";
 import "./globals.css";
 
 const saira = Saira({
   subsets: ["latin"],
   variable: "--font-saira",
   weight: ["300", "400", "500", "600", "700", "800", "900"],
+});
+
+const oswald = Oswald({
+  subsets: ["latin"],
+  variable: "--font-oswald",
+  weight: ["400", "500", "600", "700"],
 });
 
 const jetBrainsMono = JetBrains_Mono({
@@ -97,19 +105,22 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${saira.variable} ${jetBrainsMono.variable} font-sans antialiased`}>
+      <body className={`${saira.variable} ${oswald.variable} ${jetBrainsMono.variable} font-sans antialiased`}>
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(orgJsonLd) }}
         />
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="system"
-          enableSystem
-          disableTransitionOnChange={false}
-        >
-          {children}
-        </ThemeProvider>
+        <Providers>
+          <ThemeProvider
+            attribute="class"
+            defaultTheme="system"
+            enableSystem
+            disableTransitionOnChange={false}
+          >
+            {children}
+            <Toaster richColors position="top-right" />
+          </ThemeProvider>
+        </Providers>
         <Analytics />
       </body>
     </html>

@@ -1,18 +1,17 @@
 "use client";
 import Link from "next/link";
 import Image from "next/image";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState, useCallback, useRef } from "react";
 import { useTheme } from "next-themes";
-import { Search, Sun, Moon, X, Heart, ChevronDown, Menu, Languages } from "lucide-react";
+import { useSelector } from "react-redux";
+import { Search, Sun, Moon, X, Heart, ChevronDown, Menu, Languages, LogOut, Settings, LayoutGrid, User } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
-import { Oswald } from "next/font/google";
 import menuData from "./menuData";
+import { selectCurrentUser, selectAuthStatus } from "@/redux/features/auth/authSlice";
+import { useLogoutMutation } from "@/redux/features/auth/authApi";
 
-const oswald = Oswald({
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
-});
+const ADMIN_ROLES = new Set(["SUPER_ADMIN", "ADMIN", "EDITOR", "MODERATOR", "FINANCE_MANAGER"]);
 
 const Header = () => {
   const [navbarOpen, setNavbarOpen] = useState(false);
@@ -25,8 +24,23 @@ const Header = () => {
   const [scrollProgress, setScrollProgress] = useState(0);
   const [languageMenuOpen, setLanguageMenuOpen] = useState(false);
   const [language, setLanguage] = useState<"EN" | "BN">("EN");
+  const [profileMenuOpen, setProfileMenuOpen] = useState(false);
   const languageMenuRef = useRef<HTMLDivElement>(null);
+  const profileMenuRef = useRef<HTMLDivElement>(null);
   const pathname = usePathname();
+  const router = useRouter();
+
+  const authUser = useSelector(selectCurrentUser);
+  const authStatus = useSelector(selectAuthStatus);
+  const isAuthenticated = authStatus === "authenticated" && !!authUser;
+  const isAdminUser = authUser?.role ? ADMIN_ROLES.has(authUser.role) : false;
+  const [logoutFn] = useLogoutMutation();
+
+  const handleLogout = async () => {
+    setProfileMenuOpen(false);
+    await logoutFn();
+    router.push("/");
+  };
 
   // Close language dropdown when clicking outside
   useEffect(() => {
@@ -43,6 +57,22 @@ const Header = () => {
       document.removeEventListener("touchstart", handleClickOutside);
     };
   }, [languageMenuOpen]);
+
+  // Close profile dropdown when clicking outside
+  useEffect(() => {
+    if (!profileMenuOpen) return;
+    const handleClickOutside = (e: MouseEvent | TouchEvent) => {
+      if (profileMenuRef.current && !profileMenuRef.current.contains(e.target as Node)) {
+        setProfileMenuOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener("touchstart", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("touchstart", handleClickOutside);
+    };
+  }, [profileMenuOpen]);
 
   useEffect(() => {
     try {
@@ -89,6 +119,7 @@ const Header = () => {
     setOpenIndex(-1);
     setOpenSubIndex(-1);
     setLanguageMenuOpen(false);
+    setProfileMenuOpen(false);
   }, [pathname]);
 
   // Prevent body scroll when mobile menu is open
@@ -151,7 +182,7 @@ const Header = () => {
                 {!menuItem.submenu ? (
                   <Link
                     href={menuItem.path || "/"}
-                    className={`group relative px-4 py-2 font-medium uppercase tracking-wide transition-colors text-[16px] ${oswald.className} 2xl:text-lg 2xl:px-5 3xl:text-xl 3xl:px-6 4xl:text-2xl 4xl:px-8 ${
+                    className={`group relative px-4 py-2 font-medium uppercase tracking-wide transition-colors text-[16px] font-oswald 2xl:text-lg 2xl:px-5 3xl:text-xl 3xl:px-6 4xl:text-2xl 4xl:px-8 ${
                       pathname === menuItem.path
                         ? "text-primary"
                         : "text-muted-foreground hover:text-foreground"
@@ -172,7 +203,7 @@ const Header = () => {
                     {menuItem.path ? (
                       <Link
                         href={menuItem.path}
-                        className={`flex items-center gap-1.5 px-4 py-2 font-medium uppercase tracking-wide transition-colors text-[16px] ${oswald.className} 2xl:text-lg 2xl:px-5 3xl:text-xl 3xl:px-6 4xl:text-2xl 4xl:px-8 ${
+                        className={`flex items-center gap-1.5 px-4 py-2 font-medium uppercase tracking-wide transition-colors text-[16px] font-oswald 2xl:text-lg 2xl:px-5 3xl:text-xl 3xl:px-6 4xl:text-2xl 4xl:px-8 ${
                           pathname.startsWith(menuItem.path)
                             ? "text-primary"
                             : "text-muted-foreground hover:text-foreground"
@@ -188,7 +219,7 @@ const Header = () => {
                     ) : (
                     <button
                       type="button"
-                      className={`flex items-center gap-1.5 px-4 py-2 font-medium uppercase tracking-wide text-muted-foreground transition-colors hover:text-foreground text-[16px] ${oswald.className} 2xl:text-lg 2xl:px-5 3xl:text-xl 3xl:px-6 4xl:text-2xl 4xl:px-8`}
+                      className={`flex items-center gap-1.5 px-4 py-2 font-medium uppercase tracking-wide text-muted-foreground transition-colors hover:text-foreground text-[16px] font-oswald 2xl:text-lg 2xl:px-5 3xl:text-xl 3xl:px-6 4xl:text-2xl 4xl:px-8`}
                     >
                       {menuItem.title}
                       <ChevronDown
@@ -218,6 +249,20 @@ const Header = () => {
                                     onMouseEnter={() => setOpenSubIndex(subIndex)}
                                     onMouseLeave={() => setOpenSubIndex(-1)}
                                   >
+                                    {submenuItem.path ? (
+                                      <Link
+                                        href={submenuItem.path}
+                                        className="flex w-full items-center justify-between gap-3 rounded-xl px-4 py-3 text-sm text-popover-foreground transition-colors hover:bg-accent"
+                                      >
+                                        <span className="flex items-center gap-3">
+                                          {submenuItem.icon && (
+                                            <submenuItem.icon className="h-4 w-4 text-muted-foreground" />
+                                          )}
+                                          {submenuItem.title}
+                                        </span>
+                                        <ChevronDown className="h-4 w-4 -rotate-90 text-red-500" />
+                                      </Link>
+                                    ) : (
                                     <button
                                       type="button"
                                       className="flex w-full items-center justify-between gap-3 rounded-xl px-4 py-3 text-sm text-popover-foreground transition-colors hover:bg-accent"
@@ -230,6 +275,7 @@ const Header = () => {
                                       </span>
                                       <ChevronDown className="h-4 w-4 -rotate-90 text-red-500" />
                                     </button>
+                                    )}
 
                                     {/* Sub-submenu */}
                                     <AnimatePresence>
@@ -377,13 +423,103 @@ const Header = () => {
               </AnimatePresence>
             </div>
 
-            {/* Login - outlined CTA, stands out before Donate */}
-            <Link
-              href="/login"
-              className="hidden h-8 items-center rounded-full border-2 border-emerald-500/70 px-3 text-xs font-semibold text-emerald-600 transition-all duration-300 hover:bg-emerald-500/15 hover:border-emerald-500 dark:text-emerald-400 dark:hover:bg-emerald-500/20 sm:inline-flex sm:h-9 sm:px-4 sm:text-sm"
-            >
-              Login
-            </Link>
+            {/* Auth: avatar dropdown when logged in, Login button when not */}
+            {isAuthenticated && authUser ? (
+              <div ref={profileMenuRef} className="relative hidden sm:block">
+                <motion.button
+                  whileHover={{ scale: 1.04 }}
+                  whileTap={{ scale: 0.96 }}
+                  onClick={() => setProfileMenuOpen((v) => !v)}
+                  className="flex h-9 w-9 items-center justify-center rounded-full overflow-hidden ring-2 ring-border hover:ring-emerald-500/60 transition-all"
+                  aria-label="Profile menu"
+                >
+                  {authUser.profile?.avatarUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={authUser.profile.avatarUrl} alt={authUser.fullName} className="h-full w-full object-cover" />
+                  ) : (
+                    <span className="flex h-full w-full items-center justify-center bg-emerald-600 text-white text-sm font-bold">
+                      {authUser.fullName.charAt(0).toUpperCase()}
+                    </span>
+                  )}
+                </motion.button>
+                <AnimatePresence>
+                  {profileMenuOpen && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 8, scale: 0.95 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: 8, scale: 0.95 }}
+                      transition={{ duration: 0.15 }}
+                      className="absolute right-0 top-full mt-2 w-56 origin-top-right rounded-2xl border border-border/50 bg-popover/95 shadow-xl backdrop-blur-xl overflow-hidden z-50"
+                    >
+                      <div className="px-4 py-3 border-b border-border/50">
+                        <p className="text-sm font-semibold text-foreground truncate">{authUser.fullName}</p>
+                        <p className="text-xs text-muted-foreground truncate">{authUser.email}</p>
+                      </div>
+                      <div className="p-1">
+                        {isAdminUser ? (
+                          <>
+                            <Link
+                              href="/admin/profile"
+                              className="flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm text-popover-foreground hover:bg-accent transition-colors"
+                            >
+                              <User className="h-4 w-4 text-muted-foreground" />
+                              My Profile
+                            </Link>
+                            <Link
+                              href="/admin"
+                              className="flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm text-popover-foreground hover:bg-accent transition-colors"
+                            >
+                              <LayoutGrid className="h-4 w-4 text-muted-foreground" />
+                              Admin Dashboard
+                            </Link>
+                            <Link
+                              href="/admin/profile"
+                              className="flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm text-popover-foreground hover:bg-accent transition-colors"
+                            >
+                              <Settings className="h-4 w-4 text-muted-foreground" />
+                              Settings
+                            </Link>
+                          </>
+                        ) : (
+                          <>
+                            <Link
+                              href="/dashboard"
+                              className="flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm text-popover-foreground hover:bg-accent transition-colors"
+                            >
+                              <LayoutGrid className="h-4 w-4 text-muted-foreground" />
+                              My Dashboard
+                            </Link>
+                            <Link
+                              href="/dashboard/profile"
+                              className="flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm text-popover-foreground hover:bg-accent transition-colors"
+                            >
+                              <User className="h-4 w-4 text-muted-foreground" />
+                              My Profile
+                            </Link>
+                          </>
+                        )}
+                        <div className="my-1 h-px bg-border/50" />
+                        <button
+                          type="button"
+                          onClick={handleLogout}
+                          className="w-full flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                        >
+                          <LogOut className="h-4 w-4" />
+                          Sign out
+                        </button>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            ) : (
+              <Link
+                href="/login"
+                className="hidden h-8 items-center rounded-full border-2 border-emerald-500/70 px-3 text-xs font-semibold text-emerald-600 transition-all duration-300 hover:bg-emerald-500/15 hover:border-emerald-500 dark:text-emerald-400 dark:hover:bg-emerald-500/20 sm:inline-flex sm:h-9 sm:px-4 sm:text-sm"
+              >
+                Login
+              </Link>
+            )}
 
           {/* Donate Button - Hidden on small mobile, show on tablet and above */}
           <div className="hidden md:flex ml-2 mr-2 lg:mr-3 xl:ml-3 xl:mr-0 2xl:ml-4 relative z-30">
@@ -638,31 +774,58 @@ const Header = () => {
               </div>
 
               {/* Mobile Menu Footer */}
-              <div className="border-t border-border/50 p-4">
-                <div className="mb-3 flex gap-2">
-                  {/* Calendar button hidden for now */}
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const next = language === "EN" ? "BN" : "EN";
-                      setLanguage(next);
-                      try {
-                        window.localStorage.setItem("ss_language", next);
-                      } catch {}
-                    }}
-                    className="flex flex-1 items-center justify-center gap-1.5 rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
-                  >
-                    <Languages className="h-4 w-4" />
-                    <span>{language}</span>
-                  </button>
-                  <Link
-                    href="/login"
-                    onClick={() => setNavbarOpen(false)}
-                    className="flex flex-1 items-center justify-center rounded-full border-2 border-emerald-500/70 py-2 text-sm font-semibold text-emerald-600 transition-colors hover:bg-emerald-500/15 dark:text-emerald-400"
-                  >
-                    Login
-                  </Link>
-                </div>
+              <div className="border-t border-border/50 p-4 space-y-3">
+                {/* Auth row */}
+                {isAuthenticated && authUser ? (
+                  <div className="flex items-center gap-3 rounded-xl border border-border px-3 py-2.5">
+                    <div className="h-9 w-9 rounded-full overflow-hidden shrink-0 ring-2 ring-border">
+                      {authUser.profile?.avatarUrl ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={authUser.profile.avatarUrl} alt={authUser.fullName} className="h-full w-full object-cover" />
+                      ) : (
+                        <span className="flex h-full w-full items-center justify-center bg-emerald-600 text-white text-sm font-bold">
+                          {authUser.fullName.charAt(0).toUpperCase()}
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold text-foreground truncate">{authUser.fullName}</p>
+                      <Link href={isAdminUser ? "/admin/profile" : "/dashboard/profile"} onClick={() => setNavbarOpen(false)} className="text-xs text-emerald-600 hover:underline">
+                        {isAdminUser ? "View profile" : "My Profile"}
+                      </Link>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => { setNavbarOpen(false); handleLogout(); }}
+                      className="text-muted-foreground hover:text-red-600 transition-colors"
+                      aria-label="Sign out"
+                    >
+                      <LogOut className="h-4 w-4" />
+                    </button>
+                  </div>
+                ) : (
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const next = language === "EN" ? "BN" : "EN";
+                        setLanguage(next);
+                        try { window.localStorage.setItem("ss_language", next); } catch {}
+                      }}
+                      className="flex flex-1 items-center justify-center gap-1.5 rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+                    >
+                      <Languages className="h-4 w-4" />
+                      <span>{language}</span>
+                    </button>
+                    <Link
+                      href="/login"
+                      onClick={() => setNavbarOpen(false)}
+                      className="flex flex-1 items-center justify-center rounded-full border-2 border-emerald-500/70 py-2 text-sm font-semibold text-emerald-600 transition-colors hover:bg-emerald-500/15 dark:text-emerald-400"
+                    >
+                      Login
+                    </Link>
+                  </div>
+                )}
                 <Link
                   href="/donate"
                   onClick={() => setNavbarOpen(false)}
