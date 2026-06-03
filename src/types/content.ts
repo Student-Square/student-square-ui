@@ -14,6 +14,7 @@ export type ApiFeatureCard = {
   slot: HeroSlot;
   title: string;
   titleBn: string | null;
+  summary: string | null;
   category: string;
   /** S3/CDN url, or null when no image has been set. */
   image: string | null;
@@ -70,6 +71,7 @@ export type AdminFeatureCard = {
   contentRef: string;
   title: string;
   titleBn: string | null;
+  summary: string | null;
   category: string;
   /** MediaAsset id — use when sending updates back to the server */
   imageId: string | null;
@@ -89,6 +91,7 @@ export type AdminCreateCardInput = {
   contentRef: string;
   title: string;
   titleBn?: string | null;
+  summary?: string | null;
   category: string;
   /** MediaAsset id from /admin/media upload or linked post's coverImage.id */
   imageId?: string | null;

@@ -207,7 +207,7 @@ export default function StoryForm({ story }: Props) {
         />
       ) : (
         /* ── Edit form ── */
-        <div className="grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_300px] 2xl:grid-cols-[1fr_360px] gap-6">
           {/* Main content */}
           <div className="space-y-5">
             {/* Person info */}

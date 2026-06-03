@@ -43,10 +43,10 @@ type FormState = {
   contentType: ContentRefType;
   contentRef: string;
   title: string;
-  titleBn: string;
+  summary: string;
   category: string;
-  image: string;     // display URL only — not sent to server
-  imageId: string | null; // MediaAsset id — sent to server
+  image: string;
+  imageId: string | null;
   status: CardStatus;
   order: number;
 };
@@ -56,7 +56,7 @@ const emptyState: FormState = {
   contentType: "BLOG",
   contentRef: "",
   title: "",
-  titleBn: "",
+  summary: "",
   category: "",
   image: "",
   imageId: null,
@@ -73,6 +73,7 @@ type PickerItem = {
   category: string;
   imageUrl: string;
   imageId: string;
+  excerpt?: string;
   meta?: string;
 };
 
@@ -153,18 +154,29 @@ function PickerDropdown({
   );
 }
 
+type PickerSelectData = {
+  ref: string;
+  title: string;
+  category: string;
+  imageUrl: string;
+  imageId: string;
+  excerpt: string;
+};
+
 // ── Blog post picker ──────────────────────────────────────────────────────────
 
 function BlogPicker({
   value,
   selectedTitle,
   selectedImage,
+  selectedCategory,
   onSelect,
 }: {
   value: string;
   selectedTitle: string;
   selectedImage: string;
-  onSelect: (data: { ref: string; title: string; category: string; imageUrl: string; imageId: string }) => void;
+  selectedCategory: string;
+  onSelect: (data: PickerSelectData) => void;
 }) {
   const [isOpen, setIsOpen] = useState(false);
   const [query, setQuery] = useState("");
@@ -183,11 +195,12 @@ function BlogPicker({
 
   const items: PickerItem[] = (data?.data ?? []).map((p: ApiBlogListItem) => ({
     id: p.id,
-    ref: `${p.category.slug}/${p.slug}`,
+    ref: p.id,
     title: p.title,
     category: p.category.name,
     imageUrl: p.coverImage?.url ?? "",
     imageId: p.coverImage?.id ?? "",
+    excerpt: p.excerpt,
     meta: p.category.name,
   }));
 
@@ -206,7 +219,6 @@ function BlogPicker({
   return (
     <div ref={containerRef} className="relative">
       {value ? (
-        /* ── Selected state ── */
         <div className="flex items-center gap-3 p-3 rounded-xl border border-emerald-200 dark:border-emerald-800/60 bg-emerald-50/40 dark:bg-emerald-900/10">
           <div className="w-14 h-14 rounded-lg overflow-hidden bg-muted border border-border shrink-0 flex items-center justify-center">
             {selectedImage ? (
@@ -230,7 +242,6 @@ function BlogPicker({
           </button>
         </div>
       ) : (
-        /* ── Empty state ── */
         <button
           type="button"
           onClick={() => setIsOpen(true)}
@@ -252,7 +263,7 @@ function BlogPicker({
           query={query}
           onQueryChange={setQuery}
           onSelect={(item) => {
-            onSelect({ ref: item.ref, title: item.title, category: item.category, imageUrl: item.imageUrl, imageId: item.imageId });
+            onSelect({ ref: item.ref, title: item.title, category: item.category, imageUrl: item.imageUrl, imageId: item.imageId, excerpt: item.excerpt ?? "" });
             setQuery("");
           }}
           onClose={() => { setIsOpen(false); setQuery(""); }}
@@ -274,7 +285,7 @@ function StoryPicker({
   value: string;
   selectedTitle: string;
   selectedImage: string;
-  onSelect: (data: { ref: string; title: string; category: string; imageUrl: string; imageId: string }) => void;
+  onSelect: (data: PickerSelectData) => void;
 }) {
   const [isOpen, setIsOpen] = useState(false);
   const [query, setQuery] = useState("");
@@ -298,6 +309,7 @@ function StoryPicker({
     category: "Real Life Stories",
     imageUrl: s.coverImage?.url ?? "",
     imageId: s.coverImage?.id ?? "",
+    excerpt: s.summary ?? "",
     meta: s.achievement ?? s.university ?? s.department ?? "Real Life Story",
   }));
 
@@ -316,7 +328,6 @@ function StoryPicker({
   return (
     <div ref={containerRef} className="relative">
       {value ? (
-        /* ── Selected state ── */
         <div className="flex items-center gap-3 p-3 rounded-xl border border-emerald-200 dark:border-emerald-800/60 bg-emerald-50/40 dark:bg-emerald-900/10">
           <div className="w-14 h-14 rounded-lg overflow-hidden bg-muted border border-border shrink-0 flex items-center justify-center">
             {selectedImage ? (
@@ -340,7 +351,6 @@ function StoryPicker({
           </button>
         </div>
       ) : (
-        /* ── Empty state ── */
         <button
           type="button"
           onClick={() => setIsOpen(true)}
@@ -362,7 +372,7 @@ function StoryPicker({
           query={query}
           onQueryChange={setQuery}
           onSelect={(item) => {
-            onSelect({ ref: item.ref, title: item.title, category: item.category, imageUrl: item.imageUrl, imageId: item.imageId });
+            onSelect({ ref: item.ref, title: item.title, category: item.category, imageUrl: item.imageUrl, imageId: item.imageId, excerpt: item.excerpt ?? "" });
             setQuery("");
           }}
           onClose={() => { setIsOpen(false); setQuery(""); }}
@@ -385,7 +395,7 @@ export default function CardForm({ mode, initialSlot }: { mode: Mode; initialSlo
           contentType: mode.card.contentType,
           contentRef: mode.card.contentRef,
           title: mode.card.title,
-          titleBn: mode.card.titleBn ?? "",
+          summary: mode.card.summary ?? "",
           category: mode.card.category,
           image: mode.card.image ?? "",
           imageId: mode.card.imageId ?? null,
@@ -408,13 +418,12 @@ export default function CardForm({ mode, initialSlot }: { mode: Mode; initialSlo
     setForm((prev) => ({ ...prev, [key]: value }));
   }
 
-  // Clear contentRef when content type changes (create mode only)
   useEffect(() => {
     if (mode.kind === "create") setField("contentRef", "");
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [form.contentType]);
 
-  function handlePickerSelect(data: { ref: string; title: string; category: string; imageUrl: string; imageId: string }) {
+  function handlePickerSelect(data: PickerSelectData) {
     setForm((prev) => ({
       ...prev,
       contentRef: data.ref,
@@ -422,6 +431,7 @@ export default function CardForm({ mode, initialSlot }: { mode: Mode; initialSlo
       category: data.category,
       image: prev.image || data.imageUrl,
       imageId: prev.imageId || data.imageId || null,
+      summary: prev.summary || data.excerpt,
     }));
   }
 
@@ -437,7 +447,7 @@ export default function CardForm({ mode, initialSlot }: { mode: Mode; initialSlo
     } catch { /* toasted by baseApi */ }
   }
 
-  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+  async function handleSubmit(e: React.SyntheticEvent<HTMLFormElement>) {
     e.preventDefault();
 
     if (!form.contentRef.trim()) {
@@ -454,7 +464,7 @@ export default function CardForm({ mode, initialSlot }: { mode: Mode; initialSlo
       contentType: form.contentType,
       contentRef: form.contentRef.trim(),
       title: form.title.trim(),
-      titleBn: form.titleBn.trim() || null,
+      summary: form.summary.trim() || null,
       category: form.category.trim(),
       imageId: form.imageId ?? null,
       status: form.status,
@@ -488,11 +498,11 @@ export default function CardForm({ mode, initialSlot }: { mode: Mode; initialSlo
       </h1>
       <p className="mt-1 text-sm text-muted-foreground mb-8">
         {mode.kind === "edit"
-          ? "Change the linked post or update slot, status, and order. Title and image are pulled from the selected post."
-          : "Pick a published post or story to feature. Title and image are filled automatically."}
+          ? "Change the linked post or update slot, status, and order. Title, summary, and image are filled automatically."
+          : "Pick a published post or story to feature. Title, summary, and image are filled automatically."}
       </p>
 
-      <form onSubmit={handleSubmit} className="space-y-5 max-w-2xl">
+      <form onSubmit={handleSubmit} className="space-y-5 max-w-2xl 2xl:max-w-3xl">
 
         {/* Content type */}
         <Field label="Content type" required>
@@ -525,6 +535,7 @@ export default function CardForm({ mode, initialSlot }: { mode: Mode; initialSlo
                 value={form.contentRef}
                 selectedTitle={form.title}
                 selectedImage={form.image}
+                selectedCategory={form.category}
                 onSelect={handlePickerSelect}
               />
             ) : (
@@ -581,7 +592,7 @@ export default function CardForm({ mode, initialSlot }: { mode: Mode; initialSlo
             </select>
           </Field>
 
-          <Field label="Order" hint="Lower = first">
+          <Field label="Order" hint="Unique within slot">
             <input
               type="number"
               value={form.order}
@@ -592,7 +603,7 @@ export default function CardForm({ mode, initialSlot }: { mode: Mode; initialSlo
           </Field>
         </div>
 
-        {/* Non-picker types still need manual title / category / image */}
+        {/* Non-picker types: manual title / category / summary / image */}
         {!usesPicker && (
           <>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -603,6 +614,15 @@ export default function CardForm({ mode, initialSlot }: { mode: Mode; initialSlo
                 <input type="text" value={form.category} onChange={(e) => setField("category", e.target.value)} className="form-input" />
               </Field>
             </div>
+            <Field label="Summary" hint="Optional — short text shown on the carousel card">
+              <textarea
+                value={form.summary}
+                onChange={(e) => setField("summary", e.target.value)}
+                rows={3}
+                className="form-input"
+                placeholder="Short description shown on the carousel…"
+              />
+            </Field>
             <Field label="Image">
               <ImageField
                 image={form.image}
@@ -627,7 +647,7 @@ export default function CardForm({ mode, initialSlot }: { mode: Mode; initialSlo
                 Customize card display
               </span>
               <span className="text-[11px] text-muted-foreground flex items-center gap-1">
-                {customizeOpen ? "Hide" : "Override title, Bangla text, or image"}
+                {customizeOpen ? "Hide" : "Override title, summary, or image"}
                 <ChevronRight className={`h-3.5 w-3.5 transition-transform ${customizeOpen ? "rotate-90" : ""}`} />
               </span>
             </button>
@@ -644,13 +664,13 @@ export default function CardForm({ mode, initialSlot }: { mode: Mode; initialSlo
                   </Field>
                 </div>
 
-                <Field label="Title (Bangla)" hint="Shown on the main carousel card">
+                <Field label="Summary" hint="Auto-filled from the post excerpt — shown on the main carousel card">
                   <textarea
-                    value={form.titleBn}
-                    onChange={(e) => setField("titleBn", e.target.value)}
-                    rows={2}
+                    value={form.summary}
+                    onChange={(e) => setField("summary", e.target.value)}
+                    rows={3}
                     className="form-input"
-                    placeholder="বাংলা শিরোনাম..."
+                    placeholder="Short description shown on the carousel…"
                   />
                 </Field>
 

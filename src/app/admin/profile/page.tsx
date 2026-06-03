@@ -139,7 +139,7 @@ export default function AdminProfilePage() {
   const strengthTextColors = ["", "text-red-500", "text-yellow-500", "text-blue-500", "text-emerald-600"];
 
   return (
-    <div className="space-y-8 max-w-4xl">
+    <div className="space-y-8 max-w-4xl 2xl:max-w-6xl">
       {/* Page title */}
       <div>
         <h1 className="text-2xl font-bold text-foreground tracking-tight">My Profile</h1>

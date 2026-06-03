@@ -42,7 +42,7 @@ export default function ReportsPage() {
       <Header />
 
       {/* Hero */}
-      <section className="relative mt-12 sm:mt-14 lg:mt-16 h-[55vh] min-h-[320px] w-full overflow-hidden">
+      <section className="relative mt-12 sm:mt-14 lg:mt-16 h-[35vh] sm:h-[45vh] lg:h-[55vh] min-h-[220px] w-full overflow-hidden">
         <img
           src="/images/student-square-one-minute-investment-project.jpg"
           alt="Annual Reports & Financials"

@@ -122,7 +122,7 @@ export default function AdminUserDetailPage() {
         ))}
       </div>
 
-      <form onSubmit={handleSave} className="max-w-lg space-y-5">
+      <form onSubmit={handleSave} className="max-w-lg 2xl:max-w-xl space-y-5">
         <Field label="Full name">
           <input
             type="text"
@@ -136,7 +136,7 @@ export default function AdminUserDetailPage() {
           <select
             value={role}
             onChange={(e) => setRole(e.target.value as UserRole)}
-            disabled={callerRole !== "SUPER_ADMIN" && (role === "SUPER_ADMIN" || e.target?.value === "SUPER_ADMIN")}
+            disabled={callerRole !== "SUPER_ADMIN" && role === "SUPER_ADMIN"}
             className="form-input"
           >
             {ROLE_OPTIONS.map((o) => (

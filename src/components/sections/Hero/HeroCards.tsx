@@ -46,7 +46,7 @@ const ProgressIndicator = ({ duration = 7000 }: { duration?: number }) => {
 const FeatureCard = ({
   image,
   title,
-  titleBn,
+  subtitle,
   category,
   href,
   isMain = false,
@@ -54,7 +54,8 @@ const FeatureCard = ({
 }: {
   image: string | null;
   title: string;
-  titleBn?: string | null;
+  /** Secondary line under the title on the main card (summary, with titleBn fallback). */
+  subtitle?: string | null;
   category: string;
   href?: string;
   isMain?: boolean;
@@ -140,14 +141,14 @@ const FeatureCard = ({
       >
         {title}
       </motion.h3>
-      {isMain && titleBn && (
+      {isMain && subtitle && (
         <motion.p
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: delay + 0.4 }}
           className="mt-1 text-[9px] sm:text-xs md:text-sm text-white/75 leading-relaxed line-clamp-2"
         >
-          {titleBn}
+          {subtitle}
         </motion.p>
       )}
     </div>
@@ -266,7 +267,7 @@ const HeroCards = () => {
               <FeatureCard
                 image={mainFeature.image}
                 title={mainFeature.title}
-                titleBn={mainFeature.titleBn}
+                subtitle={mainFeature.summary ?? mainFeature.titleBn}
                 category={mainFeature.category}
                 href={mainFeature.href}
                 isMain

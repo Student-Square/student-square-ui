@@ -76,7 +76,7 @@ export default function DashboardOverviewPage() {
             </span>
           </div>
           <Link
-            href="/dashboard/settings"
+            href="/dashboard/profile"
             className="hidden sm:inline-flex items-center gap-1.5 text-xs font-semibold text-muted-foreground hover:text-emerald-600 transition-colors shrink-0"
           >
             Edit profile <ChevronRight className="h-3.5 w-3.5" />

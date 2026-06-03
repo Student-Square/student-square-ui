@@ -225,7 +225,7 @@ export default function TeamPage() {
   };
 
   return (
-    <div className="max-w-4xl space-y-6">
+    <div className="max-w-4xl 2xl:max-w-6xl space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-foreground tracking-tight">Team</h1>
         <p className="mt-1 text-sm text-muted-foreground">
@@ -384,32 +384,34 @@ export default function TeamPage() {
                   onDragOver={(e) => handleDragOver(e, index)}
                   onDrop={handleDrop}
                   onDragEnd={handleDragEnd}
-                  className="flex items-center gap-3 px-4 py-3 hover:bg-muted/20 transition-colors group select-none"
+                  className="flex flex-col md:flex-row md:items-center gap-3 px-4 py-4 md:py-3 hover:bg-muted/20 transition-colors group select-none"
                 >
-                  {/* Drag handle */}
-                  <div className="cursor-grab active:cursor-grabbing shrink-0 text-muted-foreground/30 group-hover:text-muted-foreground/60 transition-colors">
-                    <GripVertical className="h-4 w-4" />
-                  </div>
+                  {/* Top row - Mobile layout */}
+                  <div className="flex items-center gap-3 md:flex-1 md:min-w-0">
+                    {/* Drag handle - Desktop only */}
+                    <div className="hidden md:flex cursor-grab active:cursor-grabbing shrink-0 text-muted-foreground/30 group-hover:text-muted-foreground/60 transition-colors">
+                      <GripVertical className="h-4 w-4" />
+                    </div>
 
-                  {/* Order badge */}
-                  <span className="shrink-0 text-[10px] font-bold text-muted-foreground/50 w-4 text-center">
-                    {index + 1}
-                  </span>
+                    {/* Order badge - Desktop only */}
+                    <span className="hidden md:block shrink-0 text-[10px] font-bold text-muted-foreground/50 w-4 text-center">
+                      {index + 1}
+                    </span>
 
-                  {/* Avatar */}
-                  <div className="shrink-0 h-9 w-9 rounded-lg overflow-hidden bg-muted ring-1 ring-border">
-                    {member.avatarUrl ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={member.avatarUrl} alt={member.fullName} className="h-full w-full object-cover" />
-                    ) : (
-                      <span className="flex h-full w-full items-center justify-center text-xs font-bold text-muted-foreground">
-                        {member.fullName.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2)}
-                      </span>
-                    )}
-                  </div>
+                    {/* Avatar */}
+                    <div className="shrink-0 h-9 w-9 rounded-lg overflow-hidden bg-muted ring-1 ring-border">
+                      {member.avatarUrl ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={member.avatarUrl} alt={member.fullName} className="h-full w-full object-cover" />
+                      ) : (
+                        <span className="flex h-full w-full items-center justify-center text-xs font-bold text-muted-foreground">
+                          {member.fullName.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2)}
+                        </span>
+                      )}
+                    </div>
 
-                  {/* Name + slug */}
-                  <div className="flex-1 min-w-0">
+                    {/* Name + slug */}
+                    <div className="flex-1 min-w-0">
                     <p className="text-sm font-semibold text-foreground truncate">{member.fullName}</p>
 
                     {editingSlug?.assignmentId === member.id ? (
@@ -465,85 +467,90 @@ export default function TeamPage() {
                     )}
                   </div>
 
-                  {/* Role label */}
-                  <div className="shrink-0 w-36 lg:w-44">
-                    {editingRole?.id === member.id ? (
-                      <div className="flex items-center gap-1">
-                        <input
-                          type="text"
-                          value={editingRole.value}
-                          onChange={(e) => setEditingRole({ ...editingRole, value: e.target.value })}
-                          onKeyDown={(e) => {
-                            if (e.key === "Enter") handleSaveRole();
-                            if (e.key === "Escape") setEditingRole(null);
-                          }}
-                          className="field-input text-xs !py-1"
-                          autoFocus
-                        />
+                  </div>
+
+                  {/* Controls row - Mobile/Desktop layout */}
+                  <div className="flex items-center gap-2 md:gap-3 md:shrink-0 flex-wrap md:flex-nowrap">
+                    {/* Role label */}
+                    <div className="flex-1 md:flex-none md:w-36 lg:w-44">
+                      {editingRole?.id === member.id ? (
+                        <div className="flex items-center gap-1">
+                          <input
+                            type="text"
+                            value={editingRole.value}
+                            onChange={(e) => setEditingRole({ ...editingRole, value: e.target.value })}
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter") handleSaveRole();
+                              if (e.key === "Escape") setEditingRole(null);
+                            }}
+                            className="field-input text-xs !py-1"
+                            autoFocus
+                          />
+                          <button
+                            onClick={handleSaveRole}
+                            disabled={isSavingRole}
+                            className="p-1 rounded text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 disabled:opacity-50 shrink-0"
+                          >
+                            {isSavingRole ? <Loader2 className="h-3 w-3 animate-spin" /> : <Check className="h-3 w-3" />}
+                          </button>
+                          <button onClick={() => setEditingRole(null)} className="p-1 rounded text-muted-foreground hover:text-foreground shrink-0">
+                            <X className="h-3 w-3" />
+                          </button>
+                        </div>
+                      ) : (
                         <button
-                          onClick={handleSaveRole}
-                          disabled={isSavingRole}
-                          className="p-1 rounded text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 disabled:opacity-50"
+                          onClick={() => setEditingRole({ id: member.id, value: member.roleLabel })}
+                          className="group/role flex items-center gap-1 px-2 py-1 rounded-lg hover:bg-muted transition-colors w-full text-left"
                         >
-                          {isSavingRole ? <Loader2 className="h-3 w-3 animate-spin" /> : <Check className="h-3 w-3" />}
+                          <span className="text-xs text-foreground truncate flex-1">{member.roleLabel}</span>
+                          <Pencil className="h-2.5 w-2.5 opacity-0 group-hover/role:opacity-60 transition-opacity text-muted-foreground shrink-0" />
                         </button>
-                        <button onClick={() => setEditingRole(null)} className="p-1 rounded text-muted-foreground hover:text-foreground">
+                      )}
+                    </div>
+
+                    {/* Active toggle */}
+                    <button
+                      onClick={() => handleToggleActive(member.id, member.isActive)}
+                      aria-label={member.isActive ? "Deactivate" : "Activate"}
+                      title={member.isActive ? "Visible on site" : "Hidden from site"}
+                      className={`shrink-0 relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${
+                        member.isActive ? "bg-emerald-500" : "bg-muted-foreground/30"
+                      }`}
+                    >
+                      <span
+                        className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${
+                          member.isActive ? "translate-x-4" : "translate-x-0.5"
+                        }`}
+                      />
+                    </button>
+
+                    {/* Delete */}
+                    {confirmDelete === member.id ? (
+                      <div className="flex items-center gap-1 shrink-0">
+                        <button
+                          onClick={() => handleDelete(member.id)}
+                          disabled={isDeleting}
+                          className="px-2 py-1 rounded-lg bg-red-600 text-white text-[11px] font-bold hover:bg-red-700 disabled:opacity-60 transition-colors"
+                        >
+                          {isDeleting ? <Loader2 className="h-3 w-3 animate-spin" /> : "Confirm"}
+                        </button>
+                        <button
+                          onClick={() => setConfirmDelete(null)}
+                          className="p-1 rounded text-muted-foreground hover:text-foreground"
+                        >
                           <X className="h-3 w-3" />
                         </button>
                       </div>
                     ) : (
                       <button
-                        onClick={() => setEditingRole({ id: member.id, value: member.roleLabel })}
-                        className="group/role flex items-center gap-1 px-2 py-1 rounded-lg hover:bg-muted transition-colors w-full text-left"
+                        onClick={() => setConfirmDelete(member.id)}
+                        className="shrink-0 p-1.5 rounded-lg text-muted-foreground/0 group-hover:text-muted-foreground/50 hover:!text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors"
+                        aria-label="Remove member"
                       >
-                        <span className="text-xs text-foreground truncate flex-1">{member.roleLabel}</span>
-                        <Pencil className="h-2.5 w-2.5 opacity-0 group-hover/role:opacity-60 transition-opacity text-muted-foreground shrink-0" />
+                        <Trash2 className="h-3.5 w-3.5" />
                       </button>
                     )}
                   </div>
-
-                  {/* Active toggle */}
-                  <button
-                    onClick={() => handleToggleActive(member.id, member.isActive)}
-                    aria-label={member.isActive ? "Deactivate" : "Activate"}
-                    title={member.isActive ? "Visible on site" : "Hidden from site"}
-                    className={`shrink-0 relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${
-                      member.isActive ? "bg-emerald-500" : "bg-muted-foreground/30"
-                    }`}
-                  >
-                    <span
-                      className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${
-                        member.isActive ? "translate-x-4" : "translate-x-0.5"
-                      }`}
-                    />
-                  </button>
-
-                  {/* Delete */}
-                  {confirmDelete === member.id ? (
-                    <div className="flex items-center gap-1 shrink-0">
-                      <button
-                        onClick={() => handleDelete(member.id)}
-                        disabled={isDeleting}
-                        className="px-2 py-1 rounded-lg bg-red-600 text-white text-[11px] font-bold hover:bg-red-700 disabled:opacity-60 transition-colors"
-                      >
-                        {isDeleting ? <Loader2 className="h-3 w-3 animate-spin" /> : "Confirm"}
-                      </button>
-                      <button
-                        onClick={() => setConfirmDelete(null)}
-                        className="p-1 rounded text-muted-foreground hover:text-foreground"
-                      >
-                        <X className="h-3 w-3" />
-                      </button>
-                    </div>
-                  ) : (
-                    <button
-                      onClick={() => setConfirmDelete(member.id)}
-                      className="shrink-0 p-1.5 rounded-lg text-muted-foreground/0 group-hover:text-muted-foreground/50 hover:!text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors"
-                      aria-label="Remove member"
-                    >
-                      <Trash2 className="h-3.5 w-3.5" />
-                    </button>
-                  )}
                 </div>
               ))}
             </div>

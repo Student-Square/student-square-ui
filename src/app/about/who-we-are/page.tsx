@@ -216,7 +216,7 @@ export default function WhoWeArePage() {
       <Header />
 
       {/* Hero */}
-      <section className="relative mt-12 sm:mt-14 lg:mt-16 h-[55vh] min-h-[320px] w-full overflow-hidden">
+      <section className="relative mt-12 sm:mt-14 lg:mt-16 h-[35vh] sm:h-[45vh] lg:h-[55vh] min-h-[220px] w-full overflow-hidden">
         <img
           src={bannerUrl}
           alt={heroTitle}
@@ -237,12 +237,13 @@ export default function WhoWeArePage() {
 
       {/* Our People intro */}
       <section className="bg-background py-12 lg:py-16">
-        <div className="mx-auto max-w-4xl px-6 sm:px-10 lg:px-8">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 2xl:max-w-[1600px] 3xl:max-w-[1800px] 4xl:max-w-[2000px]">
           <motion.div
             initial={{ opacity: 0, y: 16 }}
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
             viewport={{ once: true }}
+            className="w-[90%] mx-auto"
           >
             <SectionHeading title="Our People" center={false} />
             <p className="text-base text-muted-foreground leading-relaxed">
@@ -266,13 +267,15 @@ export default function WhoWeArePage() {
           {/* Board of Trustees */}
           {groups.board.length > 0 && (
             <section className="bg-muted/30 py-14 lg:py-20">
-              <div className="mx-auto max-w-5xl px-6 sm:px-10 lg:px-8">
-                <PaginatedSection
-                  title="Board of Trustees"
-                  members={groups.board}
-                  perPage={4}
-                  variant="board"
-                />
+              <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 2xl:max-w-[1600px] 3xl:max-w-[1800px] 4xl:max-w-[2000px]">
+                <div className="w-[90%] mx-auto">
+                  <PaginatedSection
+                    title="Board of Trustees"
+                    members={groups.board}
+                    perPage={4}
+                    variant="board"
+                  />
+                </div>
               </div>
             </section>
           )}
@@ -280,12 +283,14 @@ export default function WhoWeArePage() {
           {/* Advisory Board */}
           {groups.advisory.length > 0 && (
             <section className="bg-background py-14 lg:py-20">
-              <div className="mx-auto max-w-5xl px-6 sm:px-10 lg:px-8">
-                <PaginatedSection
-                  title="Advisory Board"
-                  members={groups.advisory}
-                  perPage={5}
-                />
+              <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 2xl:max-w-[1600px] 3xl:max-w-[1800px] 4xl:max-w-[2000px]">
+                <div className="w-[90%] mx-auto">
+                  <PaginatedSection
+                    title="Advisory Board"
+                    members={groups.advisory}
+                    perPage={5}
+                  />
+                </div>
               </div>
             </section>
           )}
@@ -293,12 +298,14 @@ export default function WhoWeArePage() {
           {/* Leadership Team */}
           {groups.leadership.length > 0 && (
             <section className="bg-muted/30 py-14 lg:py-20">
-              <div className="mx-auto max-w-5xl px-6 sm:px-10 lg:px-8">
-                <PaginatedSection
-                  title="Leadership Team"
-                  members={groups.leadership}
-                  perPage={10}
-                />
+              <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 2xl:max-w-[1600px] 3xl:max-w-[1800px] 4xl:max-w-[2000px]">
+                <div className="w-[90%] mx-auto">
+                  <PaginatedSection
+                    title="Leadership Team"
+                    members={groups.leadership}
+                    perPage={10}
+                  />
+                </div>
               </div>
             </section>
           )}
@@ -306,12 +313,14 @@ export default function WhoWeArePage() {
           {/* Management Team */}
           {groups.management.length > 0 && (
             <section className="bg-background py-14 lg:py-20">
-              <div className="mx-auto max-w-5xl px-6 sm:px-10 lg:px-8">
-                <PaginatedSection
-                  title="Management Team"
-                  members={groups.management}
-                  perPage={10}
-                />
+              <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 2xl:max-w-[1600px] 3xl:max-w-[1800px] 4xl:max-w-[2000px]">
+                <div className="w-[90%] mx-auto">
+                  <PaginatedSection
+                    title="Management Team"
+                    members={groups.management}
+                    perPage={10}
+                  />
+                </div>
               </div>
             </section>
           )}

@@ -4,6 +4,7 @@ import { useEffect, useState, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { useTheme } from "next-themes";
 import { useSelector } from "react-redux";
 import {
   selectAuthStatus,
@@ -21,11 +22,15 @@ import {
   Home,
   LayoutGrid,
   LogOut,
+  Menu,
+  Moon,
   Newspaper,
   Settings,
   ShieldCheck,
+  Sun,
   UserCircle,
   Users,
+  X,
 } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 
@@ -38,6 +43,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const user = useSelector(selectCurrentUser);
   const role = useSelector(selectUserRole);
   const [logout] = useLogoutMutation();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { theme, setTheme, resolvedTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -48,6 +56,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       router.replace("/");
     }
   }, [status, role, router, pathname]);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const toggleTheme = () => setTheme(resolvedTheme === "dark" ? "light" : "dark");
+  const currentTheme = mounted ? resolvedTheme : "light";
 
   if (status === "idle" || status === "loading") {
     return (
@@ -66,9 +81,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   return (
     <main className="min-h-screen bg-background flex">
       {/* Sidebar — sticky so profile widget never scrolls away */}
-      <aside className="hidden md:flex w-60 shrink-0 border-r border-border bg-card/40 flex-col h-screen sticky top-0">
+      <aside className="hidden md:flex w-60 2xl:w-64 3xl:w-72 shrink-0 border-r border-border bg-card/40 flex-col h-screen sticky top-0">
         {/* Logo */}
-        <div className="px-4 py-4 border-b border-border">
+        <div className="px-4 py-4 border-b border-border flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2 group">
             <Image
               src="/images/ss-logo.png"
@@ -79,6 +94,37 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               priority
             />
           </Link>
+          {mounted && (
+            <button
+              onClick={toggleTheme}
+              className="flex items-center justify-center h-8 w-8 rounded-lg border border-border/50 bg-transparent text-foreground hover:bg-accent transition-colors"
+              aria-label={`Switch to ${currentTheme === "dark" ? "light" : "dark"} mode`}
+            >
+              <AnimatePresence mode="wait">
+                {currentTheme === "dark" ? (
+                  <motion.div
+                    key="moon"
+                    initial={{ rotate: -90, opacity: 0 }}
+                    animate={{ rotate: 0, opacity: 1 }}
+                    exit={{ rotate: 90, opacity: 0 }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    <Moon className="h-3.5 w-3.5" />
+                  </motion.div>
+                ) : (
+                  <motion.div
+                    key="sun"
+                    initial={{ rotate: 90, opacity: 0 }}
+                    animate={{ rotate: 0, opacity: 1 }}
+                    exit={{ rotate: -90, opacity: 0 }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    <Sun className="h-3.5 w-3.5" />
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </button>
+          )}
         </div>
 
         {/* Navigation */}
@@ -137,15 +183,186 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
       <div className="flex-1 min-w-0">
         {/* Mobile top bar */}
-        <header className="md:hidden border-b border-border bg-card/60 backdrop-blur px-4 py-3 flex items-center gap-2">
-          <Image src="/images/ss-logo.png" alt="Student Square" width={100} height={28} className="h-7 w-auto" />
-          <ChevronRight className="h-3 w-3 text-muted-foreground" />
-          <Link href="/admin/hero" className="text-xs text-muted-foreground hover:text-emerald-600">
-            Hero Cards
-          </Link>
+        <header className="md:hidden border-b border-border bg-card/60 backdrop-blur px-4 py-3 flex items-center justify-between sticky top-0 z-40">
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="flex items-center justify-center h-9 w-9 rounded-lg border border-border/50 bg-transparent text-foreground hover:bg-accent transition-colors shrink-0"
+              aria-label="Toggle menu"
+            >
+              {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+            </button>
+            <Image src="/images/ss-logo.png" alt="Student Square" width={100} height={28} className="h-7 w-auto" />
+          </div>
+          {mounted && (
+            <button
+              onClick={toggleTheme}
+              className="flex items-center justify-center h-9 w-9 rounded-lg border border-border/50 bg-transparent text-foreground hover:bg-accent transition-colors"
+              aria-label={`Switch to ${currentTheme === "dark" ? "light" : "dark"} mode`}
+            >
+              <AnimatePresence mode="wait">
+                {currentTheme === "dark" ? (
+                  <motion.div
+                    key="moon"
+                    initial={{ rotate: -90, opacity: 0 }}
+                    animate={{ rotate: 0, opacity: 1 }}
+                    exit={{ rotate: 90, opacity: 0 }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    <Moon className="h-4 w-4" />
+                  </motion.div>
+                ) : (
+                  <motion.div
+                    key="sun"
+                    initial={{ rotate: 90, opacity: 0 }}
+                    animate={{ rotate: 0, opacity: 1 }}
+                    exit={{ rotate: -90, opacity: 0 }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    <Sun className="h-4 w-4" />
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </button>
+          )}
         </header>
 
-        <div className="p-4 sm:p-6 lg:p-8 max-w-6xl">{children}</div>
+        {/* Mobile Menu Overlay */}
+        <AnimatePresence>
+          {mobileMenuOpen && (
+            <>
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.3 }}
+                className="fixed inset-0 top-0 left-0 z-[35] bg-background/80 backdrop-blur-sm md:hidden"
+                onClick={() => setMobileMenuOpen(false)}
+              />
+              <motion.nav
+                initial={{ x: "-100%" }}
+                animate={{ x: 0 }}
+                exit={{ x: "-100%" }}
+                transition={{ type: "spring", damping: 30, stiffness: 300 }}
+                className="fixed left-0 top-0 z-[36] flex h-screen w-full max-w-xs flex-col border-r border-border/50 bg-card/95 backdrop-blur md:hidden"
+              >
+                {/* Mobile Menu Header */}
+                <div className="flex h-16 shrink-0 items-center justify-between border-b border-border/50 px-4">
+                  <Image src="/images/ss-logo.png" alt="Student Square" width={100} height={28} className="h-6 w-auto" />
+                  <button
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="flex items-center justify-center h-9 w-9 rounded-lg border border-border/50 bg-transparent text-foreground hover:bg-accent transition-colors"
+                    aria-label="Close menu"
+                  >
+                    <X className="h-5 w-5" />
+                  </button>
+                </div>
+
+                {/* Mobile Menu Content */}
+                <nav className="flex-1 overflow-y-auto p-3 space-y-1 text-sm">
+                  <NavItem
+                    href="/admin"
+                    label="Overview"
+                    icon={<Home className="h-4 w-4" />}
+                    exact
+                    onNavigate={() => setMobileMenuOpen(false)}
+                  />
+
+                  <p className="px-3 pt-3 pb-1 text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60">
+                    Content
+                  </p>
+                  <NavItem
+                    href="/admin/hero"
+                    label="Hero Cards"
+                    icon={<LayoutGrid className="h-4 w-4" />}
+                    onNavigate={() => setMobileMenuOpen(false)}
+                  />
+                  <NavGroupMobile
+                    label="About Us"
+                    icon={<FileText className="h-4 w-4" />}
+                    items={[
+                      { href: "/admin/pages/about-mission-vision", label: "Our Mission & Vision" },
+                      { href: "/admin/pages/about-who-we-are", label: "Who We Are" },
+                    ]}
+                    onNavigate={() => setMobileMenuOpen(false)}
+                  />
+                  <NavGroupMobile
+                    label="Blog"
+                    icon={<Newspaper className="h-4 w-4" />}
+                    items={[
+                      { href: "/admin/blog/education-career", label: "Education & Career" },
+                      { href: "/admin/blog/articles", label: "Articles" },
+                      { href: "/admin/blog/real-life-stories", label: "Real Life Stories" },
+                      { href: "/admin/blog/magazine", label: "Magazine" },
+                      { href: "/admin/blog/categories", label: "Categories" },
+                    ]}
+                    onNavigate={() => setMobileMenuOpen(false)}
+                  />
+
+                  <p className="px-3 pt-3 pb-1 text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60">
+                    Management
+                  </p>
+                  <NavItem
+                    href="/admin/donation"
+                    label="Donation"
+                    icon={<HandCoins className="h-4 w-4" />}
+                    onNavigate={() => setMobileMenuOpen(false)}
+                  />
+                  <NavItem
+                    href="/admin/team"
+                    label="Team"
+                    icon={<ShieldCheck className="h-4 w-4" />}
+                    onNavigate={() => setMobileMenuOpen(false)}
+                  />
+                  {!isEditor && (
+                    <NavItem
+                      href="/admin/users"
+                      label="Users"
+                      icon={<Users className="h-4 w-4" />}
+                      onNavigate={() => setMobileMenuOpen(false)}
+                    />
+                  )}
+
+                  <p className="px-3 pt-3 pb-1 text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60">
+                    My Account
+                  </p>
+                  <NavGroupMobile
+                    label="My Activities"
+                    icon={<Activity className="h-4 w-4" />}
+                    items={[
+                      { href: "/admin/activities/my-blog", label: "My Blog" },
+                      { href: "/admin/activities/comments", label: "Comments" },
+                      { href: "/admin/activities/saved", label: "Saved Articles" },
+                    ]}
+                    onNavigate={() => setMobileMenuOpen(false)}
+                  />
+                  <NavItem
+                    href="/admin/profile"
+                    label="My Profile"
+                    icon={<UserCircle className="h-4 w-4" />}
+                    onNavigate={() => setMobileMenuOpen(false)}
+                  />
+                </nav>
+
+                {/* Mobile Menu Footer */}
+                {user && (
+                  <div className="border-t border-border/50 p-3">
+                    <button
+                      type="button"
+                      onClick={() => { setMobileMenuOpen(false); logout(); }}
+                      className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors text-red-600 dark:text-red-400 text-sm"
+                    >
+                      <LogOut className="h-4 w-4" />
+                      Sign out
+                    </button>
+                  </div>
+                )}
+              </motion.nav>
+            </>
+          )}
+        </AnimatePresence>
+
+        <div className="p-4 sm:p-6 lg:p-8 2xl:p-10 3xl:p-12 max-w-6xl 2xl:max-w-7xl 3xl:max-w-[1700px] 4xl:max-w-[2100px]">{children}</div>
       </div>
     </main>
   );
@@ -260,17 +477,20 @@ function NavItem({
   label,
   icon,
   exact = false,
+  onNavigate,
 }: {
   href: string;
   label: string;
   icon: React.ReactNode;
   exact?: boolean;
+  onNavigate?: () => void;
 }) {
   const pathname = usePathname();
   const active = exact ? pathname === href : pathname === href || pathname.startsWith(href + "/");
   return (
     <Link
       href={href}
+      onClick={onNavigate}
       className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-colors ${
         active
           ? "bg-emerald-600 text-white"
@@ -323,6 +543,65 @@ function NavGroup({
               <Link
                 key={item.href}
                 href={item.href}
+                className={`flex items-center gap-2 px-2 py-1.5 rounded-md text-xs transition-colors ${
+                  active
+                    ? "bg-emerald-600 text-white font-semibold"
+                    : "text-muted-foreground hover:text-emerald-600 hover:bg-muted"
+                }`}
+              >
+                {item.label}
+              </Link>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function NavGroupMobile({
+  label,
+  icon,
+  items,
+  onNavigate,
+}: {
+  label: string;
+  icon: React.ReactNode;
+  items: Array<{ href: string; label: string }>;
+  onNavigate?: () => void;
+}) {
+  const pathname = usePathname();
+  const containsActive = items.some(
+    (i) => pathname === i.href || pathname.startsWith(i.href + "/")
+  );
+  const [open, setOpen] = useState(containsActive);
+
+  return (
+    <div>
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg transition-colors ${
+          containsActive
+            ? "bg-emerald-600/10 text-emerald-700 dark:text-emerald-400"
+            : "text-foreground hover:bg-muted hover:text-emerald-600"
+        }`}
+      >
+        {icon}
+        <span className="font-medium flex-1 text-left">{label}</span>
+        <ChevronDown
+          className={`h-3.5 w-3.5 transition-transform duration-200 ${open ? "rotate-180" : ""}`}
+        />
+      </button>
+      {open && (
+        <div className="mt-0.5 ml-5 border-l border-border pl-2 space-y-0.5">
+          {items.map((item) => {
+            const active = pathname === item.href || pathname.startsWith(item.href + "/");
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                onClick={onNavigate}
                 className={`flex items-center gap-2 px-2 py-1.5 rounded-md text-xs transition-colors ${
                   active
                     ? "bg-emerald-600 text-white font-semibold"

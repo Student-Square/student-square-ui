@@ -62,7 +62,7 @@ export default function AdminOverviewPage() {
   const firstName = user?.fullName.split(" ")[0] ?? "Admin";
 
   return (
-    <div className="space-y-8 max-w-4xl">
+    <div className="space-y-8 max-w-4xl 2xl:max-w-6xl 3xl:max-w-none">
       {/* Header */}
       <div>
         <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-1">
@@ -102,7 +102,7 @@ export default function AdminOverviewPage() {
       {/* Quick access */}
       <div>
         <h2 className="text-sm font-bold text-foreground mb-3">Quick Access</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 3xl:grid-cols-6 gap-3">
           {QUICK_LINKS.map((item) => (
             <Link
               key={item.href}

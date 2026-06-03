@@ -57,7 +57,7 @@ export default function AboutPage() {
       <Header />
 
       {/* Hero — starts below the fixed navbar */}
-      <section className="relative mt-12 sm:mt-14 lg:mt-16 h-[50vh] min-h-[280px] w-full overflow-hidden">
+      <section className="relative mt-12 sm:mt-14 lg:mt-16 h-[30vh] sm:h-[40vh] lg:h-[50vh] min-h-[200px] w-full overflow-hidden">
         <img
           src="/images/student-square-school-session.jpg"
           alt="About Us"
@@ -78,7 +78,7 @@ export default function AboutPage() {
 
       {/* Intro */}
       <section className="bg-background py-12 lg:py-16">
-        <div className="mx-auto max-w-4xl px-6 sm:px-10 lg:px-8 text-center">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 2xl:max-w-[1600px] 3xl:max-w-[1800px] 4xl:max-w-[2000px] text-center">
           <motion.div
             initial={{ opacity: 0, y: 16 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -100,7 +100,7 @@ export default function AboutPage() {
 
       {/* Featured card */}
       <section className="bg-background pb-10">
-        <div className="mx-auto max-w-4xl px-6 sm:px-10 lg:px-8">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 2xl:max-w-[1600px] 3xl:max-w-[1800px] 4xl:max-w-[2000px]">
           <motion.div
             initial={{ opacity: 0, y: 16 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -131,7 +131,7 @@ export default function AboutPage() {
 
       {/* Card Grid */}
       <section className="bg-background py-10 pb-20">
-        <div className="mx-auto max-w-4xl px-6 sm:px-10 lg:px-8">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 2xl:max-w-[1600px] 3xl:max-w-[1800px] 4xl:max-w-[2000px]">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
             {aboutCards.map((card, index) => (
               <motion.div

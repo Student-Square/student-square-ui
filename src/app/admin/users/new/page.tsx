@@ -86,7 +86,7 @@ export default function AdminNewUserPage() {
       </Link>
       <h1 className="text-2xl font-bold text-foreground mb-6">New user</h1>
 
-      <form onSubmit={handleSubmit} className="max-w-lg space-y-5">
+      <form onSubmit={handleSubmit} className="max-w-lg 2xl:max-w-xl space-y-5">
         <Field label="Full name *">
           <input
             type="text"

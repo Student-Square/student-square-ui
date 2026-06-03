@@ -259,11 +259,11 @@ export default function NewBlogPage() {
         </div>
       </div>
 
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
+      <div className="mx-auto max-w-7xl 3xl:max-w-[1600px] px-4 sm:px-6 lg:px-8 py-8">
         <AnimatePresence mode="wait">
           {tab === "write" ? (
             <motion.div key="write" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.2 }}
-              className="grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-8">
+              className="grid grid-cols-1 lg:grid-cols-[1fr_300px] 2xl:grid-cols-[1fr_360px] gap-8">
 
               {/* Left: editor */}
               <div className="space-y-6">

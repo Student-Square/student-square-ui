@@ -103,7 +103,7 @@ export default function MissionVisionEditorPage() {
   }
 
   return (
-    <div className="max-w-3xl space-y-8">
+    <div className="max-w-3xl 2xl:max-w-5xl space-y-8">
       {/* Header */}
       <div>
         <h1 className="text-2xl font-bold text-foreground tracking-tight">Our Mission &amp; Vision</h1>

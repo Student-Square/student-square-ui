@@ -20,7 +20,7 @@ export default function ArchivePage() {
       <Header />
 
       {/* Hero */}
-      <section className="relative mt-12 sm:mt-14 lg:mt-16 h-[55vh] min-h-[320px] w-full overflow-hidden">
+      <section className="relative mt-12 sm:mt-14 lg:mt-16 h-[35vh] sm:h-[45vh] lg:h-[55vh] min-h-[220px] w-full overflow-hidden">
         <img
           src="/images/emergency-tran-bitoron-activities.jpg"
           alt="Archive"

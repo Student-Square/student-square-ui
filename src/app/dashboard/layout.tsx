@@ -51,6 +51,15 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   // Close mobile drawer on route change
   useEffect(() => { setMobileOpen(false); }, [pathname]);
 
+  // Lock background scroll while the mobile drawer is open so the page
+  // behind the overlay doesn't move under the user's finger.
+  useEffect(() => {
+    if (!mobileOpen) return;
+    const original = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => { document.body.style.overflow = original; };
+  }, [mobileOpen]);
+
   if (status === "idle" || status === "loading") {
     return (
       <main className="min-h-screen flex items-center justify-center bg-background">
@@ -98,10 +107,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               <button
                 type="button"
                 onClick={() => setMobileOpen(false)}
-                className="absolute top-3 right-3 p-1.5 rounded-md hover:bg-muted transition-colors text-muted-foreground"
+                className="absolute top-2.5 right-2.5 inline-flex h-10 w-10 items-center justify-center rounded-md hover:bg-muted transition-colors text-muted-foreground"
                 aria-label="Close menu"
               >
-                <X className="h-4 w-4" />
+                <X className="h-5 w-5" />
               </button>
               {sidebar}
             </motion.aside>
@@ -116,7 +125,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           <button
             type="button"
             onClick={() => setMobileOpen(true)}
-            className="p-1.5 rounded-md hover:bg-muted transition-colors text-muted-foreground"
+            className="-ml-1.5 inline-flex h-10 w-10 items-center justify-center rounded-md hover:bg-muted transition-colors text-muted-foreground"
             aria-label="Open menu"
           >
             <Menu className="h-5 w-5" />
