@@ -7,15 +7,18 @@ export function TestimonialsSection() {
   const sectionRef = useRef<HTMLElement>(null)
 
   useEffect(() => {
+    const timers: ReturnType<typeof setTimeout>[] = []
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
           if (entry.isIntersecting) {
             const elements = entry.target.querySelectorAll(".fade-in-element")
             elements.forEach((element, index) => {
-              setTimeout(() => {
-                element.classList.add("animate-fade-in-up")
-              }, index * 300)
+              timers.push(
+                setTimeout(() => {
+                  element.classList.add("animate-fade-in-up")
+                }, index * 300),
+              )
             })
           }
         })
@@ -27,7 +30,10 @@ export function TestimonialsSection() {
       observer.observe(sectionRef.current)
     }
 
-    return () => observer.disconnect()
+    return () => {
+      observer.disconnect()
+      timers.forEach(clearTimeout)
+    }
   }, [])
 
   const testimonials = [

@@ -29,6 +29,7 @@ import {
   Users,
   X,
 } from "lucide-react";
+import { getInitials } from "@/lib/utils";
 
 const CATEGORIES: Array<{ value: BoardCategory; label: string; icon: React.ReactNode }> = [
   { value: "BOARD", label: "Board of Trustees", icon: <ShieldCheck className="h-3.5 w-3.5" /> },
@@ -405,7 +406,7 @@ export default function TeamPage() {
                         <img src={member.avatarUrl} alt={member.fullName} className="h-full w-full object-cover" />
                       ) : (
                         <span className="flex h-full w-full items-center justify-center text-xs font-bold text-muted-foreground">
-                          {member.fullName.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2)}
+                          {getInitials(member.fullName)}
                         </span>
                       )}
                     </div>
@@ -591,12 +592,7 @@ export default function TeamPage() {
 }
 
 function UserAvatar({ user }: { user: Pick<AdminUser, "fullName" | "profile"> }) {
-  const initials = user.fullName
-    .split(" ")
-    .map((n) => n[0])
-    .join("")
-    .toUpperCase()
-    .slice(0, 2);
+  const initials = getInitials(user.fullName);
   return (
     <div className="h-8 w-8 rounded-lg overflow-hidden bg-muted ring-1 ring-border shrink-0">
       {user.profile?.avatarUrl ? (

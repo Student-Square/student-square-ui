@@ -2,6 +2,7 @@
 
 import Header from "@/components/common/Header/Header";
 import Footer from "@/components/common/Footer/Footer";
+import PageHero from "@/components/common/PageHero";
 import { motion } from "motion/react";
 import { Calendar, ExternalLink } from "lucide-react";
 
@@ -38,24 +39,11 @@ export default function PressPage() {
       <Header />
 
       {/* Hero */}
-      <section className="relative mt-12 sm:mt-14 lg:mt-16 h-[35vh] sm:h-[45vh] lg:h-[55vh] min-h-[220px] w-full overflow-hidden">
-        <img
-          src="/images/brain-battle-prize-ceremony.jpg"
-          alt="Press"
-          className="absolute inset-0 h-full w-full object-cover"
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-black/20" />
-        <div className="absolute bottom-0 left-0 px-6 pb-10 sm:px-10 lg:px-16">
-          <motion.h1
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white"
-          >
-            Press
-          </motion.h1>
-        </div>
-      </section>
+      <PageHero
+        imageSrc="/images/brain-battle-prize-ceremony.jpg"
+        imageAlt="Press"
+        title="Press"
+      />
 
       {/* Content */}
       <section className="bg-background py-14 lg:py-20">

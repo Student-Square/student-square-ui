@@ -18,6 +18,7 @@ import {
   Save,
   User,
 } from "lucide-react";
+import { getInitials } from "@/lib/utils";
 
 export default function AdminProfilePage() {
   const user = useSelector(selectCurrentUser);
@@ -65,12 +66,7 @@ export default function AdminProfilePage() {
 
   if (!user) return null;
 
-  const initials = user.fullName
-    .split(" ")
-    .map((n) => n[0])
-    .join("")
-    .toUpperCase()
-    .slice(0, 2);
+  const initials = getInitials(user.fullName);
 
   /* ── handlers ── */
   const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {

@@ -11,6 +11,7 @@ import {
   Newspaper,
   Users,
 } from "lucide-react";
+import { getInitials } from "@/lib/utils";
 
 const QUICK_LINKS = [
   {
@@ -85,7 +86,7 @@ export default function AdminOverviewPage() {
               <img src={user.profile.avatarUrl} alt={user.fullName} className="h-full w-full object-cover" />
             ) : (
               <span className="flex h-full w-full items-center justify-center text-lg font-bold text-muted-foreground">
-                {user.fullName.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2)}
+                {getInitials(user.fullName)}
               </span>
             )}
           </div>

@@ -4,7 +4,6 @@ import { useEffect, useState, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useTheme } from "next-themes";
 import { useSelector } from "react-redux";
 import {
   selectAuthStatus,
@@ -12,6 +11,7 @@ import {
   selectUserRole,
 } from "@/redux/features/auth/authSlice";
 import { useLogoutMutation } from "@/redux/features/auth/authApi";
+import ThemeToggle from "@/components/common/ThemeToggle";
 import {
   Activity,
   ChevronDown,
@@ -23,11 +23,9 @@ import {
   LayoutGrid,
   LogOut,
   Menu,
-  Moon,
   Newspaper,
   Settings,
   ShieldCheck,
-  Sun,
   UserCircle,
   Users,
   X,
@@ -44,8 +42,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const role = useSelector(selectUserRole);
   const [logout] = useLogoutMutation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const { theme, setTheme, resolvedTheme } = useTheme();
-  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -56,13 +52,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       router.replace("/");
     }
   }, [status, role, router, pathname]);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  const toggleTheme = () => setTheme(resolvedTheme === "dark" ? "light" : "dark");
-  const currentTheme = mounted ? resolvedTheme : "light";
 
   if (status === "idle" || status === "loading") {
     return (
@@ -94,37 +83,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               priority
             />
           </Link>
-          {mounted && (
-            <button
-              onClick={toggleTheme}
-              className="flex items-center justify-center h-8 w-8 rounded-lg border border-border/50 bg-transparent text-foreground hover:bg-accent transition-colors"
-              aria-label={`Switch to ${currentTheme === "dark" ? "light" : "dark"} mode`}
-            >
-              <AnimatePresence mode="wait">
-                {currentTheme === "dark" ? (
-                  <motion.div
-                    key="moon"
-                    initial={{ rotate: -90, opacity: 0 }}
-                    animate={{ rotate: 0, opacity: 1 }}
-                    exit={{ rotate: 90, opacity: 0 }}
-                    transition={{ duration: 0.2 }}
-                  >
-                    <Moon className="h-3.5 w-3.5" />
-                  </motion.div>
-                ) : (
-                  <motion.div
-                    key="sun"
-                    initial={{ rotate: 90, opacity: 0 }}
-                    animate={{ rotate: 0, opacity: 1 }}
-                    exit={{ rotate: -90, opacity: 0 }}
-                    transition={{ duration: 0.2 }}
-                  >
-                    <Sun className="h-3.5 w-3.5" />
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </button>
-          )}
+          <ThemeToggle className="h-8 w-8" iconClassName="h-3.5 w-3.5" />
         </div>
 
         {/* Navigation */}
@@ -194,37 +153,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             </button>
             <Image src="/images/ss-logo.png" alt="Student Square" width={100} height={28} className="h-7 w-auto" />
           </div>
-          {mounted && (
-            <button
-              onClick={toggleTheme}
-              className="flex items-center justify-center h-9 w-9 rounded-lg border border-border/50 bg-transparent text-foreground hover:bg-accent transition-colors"
-              aria-label={`Switch to ${currentTheme === "dark" ? "light" : "dark"} mode`}
-            >
-              <AnimatePresence mode="wait">
-                {currentTheme === "dark" ? (
-                  <motion.div
-                    key="moon"
-                    initial={{ rotate: -90, opacity: 0 }}
-                    animate={{ rotate: 0, opacity: 1 }}
-                    exit={{ rotate: 90, opacity: 0 }}
-                    transition={{ duration: 0.2 }}
-                  >
-                    <Moon className="h-4 w-4" />
-                  </motion.div>
-                ) : (
-                  <motion.div
-                    key="sun"
-                    initial={{ rotate: 90, opacity: 0 }}
-                    animate={{ rotate: 0, opacity: 1 }}
-                    exit={{ rotate: -90, opacity: 0 }}
-                    transition={{ duration: 0.2 }}
-                  >
-                    <Sun className="h-4 w-4" />
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </button>
-          )}
+          <ThemeToggle className="h-9 w-9" />
         </header>
 
         {/* Mobile Menu Overlay */}
@@ -277,7 +206,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                     icon={<LayoutGrid className="h-4 w-4" />}
                     onNavigate={() => setMobileMenuOpen(false)}
                   />
-                  <NavGroupMobile
+                  <NavGroup
                     label="About Us"
                     icon={<FileText className="h-4 w-4" />}
                     items={[
@@ -286,7 +215,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                     ]}
                     onNavigate={() => setMobileMenuOpen(false)}
                   />
-                  <NavGroupMobile
+                  <NavGroup
                     label="Blog"
                     icon={<Newspaper className="h-4 w-4" />}
                     items={[
@@ -326,7 +255,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                   <p className="px-3 pt-3 pb-1 text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60">
                     My Account
                   </p>
-                  <NavGroupMobile
+                  <NavGroup
                     label="My Activities"
                     icon={<Activity className="h-4 w-4" />}
                     items={[
@@ -507,67 +436,12 @@ function NavGroup({
   label,
   icon,
   items,
-}: {
-  label: string;
-  icon: React.ReactNode;
-  items: Array<{ href: string; label: string }>;
-}) {
-  const pathname = usePathname();
-  const containsActive = items.some(
-    (i) => pathname === i.href || pathname.startsWith(i.href + "/")
-  );
-  const [open, setOpen] = useState(containsActive);
-
-  return (
-    <div>
-      <button
-        type="button"
-        onClick={() => setOpen((o) => !o)}
-        className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg transition-colors ${
-          containsActive
-            ? "bg-emerald-600/10 text-emerald-700 dark:text-emerald-400"
-            : "text-foreground hover:bg-muted hover:text-emerald-600"
-        }`}
-      >
-        {icon}
-        <span className="font-medium flex-1 text-left">{label}</span>
-        <ChevronDown
-          className={`h-3.5 w-3.5 transition-transform duration-200 ${open ? "rotate-180" : ""}`}
-        />
-      </button>
-      {open && (
-        <div className="mt-0.5 ml-5 border-l border-border pl-2 space-y-0.5">
-          {items.map((item) => {
-            const active = pathname === item.href || pathname.startsWith(item.href + "/");
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={`flex items-center gap-2 px-2 py-1.5 rounded-md text-xs transition-colors ${
-                  active
-                    ? "bg-emerald-600 text-white font-semibold"
-                    : "text-muted-foreground hover:text-emerald-600 hover:bg-muted"
-                }`}
-              >
-                {item.label}
-              </Link>
-            );
-          })}
-        </div>
-      )}
-    </div>
-  );
-}
-
-function NavGroupMobile({
-  label,
-  icon,
-  items,
   onNavigate,
 }: {
   label: string;
   icon: React.ReactNode;
   items: Array<{ href: string; label: string }>;
+  /** Called after a child link is clicked — used to close the mobile menu. */
   onNavigate?: () => void;
 }) {
   const pathname = usePathname();

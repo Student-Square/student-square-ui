@@ -4,7 +4,10 @@ import { useState } from "react";
 import Link from "next/link";
 import Header from "@/components/common/Header/Header";
 import Footer from "@/components/common/Footer/Footer";
+import PageHero from "@/components/common/PageHero";
+import Container from "@/components/common/Container";
 import { motion } from "motion/react";
+import { fadeInWhileInView } from "@/lib/motion";
 import { useGetBoardGroupsQuery, useGetEditablePageQuery } from "@/redux/features/content/contentApi";
 import type { ApiBoardAssignment } from "@/types/content";
 import { BriefcaseBusiness, ChevronLeft, ChevronRight, Lightbulb, Loader2, ShieldCheck, Users, type LucideIcon } from "lucide-react";
@@ -42,44 +45,47 @@ function SectionHeading({ title, center = true }: { title: string; center?: bool
   );
 }
 
-function GridCard({ member }: { member: ApiBoardAssignment }) {
+/**
+ * A single team member tile. `board` is the larger, emphasized style used for
+ * the Board of Trustees; `grid` is the compact style for everyone else.
+ */
+function MemberCard({
+  member,
+  variant = "grid",
+}: {
+  member: ApiBoardAssignment;
+  variant?: "board" | "grid";
+}) {
   const href = `/about/who-we-are/${member.slug ?? member.userId}`;
+  const isBoard = variant === "board";
 
   return (
     <Link href={href} className="group block text-center">
-      <div className="mb-3 aspect-square overflow-hidden rounded-lg bg-muted">
+      <div
+        className={`aspect-square overflow-hidden bg-muted ${
+          isBoard ? "mb-4 rounded-xl" : "mb-3 rounded-lg"
+        }`}
+      >
         <img
           src={member.avatarUrl ?? PLACEHOLDER_AVATAR}
           alt={member.fullName}
           className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
         />
       </div>
-      <p className="text-sm font-semibold leading-snug text-foreground transition-colors group-hover:text-emerald-600">
+      <p
+        className={`transition-colors ${
+          isBoard
+            ? "text-base font-bold text-emerald-600 group-hover:text-emerald-700"
+            : "text-sm font-semibold leading-snug text-foreground group-hover:text-emerald-600"
+        }`}
+      >
         {member.fullName}
       </p>
-      <p className="mt-0.5 text-xs uppercase tracking-wide text-muted-foreground">
-        {member.roleLabel}
-      </p>
-    </Link>
-  );
-}
-
-function BoardCard({ member }: { member: ApiBoardAssignment }) {
-  const href = `/about/who-we-are/${member.slug ?? member.userId}`;
-
-  return (
-    <Link href={href} className="group block text-center">
-      <div className="mb-4 aspect-square overflow-hidden rounded-xl bg-muted">
-        <img
-          src={member.avatarUrl ?? PLACEHOLDER_AVATAR}
-          alt={member.fullName}
-          className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-        />
-      </div>
-      <p className="text-base font-bold text-emerald-600 transition-colors group-hover:text-emerald-700">
-        {member.fullName}
-      </p>
-      <p className="mt-1 text-xs uppercase tracking-widest text-muted-foreground">
+      <p
+        className={`text-xs uppercase text-muted-foreground ${
+          isBoard ? "mt-1 tracking-widest" : "mt-0.5 tracking-wide"
+        }`}
+      >
         {member.roleLabel}
       </p>
     </Link>
@@ -173,21 +179,12 @@ function PaginatedSection({
   if (members.length === 0) return null;
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 16 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
-      viewport={{ once: true }}
-    >
+    <motion.div {...fadeInWhileInView}>
       <SectionHeading title={title} />
       <div className={`grid ${gridCols} gap-6`}>
-        {visible.map((m) =>
-          variant === "board" ? (
-            <BoardCard key={m.id} member={m} />
-          ) : (
-            <GridCard key={m.id} member={m} />
-          )
-        )}
+        {visible.map((m) => (
+          <MemberCard key={m.id} member={m} variant={variant} />
+        ))}
       </div>
       <Pagination
         page={page}
@@ -216,41 +213,18 @@ export default function WhoWeArePage() {
       <Header />
 
       {/* Hero */}
-      <section className="relative mt-12 sm:mt-14 lg:mt-16 h-[35vh] sm:h-[45vh] lg:h-[55vh] min-h-[220px] w-full overflow-hidden">
-        <img
-          src={bannerUrl}
-          alt={heroTitle}
-          className="absolute inset-0 h-full w-full object-cover"
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-black/20" />
-        <div className="absolute bottom-0 left-0 px-6 pb-10 sm:px-10 lg:px-16">
-          <motion.h1
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white"
-          >
-            {heroTitle}
-          </motion.h1>
-        </div>
-      </section>
+      <PageHero imageSrc={bannerUrl} imageAlt={heroTitle} title={heroTitle} />
 
       {/* Our People intro */}
       <section className="bg-background py-12 lg:py-16">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 2xl:max-w-[1600px] 3xl:max-w-[1800px] 4xl:max-w-[2000px]">
-          <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-            viewport={{ once: true }}
-            className="w-[90%] mx-auto"
-          >
+        <Container>
+          <motion.div {...fadeInWhileInView} className="w-[90%] mx-auto">
             <SectionHeading title="Our People" center={false} />
             <p className="text-base text-muted-foreground leading-relaxed">
               {ourPeopleBody}
             </p>
           </motion.div>
-        </div>
+        </Container>
       </section>
 
       {isLoading && (
@@ -267,7 +241,7 @@ export default function WhoWeArePage() {
           {/* Board of Trustees */}
           {groups.board.length > 0 && (
             <section className="bg-muted/30 py-14 lg:py-20">
-              <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 2xl:max-w-[1600px] 3xl:max-w-[1800px] 4xl:max-w-[2000px]">
+              <Container>
                 <div className="w-[90%] mx-auto">
                   <PaginatedSection
                     title="Board of Trustees"
@@ -276,14 +250,14 @@ export default function WhoWeArePage() {
                     variant="board"
                   />
                 </div>
-              </div>
+              </Container>
             </section>
           )}
 
           {/* Advisory Board */}
           {groups.advisory.length > 0 && (
             <section className="bg-background py-14 lg:py-20">
-              <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 2xl:max-w-[1600px] 3xl:max-w-[1800px] 4xl:max-w-[2000px]">
+              <Container>
                 <div className="w-[90%] mx-auto">
                   <PaginatedSection
                     title="Advisory Board"
@@ -291,14 +265,14 @@ export default function WhoWeArePage() {
                     perPage={5}
                   />
                 </div>
-              </div>
+              </Container>
             </section>
           )}
 
           {/* Leadership Team */}
           {groups.leadership.length > 0 && (
             <section className="bg-muted/30 py-14 lg:py-20">
-              <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 2xl:max-w-[1600px] 3xl:max-w-[1800px] 4xl:max-w-[2000px]">
+              <Container>
                 <div className="w-[90%] mx-auto">
                   <PaginatedSection
                     title="Leadership Team"
@@ -306,14 +280,14 @@ export default function WhoWeArePage() {
                     perPage={10}
                   />
                 </div>
-              </div>
+              </Container>
             </section>
           )}
 
           {/* Management Team */}
           {groups.management.length > 0 && (
             <section className="bg-background py-14 lg:py-20">
-              <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 2xl:max-w-[1600px] 3xl:max-w-[1800px] 4xl:max-w-[2000px]">
+              <Container>
                 <div className="w-[90%] mx-auto">
                   <PaginatedSection
                     title="Management Team"
@@ -321,7 +295,7 @@ export default function WhoWeArePage() {
                     perPage={10}
                   />
                 </div>
-              </div>
+              </Container>
             </section>
           )}
 

@@ -1,34 +1,13 @@
 "use client"
 
-import { useEffect, useRef, useState } from "react"
 import { motion } from "motion/react"
 import TextAnimate from "@/components/ui/text-animate"
-import FeatureGridPipeline from "./FeatureGridPipeline"
 import StarPopIn from "@/components/ui/star-pop-in"
 import ExpandableCards from "../../features/ExpandableCards/ExpandableCards"
 
 const StartSectionPipeline = () => {
-  const sectionRef = useRef<HTMLElement>(null)
-  const [isVisible, setIsVisible] = useState(false)
-
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          setIsVisible(true)
-        }
-      },
-      { threshold: 0.1, rootMargin: "0px 0px -100px 0px" },
-    )
-    if (sectionRef.current) observer.observe(sectionRef.current)
-    return () => {
-      if (sectionRef.current) observer.unobserve(sectionRef.current)
-    }
-  }, [])
-
   return (
     <section
-      ref={sectionRef}
       id="features"
       className="relative w-full py-10 sm:py-12 md:py-16 px-4 sm:px-6 md:px-8 overflow-hidden"
     >
@@ -66,7 +45,6 @@ const StartSectionPipeline = () => {
           </p>
         </motion.div>
 
-        {/* <FeatureGridPipeline /> */}
         <ExpandableCards/>
       </div>
     </section>

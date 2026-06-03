@@ -144,22 +144,24 @@ export default function BlogPage() {
           <div className="absolute -bottom-32 -left-16 w-72 h-72 rounded-full bg-emerald-600/10 dark:bg-emerald-400/10 blur-3xl" />
         </div>
 
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-12 py-12 sm:py-16 lg:py-20">
+        <div className="mx-auto w-full lg:w-4/5 px-4 sm:px-6 lg:px-8 py-8 sm:py-10 lg:py-14">
           <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
+            initial={{ opacity: 0, x: -10 }}
+            animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.5 }}
-            className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-100/80 dark:bg-emerald-900/40 border border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300 text-[11px] font-semibold uppercase tracking-wider mb-5"
+            className="flex items-center gap-2.5 mb-4 text-emerald-600 dark:text-emerald-400"
           >
-            <Sparkles className="h-3 w-3" />
-            Blog &amp; Stories
+            <span className="h-px w-8 bg-emerald-500" />
+            <span className="text-[11px] font-bold uppercase tracking-[0.22em]">
+              Blog &amp; Stories
+            </span>
           </motion.div>
 
           <motion.h1
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
-            className="text-3xl sm:text-4xl lg:text-5xl font-bold text-foreground tracking-tight max-w-3xl leading-tight"
+            className="text-2xl sm:text-3xl lg:text-4xl font-bold text-foreground tracking-tight max-w-3xl leading-[1.15] text-balance"
           >
             Insights, updates, and stories from the{" "}
             <span className="bg-gradient-to-r from-emerald-600 to-emerald-400 bg-clip-text text-transparent">
@@ -172,81 +174,27 @@ export default function BlogPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.1 }}
-            className="mt-4 text-sm sm:text-base text-muted-foreground max-w-2xl"
+            className="mt-4 text-sm sm:text-base text-muted-foreground leading-relaxed max-w-2xl"
           >
             Read about our programs, the people who make them possible, and the change we are
             building together — one student, one community at a time.
           </motion.p>
-
-          {/* Category pills */}
-          <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.2 }}
-            className="mt-8 flex flex-wrap gap-2"
-          >
-            <button
-              onClick={() => setActiveCategory("all")}
-              className={`inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border text-xs sm:text-sm font-semibold transition-all ${
-                activeCategory === "all"
-                  ? "bg-emerald-600 border-emerald-600 text-white shadow-sm shadow-emerald-600/30"
-                  : "bg-card border-border text-foreground hover:border-emerald-500/60 hover:text-emerald-600"
-              }`}
-            >
-              All
-              {meta && (
-                <span
-                  className={`text-[10px] px-1.5 py-0.5 rounded-full ${
-                    activeCategory === "all"
-                      ? "bg-white/20 text-white"
-                      : "bg-muted text-muted-foreground"
-                  }`}
-                >
-                  {meta.total}
-                </span>
-              )}
-            </button>
-
-            {categories.map((cat) => {
-              const isActive = activeCategory === cat.slug;
-              return (
-                <button
-                  key={cat.id}
-                  onClick={() => setActiveCategory(cat.slug)}
-                  className={`inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border text-xs sm:text-sm font-semibold transition-all ${
-                    isActive
-                      ? "bg-emerald-600 border-emerald-600 text-white shadow-sm shadow-emerald-600/30"
-                      : "bg-card border-border text-foreground hover:border-emerald-500/60 hover:text-emerald-600"
-                  }`}
-                >
-                  {cat.name}
-                  <span
-                    className={`text-[10px] px-1.5 py-0.5 rounded-full ${
-                      isActive
-                        ? "bg-white/20 text-white"
-                        : "bg-muted text-muted-foreground"
-                    }`}
-                  >
-                    {cat._count.posts}
-                  </span>
-                </button>
-              );
-            })}
-          </motion.div>
         </div>
       </section>
 
       {/* Featured */}
       {featuredPost && !isBusy && (
-        <section className="py-10 sm:py-14 lg:py-16">
-          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-12">
-            <div className="flex items-baseline justify-between mb-5 sm:mb-6 gap-3 flex-wrap">
-              <h2 className="text-xs font-bold uppercase tracking-widest text-emerald-600">
+        <section className="py-6 sm:py-8">
+          <div className="mx-auto w-full lg:w-4/5 px-4 sm:px-6 lg:px-8">
+            <div className="flex items-center gap-2.5 mb-4 text-emerald-600">
+              <Sparkles className="h-3.5 w-3.5" />
+              <h2 className="text-xs font-bold uppercase tracking-[0.18em]">
                 Featured in{" "}
                 {activeCategory === "all"
                   ? "All Stories"
                   : (categoriesData?.find((c) => c.slug === activeCategory)?.name ?? activeCategory)}
               </h2>
+              <span className="h-px flex-1 bg-gradient-to-r from-emerald-500/40 to-transparent" />
             </div>
 
             <motion.div
@@ -257,9 +205,9 @@ export default function BlogPage() {
             >
               <Link
                 href={`/blog/${featuredPost.slug}`}
-                className="group grid grid-cols-1 lg:grid-cols-5 gap-0 lg:gap-8 bg-card border border-border rounded-2xl overflow-hidden hover:shadow-xl hover:shadow-emerald-500/5 hover:border-emerald-500/40 transition-all duration-300"
+                className="group grid grid-cols-1 lg:grid-cols-2 gap-0 lg:gap-8 bg-card border border-border rounded-2xl overflow-hidden hover:shadow-xl hover:shadow-emerald-500/10 hover:border-emerald-500/40 hover:-translate-y-0.5 transition-all duration-300"
               >
-                <div className="lg:col-span-3 aspect-[16/10] lg:aspect-auto overflow-hidden bg-muted">
+                <div className="relative aspect-[16/10] lg:aspect-auto lg:min-h-[360px] overflow-hidden bg-muted">
                   {featuredPost.coverImage ? (
                     <img
                       src={featuredPost.coverImage.url}
@@ -271,8 +219,9 @@ export default function BlogPage() {
                       <Sparkles className="h-16 w-16 text-emerald-300 dark:text-emerald-700" />
                     </div>
                   )}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 lg:hidden" />
                 </div>
-                <div className="lg:col-span-2 p-5 sm:p-6 lg:p-8 flex flex-col justify-center">
+                <div className="p-5 sm:p-6 lg:p-8 flex flex-col justify-center">
                   <div className="flex flex-wrap items-center gap-2 mb-4">
                     <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded-full bg-emerald-600 text-white">
                       {featuredPost.category.name}
@@ -286,7 +235,7 @@ export default function BlogPage() {
                       </span>
                     ))}
                   </div>
-                  <h3 className="text-xl sm:text-2xl lg:text-3xl font-bold text-foreground leading-tight group-hover:text-emerald-600 transition-colors">
+                  <h3 className="text-xl sm:text-2xl lg:text-[1.75rem] font-bold text-foreground leading-tight tracking-tight group-hover:text-emerald-600 transition-colors line-clamp-3">
                     {featuredPost.title}
                   </h3>
                   <p className="mt-3 text-sm text-muted-foreground leading-relaxed line-clamp-3">
@@ -331,10 +280,10 @@ export default function BlogPage() {
    
 
       {/* Controls + grid */}
-      <section className="pb-16 lg:pb-24">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-12">
+      <section className="pt-2 pb-16 lg:pb-24">
+        <div className="mx-auto w-full lg:w-4/5 px-4 sm:px-6 lg:px-8">
           {/* Toolbar */}
-          <div className="flex flex-col lg:flex-row lg:items-center gap-3 lg:gap-4 mb-6">
+          <div className="flex flex-col lg:flex-row lg:items-center gap-3 lg:gap-4 mb-4">
             <div className="relative flex-1 min-w-0 max-w-full lg:max-w-md">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <input
@@ -392,7 +341,7 @@ export default function BlogPage() {
 
 
           {/* Results count */}
-          <div className="flex items-baseline justify-between gap-3 flex-wrap mb-6">
+          <div className="flex items-baseline justify-between gap-3 flex-wrap mb-4">
             <h2 className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
               {activeCategory === "all"
                 ? "Latest Articles"
@@ -553,7 +502,7 @@ export default function BlogPage() {
 
    {/* Real Life Stories promo */}
       <section className="pb-10 sm:pb-14 lg:pb-16">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-12">
+        <div className="mx-auto w-full lg:w-4/5 px-4 sm:px-6 lg:px-8">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
