@@ -2,11 +2,9 @@
 
 import { Cormorant_Garamond, Outfit } from "next/font/google";
 import { useEffect, useMemo, useState } from "react";
-import { closestAmountKey, impacts, oneTimeInlineImpacts } from "./constants";
-import type { Frequency } from "./types";
+import { closestAmountKey, impacts } from "./constants";
 import styles from "./DonateExperience.module.css";
 import DonateHeroSection from "./sections/DonateHeroSection";
-import DonateInlineSection from "./sections/DonateInlineSection";
 import DonatePaymentSection from "./sections/DonatePaymentSection";
 import DonateProjectsSection from "./sections/DonateProjectsSection";
 import DonateTransformSection from "./sections/DonateTransformSection";
@@ -26,11 +24,8 @@ const outfit = Outfit({
 });
 
 export default function DonateExperience() {
-  const [currentFreq, setCurrentFreq] = useState<Frequency>("monthly");
   const [currentAmt, setCurrentAmt] = useState<number>(500);
-  const [currentAmt2, setCurrentAmt2] = useState<number>(500);
   const [heroCustomValue, setHeroCustomValue] = useState("");
-  const [inlineCustomValue, setInlineCustomValue] = useState("");
   const [openAccordionIndex, setOpenAccordionIndex] = useState<number | null>(null);
 
   useEffect(() => {
@@ -55,13 +50,8 @@ export default function DonateExperience() {
 
   const heroImpact = useMemo(() => {
     const key = closestAmountKey(currentAmt);
-    return impacts[currentFreq][key];
-  }, [currentAmt, currentFreq]);
-
-  const inlineImpact = useMemo(() => {
-    const key = closestAmountKey(currentAmt2);
-    return oneTimeInlineImpacts[key] ?? `Your BDT ${currentAmt2.toLocaleString()} donation makes a meaningful difference.`;
-  }, [currentAmt2]);
+    return impacts.monthly[key];
+  }, [currentAmt]);
 
   const handleHeroCustomAmount = (value: string) => {
     setHeroCustomValue(value);
@@ -71,22 +61,9 @@ export default function DonateExperience() {
     }
   };
 
-  const handleInlineCustomAmount = (value: string) => {
-    setInlineCustomValue(value);
-    const parsedValue = Number.parseInt(value, 10);
-    if (Number.isFinite(parsedValue) && parsedValue > 0) {
-      setCurrentAmt2(parsedValue);
-    }
-  };
-
   const handleHeroAmountPick = (amount: number) => {
     setCurrentAmt(amount);
     setHeroCustomValue("");
-  };
-
-  const handleInlineAmountPick = (amount: number) => {
-    setCurrentAmt2(amount);
-    setInlineCustomValue("");
   };
 
   const handleToggleAccordion = (index: number) => {
@@ -96,11 +73,9 @@ export default function DonateExperience() {
   return (
     <main className={`${styles.page} ${cormorant.variable} ${outfit.variable}`}>
       <DonateHeroSection
-        currentFreq={currentFreq}
         currentAmt={currentAmt}
         heroCustomValue={heroCustomValue}
         heroImpact={heroImpact}
-        onFreqChange={setCurrentFreq}
         onAmountPick={handleHeroAmountPick}
         onCustomAmountChange={handleHeroCustomAmount}
       />
@@ -108,13 +83,6 @@ export default function DonateExperience() {
       <DonateProjectsSection />
       <DonateUtilizationSection openAccordionIndex={openAccordionIndex} onToggleAccordion={handleToggleAccordion} />
       <DonateTransformSection />
-      <DonateInlineSection
-        currentAmt2={currentAmt2}
-        inlineCustomValue={inlineCustomValue}
-        inlineImpact={inlineImpact}
-        onAmountPick={handleInlineAmountPick}
-        onCustomAmountChange={handleInlineCustomAmount}
-      />
     </main>
   );
 }

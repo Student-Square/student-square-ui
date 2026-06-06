@@ -219,7 +219,6 @@ function SidebarContent({
           href="/dashboard/donation"
           label="Donation"
           icon={<Heart className="h-4 w-4" />}
-          badge="Soon"
         />
       </nav>
 
