@@ -1,14 +1,16 @@
-﻿"use client";
+"use client";
 
 import { ProgressiveBlur } from "@/components/ui/progressive-blur";
 import { AnimatePresence, motion } from "motion/react";
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
-import { useMemo, useState, useEffect } from "react";
-import { getActiveCardsForSlot } from "@/data/cards";
+import { useState, useEffect } from "react";
+import { useGetCardsQuery } from "@/redux/features/content/contentApi";
+import type { ApiFeatureCard } from "@/types/content";
 import { useMediaQuery } from "@/hooks/use-media-query";
 
+const PLACEHOLDER_IMAGE = "/images/student-square-school-session.jpg";
 
 // Animated Progress Indicator
 const ProgressIndicator = ({ duration = 7000 }: { duration?: number }) => {
@@ -44,20 +46,23 @@ const ProgressIndicator = ({ duration = 7000 }: { duration?: number }) => {
 const FeatureCard = ({
   image,
   title,
-  titleBn,
+  subtitle,
   category,
   href,
   isMain = false,
   delay = 0,
 }: {
-  image: string;
+  image: string | null;
   title: string;
-  titleBn?: string;
+  /** Secondary line under the title on the main card (summary, with titleBn fallback). */
+  subtitle?: string | null;
   category: string;
   href?: string;
   isMain?: boolean;
   delay?: number;
-}) => (
+}) => {
+  const resolvedImage = image ?? PLACEHOLDER_IMAGE;
+  return (
   <motion.div
     initial={{ opacity: 0, y: 30 }}
     animate={{ opacity: 1, y: 0 }}
@@ -70,7 +75,7 @@ const FeatureCard = ({
     <div className="absolute inset-0">
       <AnimatePresence mode="wait">
         <motion.div
-          key={image}
+          key={resolvedImage}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
@@ -80,7 +85,7 @@ const FeatureCard = ({
           {isMain ? (
             <div className="absolute inset-0 [mask-image:linear-gradient(to_bottom,transparent_0%,black_70%,black_100%)]">
               <Image
-                src={image || "/placeholder.svg"}
+                src={resolvedImage}
                 alt={title}
                 fill
                 className="object-cover transition-transform duration-[1200ms] ease-[cubic-bezier(0.25,0.46,0.45,0.94)] group-hover:scale-[1.03]"
@@ -94,7 +99,7 @@ const FeatureCard = ({
             </div>
           ) : (
             <Image
-              src={image || "/placeholder.svg"}
+              src={resolvedImage}
               alt={title}
               fill
               className="object-cover transition-transform duration-[1200ms] ease-[cubic-bezier(0.25,0.46,0.45,0.94)] group-hover:scale-[1.03]"
@@ -114,7 +119,7 @@ const FeatureCard = ({
       blurIntensity={1.5}
       blurLayers={4}
     />
-    
+
     <div className="absolute inset-x-0 bottom-0 z-20 p-4 sm:p-5 md:p-6">
       <motion.span
         initial={{ opacity: 0, y: 10 }}
@@ -129,24 +134,23 @@ const FeatureCard = ({
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: delay + 0.3 }}
         className={`font-semibold leading-tight text-white ${
-          isMain 
-            ? "text-xs sm:text-xl md:text-2xl lg:text-3xl" 
+          isMain
+            ? "text-xs sm:text-xl md:text-2xl lg:text-3xl"
             : "text-[10px] sm:text-base md:text-lg lg:text-xl"
         }`}
       >
         {title}
       </motion.h3>
-      {isMain && titleBn && (
+      {isMain && subtitle && (
         <motion.p
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: delay + 0.4 }}
           className="mt-1 text-[9px] sm:text-xs md:text-sm text-white/75 leading-relaxed line-clamp-2"
         >
-          {titleBn}
+          {subtitle}
         </motion.p>
       )}
-
     </div>
 
     {isMain && <ProgressIndicator duration={7000} />}
@@ -170,19 +174,35 @@ const FeatureCard = ({
       />
     )}
   </motion.div>
+  );
+};
+
+// Skeleton card — preserves the hero layout while data is loading
+const SkeletonCard = ({ isMain = false }: { isMain?: boolean }) => (
+  <div
+    className={`relative overflow-hidden rounded-2xl sm:rounded-3xl bg-muted/60 animate-pulse ${
+      isMain
+        ? "h-[220px] sm:h-[260px] md:h-[300px] lg:h-full"
+        : "h-[120px] sm:h-[150px] md:h-[200px] lg:h-[240px]"
+    }`}
+  />
 );
 
 const HeroCards = () => {
-  // Resolve published cards per slot (will become an API call in phase 2).
-  const mainCards = useMemo(() => getActiveCardsForSlot("main_carousel"), []);
-  const secondaryFeature = useMemo(() => getActiveCardsForSlot("secondary")[0], []);
-  const thirdFeature = useMemo(() => getActiveCardsForSlot("third")[0], []);
-  const blog1 = useMemo(() => getActiveCardsForSlot("blog_1")[0], []);
-  const blog2 = useMemo(() => getActiveCardsForSlot("blog_2")[0], []);
+  // Fetch all cards; RTK Query deduplicates requests automatically.
+  const { data: allCards = [], isLoading, isError } = useGetCardsQuery();
+
+  const mainCards     = allCards.filter((c: ApiFeatureCard) => c.slot === "main_carousel");
+  const secondary     = allCards.find((c: ApiFeatureCard) => c.slot === "secondary");
+  const third         = allCards.find((c: ApiFeatureCard) => c.slot === "third");
+  const blog1         = allCards.find((c: ApiFeatureCard) => c.slot === "blog_1");
+  const blog2         = allCards.find((c: ApiFeatureCard) => c.slot === "blog_2");
 
   const [currentMainIndex, setCurrentMainIndex] = useState(0);
   const isMobile = useMediaQuery("(max-width: 639px)");
 
+  // Rotate the main carousel. Declared BEFORE any early returns so the hook
+  // order is identical on every render (Rules of Hooks).
   useEffect(() => {
     if (mainCards.length <= 1) return;
     const mainInterval = setInterval(() => {
@@ -190,6 +210,43 @@ const HeroCards = () => {
     }, 7000);
     return () => clearInterval(mainInterval);
   }, [mainCards.length]);
+
+  // Loading skeleton — keeps the page from jumping when data arrives
+  if (isLoading) {
+    return (
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 2xl:max-w-[1600px] 3xl:max-w-[1800px] 4xl:max-w-[2000px]">
+        <div className="grid grid-cols-2 gap-3 sm:gap-4 md:gap-5 lg:grid-cols-3 lg:grid-rows-2 lg:gap-6">
+          <div className="col-span-2 lg:col-span-2 lg:row-span-2">
+            <SkeletonCard isMain />
+          </div>
+          <div className="lg:col-span-1"><SkeletonCard /></div>
+          <div className="lg:col-span-1"><SkeletonCard /></div>
+        </div>
+        {!isMobile && (
+          <div className="mt-3 grid gap-3 sm:mt-4 sm:gap-4 md:mt-5 md:grid-cols-2 md:gap-5 lg:mt-6 lg:gap-6">
+            <SkeletonCard />
+            <SkeletonCard />
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  // Backend down or empty result — fail open with a quiet placeholder
+  if (isError || allCards.length === 0) {
+    return (
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="rounded-2xl border border-dashed border-border bg-card/40 p-10 text-center">
+          <p className="text-sm font-semibold text-foreground">
+            Featured content will be back shortly.
+          </p>
+          <p className="mt-1 text-xs text-muted-foreground">
+            We&apos;re refreshing what&apos;s on display. Check back in a moment.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   const mainFeature = mainCards[currentMainIndex];
 
@@ -210,7 +267,7 @@ const HeroCards = () => {
               <FeatureCard
                 image={mainFeature.image}
                 title={mainFeature.title}
-                titleBn={mainFeature.titleBn}
+                subtitle={mainFeature.summary ?? mainFeature.titleBn}
                 category={mainFeature.category}
                 href={mainFeature.href}
                 isMain
@@ -220,26 +277,26 @@ const HeroCards = () => {
         )}
 
         {/* Secondary Feature */}
-        {secondaryFeature && (
+        {secondary && (
           <div className="lg:col-span-1">
             <FeatureCard
-              image={secondaryFeature.image}
-              title={secondaryFeature.title}
-              category={secondaryFeature.category}
-              href={secondaryFeature.href}
+              image={secondary.image}
+              title={secondary.title}
+              category={secondary.category}
+              href={secondary.href}
               delay={0.1}
             />
           </div>
         )}
 
         {/* Third Feature */}
-        {thirdFeature && (
+        {third && (
           <div className="lg:col-span-1">
             <FeatureCard
-              image={thirdFeature.image}
-              title={thirdFeature.title}
-              category={thirdFeature.category}
-              href={thirdFeature.href}
+              image={third.image}
+              title={third.title}
+              category={third.category}
+              href={third.href}
               delay={0.2}
             />
           </div>

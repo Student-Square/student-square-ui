@@ -2,7 +2,10 @@
 
 import Header from "@/components/common/Header/Header";
 import Footer from "@/components/common/Footer/Footer";
+import PageHero from "@/components/common/PageHero";
+import Container from "@/components/common/Container";
 import { motion } from "motion/react";
+import { fadeInWhileInView } from "@/lib/motion";
 import { ArrowRight } from "lucide-react";
 import Link from "next/link";
 
@@ -57,34 +60,17 @@ export default function AboutPage() {
       <Header />
 
       {/* Hero — starts below the fixed navbar */}
-      <section className="relative mt-12 sm:mt-14 lg:mt-16 h-[50vh] min-h-[280px] w-full overflow-hidden">
-        <img
-          src="/images/student-square-school-session.jpg"
-          alt="About Us"
-          className="absolute inset-0 h-full w-full object-cover"
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-black/20" />
-        <div className="absolute bottom-0 left-0 px-6 pb-10 sm:px-10 lg:px-16">
-          <motion.h1
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white"
-          >
-            About Us
-          </motion.h1>
-        </div>
-      </section>
+      <PageHero
+        imageSrc="/images/student-square-school-session.jpg"
+        imageAlt="About Us"
+        title="About Us"
+        heightClassName="h-[30vh] sm:h-[40vh] lg:h-[50vh] min-h-[200px]"
+      />
 
       {/* Intro */}
       <section className="bg-background py-12 lg:py-16">
-        <div className="mx-auto max-w-4xl px-6 sm:px-10 lg:px-8 text-center">
-          <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-            viewport={{ once: true }}
-          >
+        <Container className="text-center">
+          <motion.div {...fadeInWhileInView}>
             <p className="text-base text-muted-foreground leading-relaxed max-w-2xl mx-auto">
               Student Square is a non-profit organization devoted to building an inclusive society where every
               individual's potential is nurtured and developed, free from discrimination.
@@ -95,18 +81,13 @@ export default function AboutPage() {
               </button>
             </Link>
           </motion.div>
-        </div>
+        </Container>
       </section>
 
       {/* Featured card */}
       <section className="bg-background pb-10">
-        <div className="mx-auto max-w-4xl px-6 sm:px-10 lg:px-8">
-          <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-            viewport={{ once: true }}
-          >
+        <Container>
+          <motion.div {...fadeInWhileInView}>
             <Link href="/about/mission-vision">
               <div className="group relative overflow-hidden rounded-2xl border border-border cursor-pointer hover:border-emerald-500/50 transition-all duration-300">
                 <div className="relative h-56 sm:h-64 overflow-hidden">
@@ -126,12 +107,12 @@ export default function AboutPage() {
               </div>
             </Link>
           </motion.div>
-        </div>
+        </Container>
       </section>
 
       {/* Card Grid */}
       <section className="bg-background py-10 pb-20">
-        <div className="mx-auto max-w-4xl px-6 sm:px-10 lg:px-8">
+        <Container>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
             {aboutCards.map((card, index) => (
               <motion.div
@@ -164,7 +145,7 @@ export default function AboutPage() {
               </motion.div>
             ))}
           </div>
-        </div>
+        </Container>
       </section>
 
       <Footer />

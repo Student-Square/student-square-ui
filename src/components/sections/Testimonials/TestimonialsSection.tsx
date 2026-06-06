@@ -7,15 +7,18 @@ export function TestimonialsSection() {
   const sectionRef = useRef<HTMLElement>(null)
 
   useEffect(() => {
+    const timers: ReturnType<typeof setTimeout>[] = []
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
           if (entry.isIntersecting) {
             const elements = entry.target.querySelectorAll(".fade-in-element")
             elements.forEach((element, index) => {
-              setTimeout(() => {
-                element.classList.add("animate-fade-in-up")
-              }, index * 300)
+              timers.push(
+                setTimeout(() => {
+                  element.classList.add("animate-fade-in-up")
+                }, index * 300),
+              )
             })
           }
         })
@@ -27,7 +30,10 @@ export function TestimonialsSection() {
       observer.observe(sectionRef.current)
     }
 
-    return () => observer.disconnect()
+    return () => {
+      observer.disconnect()
+      timers.forEach(clearTimeout)
+    }
   }, [])
 
   const testimonials = [
@@ -105,13 +111,13 @@ export function TestimonialsSection() {
             Success Stories
             <div className="w-8 h-px bg-primary/50" />
           </div>
-          <h2 className="fade-in-element opacity-0 translate-y-8 transition-all duration-1000 ease-out font-heading text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-light text-foreground mb-6 tracking-tight text-balance">
+          <h2 className="fade-in-element opacity-0 translate-y-8 transition-all duration-1000 ease-out font-heading text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-light text-foreground mb-6 tracking-tight text-balance">
             The students we{" "}
             <span className="font-medium italic bg-gradient-to-r from-green-600 to-green-500 bg-clip-text text-transparent dark:from-green-400 dark:to-green-500">
               empower
             </span>
           </h2>
-          <p className="fade-in-element opacity-0 translate-y-8 transition-all duration-1000 ease-out text-sm sm:text-base md:text-base text-muted-foreground max-w-2xl mx-auto leading-relaxed">
+          <p className="fade-in-element opacity-0 translate-y-8 transition-all duration-1000 ease-out text-base sm:text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
             Discover how students across Ireland are transforming their academic journey with our counselling, advocacy, and wellbeing services
           </p>
         </div>

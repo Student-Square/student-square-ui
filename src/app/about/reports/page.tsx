@@ -2,6 +2,7 @@
 
 import Header from "@/components/common/Header/Header";
 import Footer from "@/components/common/Footer/Footer";
+import PageHero from "@/components/common/PageHero";
 import { motion } from "motion/react";
 import { Download, FileText } from "lucide-react";
 
@@ -42,24 +43,11 @@ export default function ReportsPage() {
       <Header />
 
       {/* Hero */}
-      <section className="relative mt-12 sm:mt-14 lg:mt-16 h-[55vh] min-h-[320px] w-full overflow-hidden">
-        <img
-          src="/images/student-square-one-minute-investment-project.jpg"
-          alt="Annual Reports & Financials"
-          className="absolute inset-0 h-full w-full object-cover"
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-black/20" />
-        <div className="absolute bottom-0 left-0 px-6 pb-10 sm:px-10 lg:px-16">
-          <motion.h1
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white"
-          >
-            Annual Reports &amp; Financials
-          </motion.h1>
-        </div>
-      </section>
+      <PageHero
+        imageSrc="/images/student-square-one-minute-investment-project.jpg"
+        imageAlt="Annual Reports & Financials"
+        title="Annual Reports & Financials"
+      />
 
       {/* Content */}
       <section className="bg-background py-14 lg:py-20">

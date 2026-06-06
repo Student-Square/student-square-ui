@@ -105,6 +105,7 @@ const menuData: Menu[] = [
   {
     id: 3,
     title: "Blog",
+    path: "/blog",
     newTab: false,
     submenu: [
       {
@@ -123,38 +124,38 @@ const menuData: Menu[] = [
         submenu: [
           {
             id: 321,
-            title: "Parenting",
-            path: "/blog/education-career/parenting",
-            newTab: false,
-            icon: Users,
-          },
-          {
-            id: 322,
-            title: "Self-Development",
-            path: "/blog/education-career/self-development",
-            newTab: false,
-            icon: Target,
-          },
-          {
-            id: 323,
             title: "Career",
             path: "/blog/education-career/career",
             newTab: false,
             icon: Briefcase,
           },
           {
-            id: 324,
-            title: "Social Issues",
-            path: "/blog/education-career/social-issues",
-            newTab: false,
-            icon: Globe,
-          },
-          {
-            id: 325,
+            id: 322,
             title: "Higher Study",
             path: "/blog/education-career/higher-study",
             newTab: false,
             icon: BookOpen,
+          },
+          {
+            id: 323,
+            title: "Self-Development",
+            path: "/blog/education-career/self-development",
+            newTab: false,
+            icon: Target,
+          },
+          {
+            id: 324,
+            title: "Parenting",
+            path: "/blog/education-career/parenting",
+            newTab: false,
+            icon: Users,
+          },
+          {
+            id: 325,
+            title: "Social Issues",
+            path: "/blog/education-career/social-issues",
+            newTab: false,
+            icon: Globe,
           },
           {
             id: 326,

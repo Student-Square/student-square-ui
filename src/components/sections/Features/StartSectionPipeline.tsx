@@ -1,34 +1,13 @@
 "use client"
 
-import { useEffect, useRef, useState } from "react"
 import { motion } from "motion/react"
 import TextAnimate from "@/components/ui/text-animate"
-import FeatureGridPipeline from "./FeatureGridPipeline"
 import StarPopIn from "@/components/ui/star-pop-in"
 import ExpandableCards from "../../features/ExpandableCards/ExpandableCards"
 
 const StartSectionPipeline = () => {
-  const sectionRef = useRef<HTMLElement>(null)
-  const [isVisible, setIsVisible] = useState(false)
-
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          setIsVisible(true)
-        }
-      },
-      { threshold: 0.1, rootMargin: "0px 0px -100px 0px" },
-    )
-    if (sectionRef.current) observer.observe(sectionRef.current)
-    return () => {
-      if (sectionRef.current) observer.unobserve(sectionRef.current)
-    }
-  }, [])
-
   return (
     <section
-      ref={sectionRef}
       id="features"
       className="relative w-full py-10 sm:py-12 md:py-16 px-4 sm:px-6 md:px-8 overflow-hidden"
     >
@@ -44,7 +23,7 @@ const StartSectionPipeline = () => {
           <div className="inline-flex items-center px-3 sm:px-4 py-1.5 sm:py-2 rounded-full bg-emerald-500/10 border border-emerald-500/30 backdrop-blur-sm text-emerald-700 dark:text-emerald-300 text-xs sm:text-sm font-medium mb-4 sm:mb-6">
             ✨ Student Square — What We Do
           </div>
-          <h2 className="font-heading text-2xl sm:text-3xl md:text-3xl lg:text-4xl xl:text-5xl font-bold text-balance text-foreground mb-4 sm:mb-6 leading-tight">
+          <h2 className="font-heading text-3xl sm:text-4xl md:text-4xl lg:text-5xl xl:text-6xl font-bold tracking-[0.02em] text-balance text-foreground mb-4 sm:mb-6 leading-tight">
             <span className="bg-clip-text text-transparent bg-gradient-to-b from-foreground to-muted-foreground">
               Your Changes
             </span>
@@ -66,7 +45,6 @@ const StartSectionPipeline = () => {
           </p>
         </motion.div>
 
-        {/* <FeatureGridPipeline /> */}
         <ExpandableCards/>
       </div>
     </section>

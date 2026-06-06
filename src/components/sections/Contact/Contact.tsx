@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-import { useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { motion } from "motion/react"
 import { MapPin, Phone, Send } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -13,12 +13,16 @@ export default function Contact() {
   const [formState, setFormState] = useState<"idle" | "submitting" | "sent">("idle")
   const [termsAccepted, setTermsAccepted] = useState(false)
   const [weeklyUpdates, setWeeklyUpdates] = useState(false)
+  const submitTimer = useRef<ReturnType<typeof setTimeout>>(undefined)
+
+  // Clear any pending submit timer if the component unmounts mid-submission.
+  useEffect(() => () => clearTimeout(submitTimer.current), [])
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (!termsAccepted) return
     setFormState("submitting")
-    setTimeout(() => setFormState("sent"), 1500)
+    submitTimer.current = setTimeout(() => setFormState("sent"), 1500)
   }
 
   const mapEmbedUrl =
@@ -38,7 +42,7 @@ export default function Contact() {
           >
             {/* Contact Info */}
             <div>
-              <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-foreground mb-3 sm:mb-6">Get in Touch</h2>
+              <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-[0.02em] text-foreground mb-3 sm:mb-6">Get in Touch</h2>
               <p className="text-sm sm:text-base md:text-lg text-muted-foreground font-light leading-relaxed max-w-md mb-6">
                 Connect with our strategic investment team to discuss ventures, partnerships, or institutional
                 inquiries.

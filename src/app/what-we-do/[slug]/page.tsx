@@ -41,7 +41,7 @@ export default function ServicePage() {
           transition={{ duration: 0.6 }}
           className="relative left-1/2 w-screen -translate-x-1/2"
         >
-          <div className="relative h-[40vh] sm:h-[50vh] md:h-[55vh] lg:h-[65vh] xl:h-[70vh] min-h-[260px] max-h-[700px] overflow-hidden bg-muted">
+          <div className="relative h-[30vh] sm:h-[40vh] md:h-[50vh] lg:h-[60vh] xl:h-[70vh] min-h-[200px] max-h-[700px] overflow-hidden bg-muted">
             <img
               src={service.heroImage}
               alt={service.title}

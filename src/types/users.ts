@@ -1,0 +1,51 @@
+import type { UserRole, UserStatus } from "@/types/auth";
+
+export type AdminUser = {
+  id: string;
+  slug: string | null;
+  email: string;
+  fullName: string;
+  role: UserRole;
+  status: UserStatus;
+  emailVerifiedAt: string | null;
+  lastLoginAt: string | null;
+  createdAt: string;
+  profile: {
+    fullNameBn: string | null;
+    avatarUrl: string | null;
+    bio: string | null;
+  } | null;
+};
+
+export type AdminCreateUserInput = {
+  email: string;
+  fullName: string;
+  fullNameBn?: string;
+  password: string;
+  role?: UserRole;
+};
+
+export type AdminUpdateUserInput = Partial<
+  Pick<AdminUser, "fullName" | "slug" | "role" | "status"> & {
+    fullNameBn: string | null;
+    bio: string | null;
+    avatarUrl: string | null;
+  }
+>;
+
+export type AdminUserListParams = {
+  q?: string;
+  role?: UserRole;
+  status?: UserStatus;
+  verifiedOnly?: boolean;
+  page?: number;
+  limit?: number;
+};
+
+export type PaginatedUsers = {
+  data: AdminUser[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+};
