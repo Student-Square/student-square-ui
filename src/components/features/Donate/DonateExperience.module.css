@@ -159,7 +159,7 @@
   margin: 0 auto;
   padding: 0 1rem;
   display: grid;
-  grid-template-columns: 1fr 460px;
+  grid-template-columns: 1fr 540px;
   align-items: start;
   gap: 0;
 }
@@ -306,7 +306,7 @@
   box-shadow: var(--shadow-lg);
   overflow: hidden;
   width: 100%;
-  max-width: 440px;
+  max-width: 520px;
 }
 
 .cardHeader {
@@ -491,6 +491,56 @@
 
 .donorFieldFull {
   grid-column: 1 / -1;
+}
+
+.giftGroup {
+  margin-bottom: 18px;
+}
+
+.giftSelect {
+  width: 100%;
+  padding: 12px 14px;
+  border: 2px solid var(--border);
+  border-radius: 8px;
+  font-family: var(--f-body);
+  font-size: 0.88rem;
+  color: var(--ink);
+  outline: none;
+  background: var(--white);
+  cursor: pointer;
+  transition: border-color 0.2s;
+}
+
+.giftSelect:focus {
+  border-color: var(--leaf);
+}
+
+.giftPurpose {
+  margin-top: 10px;
+}
+
+.anonRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 16px;
+  font-size: 0.8rem;
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.anonRow input {
+  width: 15px;
+  height: 15px;
+  accent-color: var(--forest);
+  cursor: pointer;
+}
+
+.donateButton:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: 0 6px 20px rgba(27, 77, 30, 0.3);
 }
 
 .donorFieldPhone {

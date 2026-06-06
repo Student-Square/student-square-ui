@@ -9,7 +9,7 @@ import { toast } from "sonner";
 import { logout, setUser } from "../features/auth/authSlice";
 
 const BASE_URL =
-  process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000/api/v1";
+  process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8080/api/v1";
 
 const rawBaseQuery = fetchBaseQuery({
   baseUrl: BASE_URL,
@@ -138,6 +138,8 @@ export const baseApi = createApi({
     "SiteSettings",
     "Comments",
     "Notifications",
+    "Donations",
+    "AdminDonations",
     "AdminBlogs",
     "AdminStories",
     "AdminCampaigns",
