@@ -1,0 +1,120 @@
+"use client";
+
+import { Cormorant_Garamond, Outfit } from "next/font/google";
+import { useEffect, useMemo, useState } from "react";
+import { closestAmountKey, impacts, oneTimeInlineImpacts } from "./constants";
+import type { Frequency } from "./types";
+import styles from "./DonateExperience.module.css";
+import DonateHeroSection from "./sections/DonateHeroSection";
+import DonateInlineSection from "./sections/DonateInlineSection";
+import DonatePaymentSection from "./sections/DonatePaymentSection";
+import DonateProjectsSection from "./sections/DonateProjectsSection";
+import DonateTransformSection from "./sections/DonateTransformSection";
+import DonateUtilizationSection from "./sections/DonateUtilizationSection";
+
+const cormorant = Cormorant_Garamond({
+  subsets: ["latin"],
+  variable: "--font-donate-display",
+  weight: ["400", "600", "700"],
+  style: ["normal", "italic"],
+});
+
+const outfit = Outfit({
+  subsets: ["latin"],
+  variable: "--font-donate-body",
+  weight: ["300", "400", "500", "600", "700"],
+});
+
+export default function DonateExperience() {
+  const [currentFreq, setCurrentFreq] = useState<Frequency>("monthly");
+  const [currentAmt, setCurrentAmt] = useState<number>(500);
+  const [currentAmt2, setCurrentAmt2] = useState<number>(500);
+  const [heroCustomValue, setHeroCustomValue] = useState("");
+  const [inlineCustomValue, setInlineCustomValue] = useState("");
+  const [openAccordionIndex, setOpenAccordionIndex] = useState<number | null>(null);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (!entry.isIntersecting) {
+            return;
+          }
+          entry.target.classList.add(styles.revealVisible);
+          observer.unobserve(entry.target);
+        });
+      },
+      { threshold: 0.12 },
+    );
+
+    const targets = document.querySelectorAll<HTMLElement>("[data-donate-reveal='true']");
+    targets.forEach((target) => observer.observe(target));
+
+    return () => observer.disconnect();
+  }, []);
+
+  const heroImpact = useMemo(() => {
+    const key = closestAmountKey(currentAmt);
+    return impacts[currentFreq][key];
+  }, [currentAmt, currentFreq]);
+
+  const inlineImpact = useMemo(() => {
+    const key = closestAmountKey(currentAmt2);
+    return oneTimeInlineImpacts[key] ?? `Your BDT ${currentAmt2.toLocaleString()} donation makes a meaningful difference.`;
+  }, [currentAmt2]);
+
+  const handleHeroCustomAmount = (value: string) => {
+    setHeroCustomValue(value);
+    const parsedValue = Number.parseInt(value, 10);
+    if (Number.isFinite(parsedValue) && parsedValue > 0) {
+      setCurrentAmt(parsedValue);
+    }
+  };
+
+  const handleInlineCustomAmount = (value: string) => {
+    setInlineCustomValue(value);
+    const parsedValue = Number.parseInt(value, 10);
+    if (Number.isFinite(parsedValue) && parsedValue > 0) {
+      setCurrentAmt2(parsedValue);
+    }
+  };
+
+  const handleHeroAmountPick = (amount: number) => {
+    setCurrentAmt(amount);
+    setHeroCustomValue("");
+  };
+
+  const handleInlineAmountPick = (amount: number) => {
+    setCurrentAmt2(amount);
+    setInlineCustomValue("");
+  };
+
+  const handleToggleAccordion = (index: number) => {
+    setOpenAccordionIndex((previous) => (previous === index ? null : index));
+  };
+
+  return (
+    <main className={`${styles.page} ${cormorant.variable} ${outfit.variable}`}>
+      <DonateHeroSection
+        currentFreq={currentFreq}
+        currentAmt={currentAmt}
+        heroCustomValue={heroCustomValue}
+        heroImpact={heroImpact}
+        onFreqChange={setCurrentFreq}
+        onAmountPick={handleHeroAmountPick}
+        onCustomAmountChange={handleHeroCustomAmount}
+      />
+      <DonatePaymentSection />
+      <DonateProjectsSection />
+      <DonateUtilizationSection openAccordionIndex={openAccordionIndex} onToggleAccordion={handleToggleAccordion} />
+      <DonateTransformSection />
+      <DonateInlineSection
+        currentAmt2={currentAmt2}
+        inlineCustomValue={inlineCustomValue}
+        inlineImpact={inlineImpact}
+        onAmountPick={handleInlineAmountPick}
+        onCustomAmountChange={handleInlineCustomAmount}
+      />
+    </main>
+  );
+}
