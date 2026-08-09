@@ -14,6 +14,7 @@ import { useLogoutMutation } from "@/redux/features/auth/authApi";
 import ThemeToggle from "@/components/common/ThemeToggle";
 import {
   Activity,
+  BookOpen,
   ChevronDown,
   ChevronRight,
   ExternalLink,
@@ -28,6 +29,7 @@ import {
   ShieldCheck,
   UserCircle,
   Users,
+  Wallet,
   X,
 } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
@@ -117,9 +119,14 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           {/* ── MANAGEMENT ── */}
           <NavSection label="Management" />
           <NavItem href="/admin/donation" label="Donation" icon={<HandCoins className="h-4 w-4" />} />
+          <NavItem href="/admin/operations" label="Operations (DOB)" icon={<BookOpen className="h-4 w-4" />} />
+          <NavItem href="/admin/finance" label="Financial Work Book" icon={<Wallet className="h-4 w-4" />} />
           <NavItem href="/admin/team" label="Team" icon={<ShieldCheck className="h-4 w-4" />} />
           {!isEditor && (
-            <NavItem href="/admin/users" label="Users" icon={<Users className="h-4 w-4" />} />
+            <>
+              <NavItem href="/admin/members" label="Members" icon={<Users className="h-4 w-4" />} />
+              <NavItem href="/admin/users" label="Users" icon={<Users className="h-4 w-4" />} />
+            </>
           )}
 
           {/* ── MY ACCOUNT ── */}
@@ -238,18 +245,38 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                     onNavigate={() => setMobileMenuOpen(false)}
                   />
                   <NavItem
+                    href="/admin/operations"
+                    label="Operations (DOB)"
+                    icon={<BookOpen className="h-4 w-4" />}
+                    onNavigate={() => setMobileMenuOpen(false)}
+                  />
+                  <NavItem
+                    href="/admin/finance"
+                    label="Financial Work Book"
+                    icon={<Wallet className="h-4 w-4" />}
+                    onNavigate={() => setMobileMenuOpen(false)}
+                  />
+                  <NavItem
                     href="/admin/team"
                     label="Team"
                     icon={<ShieldCheck className="h-4 w-4" />}
                     onNavigate={() => setMobileMenuOpen(false)}
                   />
                   {!isEditor && (
-                    <NavItem
-                      href="/admin/users"
-                      label="Users"
-                      icon={<Users className="h-4 w-4" />}
-                      onNavigate={() => setMobileMenuOpen(false)}
-                    />
+                    <>
+                      <NavItem
+                        href="/admin/members"
+                        label="Members"
+                        icon={<Users className="h-4 w-4" />}
+                        onNavigate={() => setMobileMenuOpen(false)}
+                      />
+                      <NavItem
+                        href="/admin/users"
+                        label="Users"
+                        icon={<Users className="h-4 w-4" />}
+                        onNavigate={() => setMobileMenuOpen(false)}
+                      />
+                    </>
                   )}
 
                   <p className="px-3 pt-3 pb-1 text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60">

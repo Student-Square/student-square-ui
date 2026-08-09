@@ -44,8 +44,8 @@ export {
 export {
   useGetCardsQuery,
   useGetPageSectionsQuery,
-  useGetBoardMembersQuery,
-  useGetBoardMemberBySlugQuery,
+  useGetBoardGroupsQuery,
+  useGetPublicUserBySlugQuery,
   useGetSiteSettingsQuery,
 } from "./features/content/contentApi";
 

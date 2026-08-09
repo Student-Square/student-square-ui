@@ -14,6 +14,7 @@ import { ADMIN_ROLES } from "@/lib/auth-routing";
 import { useLogoutMutation } from "@/redux/features/auth/authApi";
 import {
   Bookmark,
+  BookOpen,
   ChevronDown,
   ChevronRight,
   ExternalLink,
@@ -24,6 +25,7 @@ import {
   MessageSquare,
   Newspaper,
   UserCircle,
+  Wallet,
   X,
 } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
@@ -209,6 +211,23 @@ function SidebarContent({
         />
 
         {/* Donation */}
+        <div className="pt-3 pb-1">
+          <p className="px-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+            Operations
+          </p>
+        </div>
+
+        <NavItem
+          href="/dashboard/operations"
+          label="Daily Operation Book"
+          icon={<BookOpen className="h-4 w-4" />}
+        />
+        <NavItem
+          href="/dashboard/finance"
+          label="Financial Work Book"
+          icon={<Wallet className="h-4 w-4" />}
+        />
+
         <div className="pt-3 pb-1">
           <p className="px-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
             Support

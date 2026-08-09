@@ -150,6 +150,10 @@ export const baseApi = createApi({
     "AdminUsers",
     "AdminMedia",
     "AdminAudit",
+    "Operations",
+    "AdminOperations",
+    "Finance",
+    "AdminFinance",
   ],
   endpoints: () => ({}),
 });

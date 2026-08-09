@@ -15,6 +15,7 @@ export type ApiMe = {
   email: string;
   fullName: string;
   slug: string | null;
+  memberId?: string | null;
   role: UserRole;
   status: UserStatus;
   emailVerifiedAt: string | null;
@@ -35,6 +36,26 @@ export type ApiMe = {
     profession: string | null;
     workplace: string | null;
     preferredAnonymous: boolean;
+  } | null;
+  memberProfile?: {
+    id: string;
+    phone: string;
+    address: string;
+    ageBand: string;
+    gender: string;
+    homeDistrict: string;
+    studyLevel: string;
+    institutionType: string;
+    institutionTypeOther: string | null;
+    institutionName: string;
+    fieldOfStudy: string;
+    subjectDepartment: string;
+    subjectFeeling: string;
+    subjectFeelingWhy: string | null;
+    facedSubjectConfusion: boolean;
+    occupationStatus: string;
+    disabilityStatus: string;
+    completedAt: string;
   } | null;
 };
 

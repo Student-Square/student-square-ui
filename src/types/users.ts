@@ -5,6 +5,7 @@ export type AdminUser = {
   slug: string | null;
   email: string;
   fullName: string;
+  memberId?: string | null;
   role: UserRole;
   status: UserStatus;
   emailVerifiedAt: string | null;
@@ -14,6 +15,16 @@ export type AdminUser = {
     fullNameBn: string | null;
     avatarUrl: string | null;
     bio: string | null;
+    phone?: string | null;
+  } | null;
+  memberProfile?: {
+    homeDistrict: string;
+    occupationStatus: string;
+    studyLevel: string;
+    institutionName: string;
+    fieldOfStudy: string;
+    disabilityStatus: string;
+    completedAt: string;
   } | null;
 };
 
@@ -38,6 +49,9 @@ export type AdminUserListParams = {
   role?: UserRole;
   status?: UserStatus;
   verifiedOnly?: boolean;
+  foundationOnly?: boolean;
+  occupationStatus?: string;
+  homeDistrict?: string;
   page?: number;
   limit?: number;
 };

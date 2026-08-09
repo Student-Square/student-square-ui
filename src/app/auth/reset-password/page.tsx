@@ -117,6 +117,15 @@ function ResetPasswordForm() {
     if (newPassword.length < 8) { setFormError("Password must be at least 8 characters."); return; }
     if (newPassword !== confirmPassword) { setFormError("Passwords do not match."); return; }
 
+    // Both come from the query string, so both can be absent — sending null
+    // would reach the API as a malformed reset rather than a clear message.
+    if (!token || !email) {
+      setFormError(
+        "This reset link is incomplete. Please request a new password reset email."
+      );
+      return;
+    }
+
     try {
       await resetPassword({ token, email, password: newPassword }).unwrap();
       setStage("success");

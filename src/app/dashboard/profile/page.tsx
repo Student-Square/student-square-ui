@@ -186,6 +186,14 @@ export default function MemberProfilePage() {
         <div className="text-center sm:text-left min-w-0">
           <p className="text-lg font-bold text-foreground">{user.fullName}</p>
           <p className="text-sm text-muted-foreground">{user.email}</p>
+          {user.memberId && (
+            <p className="text-xs text-muted-foreground mt-1">
+              Member ID:{" "}
+              <span className="font-semibold text-foreground tracking-wide">
+                {user.memberId}
+              </span>
+            </p>
+          )}
           <div className="flex flex-wrap gap-2 mt-2 justify-center sm:justify-start">
             <span className="inline-flex text-[10px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400">
               {user.role.replace(/_/g, " ")}

@@ -1,8 +1,16 @@
 import { baseApi } from "@/redux/api/baseApi";
 import { setUser, logout } from "./authSlice";
 import type { ApiMe } from "@/types/auth";
+import type { FoundationRegisterInput } from "@/lib/registration";
 
-type RegisterInput = { email: string; password: string; fullName: string };
+type RegisterResult = {
+  id: string;
+  email: string;
+  fullName: string;
+  memberId?: string | null;
+  role?: string;
+  status?: string;
+};
 type LoginInput = { email: string; password: string };
 type ChangePasswordInput = { oldPassword: string; newPassword: string };
 type ForgotPasswordInput = { email: string };
@@ -10,7 +18,7 @@ type ResetPasswordInput = { email?: string; password: string; token?: string };
 
 const authApi = baseApi.injectEndpoints({
   endpoints: (build) => ({
-    register: build.mutation<{ id: string; email: string; fullName: string }, RegisterInput>({
+    register: build.mutation<RegisterResult, FoundationRegisterInput>({
       query: (body) => ({ url: "/auth/register", method: "POST", body }),
     }),
 
@@ -23,11 +31,12 @@ const authApi = baseApi.injectEndpoints({
       async onQueryStarted(_, { dispatch, queryFulfilled }) {
         try {
           await queryFulfilled;
-          // Cookie is set by the server; fetch me to populate the store
-          const me = await dispatch(authApi.endpoints.getMe.initiate(undefined, { forceRefetch: true }));
+          const me = await dispatch(
+            authApi.endpoints.getMe.initiate(undefined, { forceRefetch: true })
+          );
           if (me.data) dispatch(setUser(me.data as ApiMe));
         } catch {
-          // login failed — nothing to do
+          // login failed
         }
       },
       invalidatesTags: ["Auth"],
