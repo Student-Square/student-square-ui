@@ -50,7 +50,9 @@ function emptyForm(): OperationEntryInput & {
     endsAt: toLocalInput(later.toISOString()),
     mentorIds: [],
     mentorsOther: "",
-    attendees: "",
+    attendeeMode: "NAMES" as const,
+    attendeeNames: [],
+    attendeeCount: undefined,
     description: "",
     includeOthers: false,
     mentorQuery: "",
@@ -92,7 +94,9 @@ export default function DashboardOperationsPage() {
       endsAt: toLocalInput(row.endsAt),
       mentorIds: row.mentorIds,
       mentorsOther: row.mentorsOther ?? "",
-      attendees: row.attendees,
+      attendeeMode: row.attendeeMode,
+      attendeeNames: row.attendeeNames,
+      attendeeCount: row.attendeeCount ?? undefined,
       description: row.description,
       includeOthers: Boolean(row.mentorsOther),
       mentorQuery: "",
@@ -144,7 +148,16 @@ export default function DashboardOperationsPage() {
   const submit = async () => {
     setError(null);
     if (!form.taskName.trim()) return setError("Task name is required.");
-    if (!form.attendees.trim()) return setError("Attendees are required.");
+    // FR-12-004 mirrored client-side so the message arrives before the request.
+    // The server enforces the same rule — see operation.attendees.ts.
+    if (form.attendeeMode === "NAMES") {
+      const named = (form.attendeeNames ?? []).filter((n) => n.trim()).length;
+      if (!named) return setError("Add at least one attendee name.");
+      if (named >= 5)
+        return setError("From 5 attendees, switch to a headcount.");
+    } else if (!form.attendeeCount || form.attendeeCount < 5) {
+      return setError("A headcount is for 5 or more — otherwise list names.");
+    }
     if (!form.description.trim()) return setError("Description is required.");
     if (form.includeOthers && !form.mentorsOther?.trim() && !form.mentorIds.length) {
       return setError("Add mentors or others.");
@@ -156,7 +169,13 @@ export default function DashboardOperationsPage() {
       endsAt: new Date(form.endsAt).toISOString(),
       mentorIds: form.mentorIds,
       mentorsOther: form.includeOthers ? form.mentorsOther?.trim() || null : null,
-      attendees: form.attendees.trim(),
+      attendeeMode: form.attendeeMode,
+      attendeeNames:
+        form.attendeeMode === "NAMES"
+          ? (form.attendeeNames ?? []).map((n) => n.trim()).filter(Boolean)
+          : undefined,
+      attendeeCount:
+        form.attendeeMode === "COUNT" ? form.attendeeCount : undefined,
       description: form.description.trim(),
     };
 
@@ -416,18 +435,93 @@ export default function DashboardOperationsPage() {
                 )}
               </div>
 
-              <label className="block text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                Attendees
-                <input
-                  className={`${fieldClass} mt-1`}
-                  value={form.attendees}
-                  onChange={(e) => patch({ attendees: e.target.value })}
-                  placeholder="Names if &lt;5 people; count if 5+"
-                />
-                <span className="mt-1 block text-[11px] font-normal normal-case tracking-normal text-muted-foreground">
-                  For 5+ persons use a number; for fewer than 5 use names.
+              <div>
+                <span className="block text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                  Attendees
                 </span>
-              </label>
+                <div className="mt-1 flex gap-1.5">
+                  {(["NAMES", "COUNT"] as const).map((mode) => (
+                    <button
+                      key={mode}
+                      type="button"
+                      onClick={() => patch({ attendeeMode: mode })}
+                      className={`rounded-full px-3 py-1.5 text-xs font-semibold transition-colors ${
+                        form.attendeeMode === mode
+                          ? "bg-emerald-600 text-white"
+                          : "border border-border text-muted-foreground"
+                      }`}
+                    >
+                      {mode === "NAMES" ? "Names (under 5)" : "Headcount (5+)"}
+                    </button>
+                  ))}
+                </div>
+
+                {form.attendeeMode === "NAMES" ? (
+                  <div className="mt-2 space-y-1.5">
+                    {(form.attendeeNames ?? []).map((name, index) => (
+                      <div key={index} className="flex gap-1.5">
+                        <input
+                          className={fieldClass}
+                          value={name}
+                          onChange={(e) => {
+                            const next = [...(form.attendeeNames ?? [])];
+                            next[index] = e.target.value;
+                            patch({ attendeeNames: next });
+                          }}
+                          placeholder="Attendee name"
+                        />
+                        <button
+                          type="button"
+                          onClick={() =>
+                            patch({
+                              attendeeNames: (form.attendeeNames ?? []).filter(
+                                (_, i) => i !== index
+                              ),
+                            })
+                          }
+                          className="px-2 rounded-lg border border-border text-muted-foreground hover:text-rose-600"
+                          aria-label="Remove attendee"
+                        >
+                          <X className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
+                    ))}
+                    {(form.attendeeNames ?? []).length < 4 && (
+                      <button
+                        type="button"
+                        onClick={() =>
+                          patch({
+                            attendeeNames: [...(form.attendeeNames ?? []), ""],
+                          })
+                        }
+                        className="text-xs font-semibold text-emerald-600 hover:underline"
+                      >
+                        + Add attendee
+                      </button>
+                    )}
+                  </div>
+                ) : (
+                  <input
+                    type="number"
+                    min={5}
+                    className={`${fieldClass} mt-2`}
+                    value={form.attendeeCount ?? ""}
+                    onChange={(e) =>
+                      patch({
+                        attendeeCount: e.target.value
+                          ? Number(e.target.value)
+                          : undefined,
+                      })
+                    }
+                    placeholder="How many attended"
+                  />
+                )}
+
+                <span className="mt-1.5 block text-[11px] text-muted-foreground">
+                  Under five people, record their names. From five, a headcount
+                  is enough — an activity note should not become a roster.
+                </span>
+              </div>
 
               <label className="block text-xs font-bold uppercase tracking-wider text-muted-foreground">
                 Task description

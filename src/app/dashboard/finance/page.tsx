@@ -15,12 +15,19 @@ import {
 import { selectCurrentUser } from "@/redux/features/auth/authSlice";
 import {
   downloadFinanceExport,
+  financeExportPath,
   useCreateFinanceEntryMutation,
   useDeleteFinanceEntryMutation,
   useListMyFinanceQuery,
   useUpdateFinanceEntryMutation,
 } from "@/redux/features/finance/financeApi";
-import type { FinanceCurrency, FinanceEntry, FinanceEntryInput } from "@/types/finance";
+import { formatMoney } from "@/lib/money";
+import type {
+  ExportFormat,
+  FinanceCurrency,
+  FinanceEntry,
+  FinanceEntryInput,
+} from "@/types/finance";
 
 const fieldClass =
   "w-full px-3 py-2 text-sm rounded-lg bg-background border border-border focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20";
@@ -30,15 +37,16 @@ const CURRENCIES: FinanceCurrency[] = ["BDT", "USD", "GBP"];
 const emptyForm = (): FinanceEntryInput => ({
   entryDate: new Date().toISOString().slice(0, 10),
   itemName: "",
-  quantity: 1,
-  unitCost: 0,
+  quantity: "1",
+  unitCost: "0",
   currency: "BDT",
-  moneyIn: 0,
-  moneyOut: 0,
+  moneyIn: "0",
+  moneyOut: "0",
 });
 
-const money = (n: number, c: string) =>
-  `${c} ${n.toLocaleString(undefined, { maximumFractionDigits: 2 })}`;
+// Amounts stay strings from the API to the input and back — FR-13-009.
+const money = (value: string | null | undefined, currency: string) =>
+  formatMoney(value, currency);
 
 export default function DashboardFinancePage() {
   const user = useSelector(selectCurrentUser);
@@ -123,18 +131,22 @@ export default function DashboardFinancePage() {
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
-          <button
-            type="button"
-            onClick={() =>
-              downloadFinanceExport(
-                "/finance/mine/export.csv",
-                "financial-workbook.csv"
-              ).catch(() => toast.error("Excel/CSV download failed"))
-            }
-            className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-border text-sm font-semibold hover:bg-muted"
-          >
-            <Download className="h-4 w-4" /> Excel (CSV)
-          </button>
+          {/* FR-13-012 — the same book in three formats, one route each. */}
+          {(["xlsx", "csv", "pdf"] as ExportFormat[]).map((format) => (
+            <button
+              key={format}
+              type="button"
+              onClick={() =>
+                downloadFinanceExport(
+                  financeExportPath("mine", format),
+                  `financial-workbook.${format}`
+                ).catch(() => toast.error("Download failed"))
+              }
+              className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-border text-sm font-semibold hover:bg-muted"
+            >
+              <Download className="h-4 w-4" /> {format.toUpperCase()}
+            </button>
+          ))}
           <button
             type="button"
             onClick={openCreate}
@@ -190,13 +202,13 @@ export default function DashboardFinancePage() {
                   </td>
                   <td className="px-3 py-3 text-xs">{row.currency}</td>
                   <td className="px-3 py-3 text-right text-emerald-700 dark:text-emerald-400">
-                    {row.moneyIn.toLocaleString()}
+                    {formatMoney(row.moneyIn)}
                   </td>
                   <td className="px-3 py-3 text-right text-red-600">
-                    {row.moneyOut.toLocaleString()}
+                    {formatMoney(row.moneyOut)}
                   </td>
                   <td className="px-3 py-3 text-right font-semibold">
-                    {row.balance.toLocaleString()}
+                    {formatMoney(row.balance)}
                   </td>
                   <td className="px-3 py-3">
                     <div className="flex gap-1 justify-end">
@@ -275,7 +287,7 @@ export default function DashboardFinancePage() {
                     step="any"
                     className={`${fieldClass} mt-1`}
                     value={form.quantity}
-                    onChange={(e) => patch({ quantity: Number(e.target.value) })}
+                    onChange={(e) => patch({ quantity: e.target.value })}
                   />
                 </label>
                 <label className="block text-xs font-bold uppercase tracking-wider text-muted-foreground">
@@ -286,7 +298,7 @@ export default function DashboardFinancePage() {
                     step="any"
                     className={`${fieldClass} mt-1`}
                     value={form.unitCost}
-                    onChange={(e) => patch({ unitCost: Number(e.target.value) })}
+                    onChange={(e) => patch({ unitCost: e.target.value })}
                   />
                 </label>
               </div>
@@ -315,7 +327,7 @@ export default function DashboardFinancePage() {
                     step="any"
                     className={`${fieldClass} mt-1`}
                     value={form.moneyIn}
-                    onChange={(e) => patch({ moneyIn: Number(e.target.value) })}
+                    onChange={(e) => patch({ moneyIn: e.target.value })}
                   />
                 </label>
                 <label className="block text-xs font-bold uppercase tracking-wider text-muted-foreground">
@@ -326,7 +338,7 @@ export default function DashboardFinancePage() {
                     step="any"
                     className={`${fieldClass} mt-1`}
                     value={form.moneyOut}
-                    onChange={(e) => patch({ moneyOut: Number(e.target.value) })}
+                    onChange={(e) => patch({ moneyOut: e.target.value })}
                   />
                 </label>
               </div>

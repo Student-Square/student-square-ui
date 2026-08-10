@@ -3,9 +3,13 @@
 export type UserRole =
   | "SUPER_ADMIN"
   | "ADMIN"
+  | "COUNSELLOR"
+  | "MENTOR"
   | "MODERATOR"
   | "EDITOR"
+  | "AUTHOR"
   | "FINANCE_MANAGER"
+  | "HR_MANAGER"
   | "MEMBER";
 
 export type UserStatus = "ACTIVE" | "SUSPENDED" | "PENDING_VERIFICATION";

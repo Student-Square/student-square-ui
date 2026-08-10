@@ -17,13 +17,18 @@ import {
   BookOpen,
   ChevronDown,
   ChevronRight,
+  ClipboardList,
   ExternalLink,
+  FileCode2,
   FileText,
   HandCoins,
   Home,
   LayoutGrid,
+  Library,
   LogOut,
+  Megaphone,
   Menu,
+  MessageSquareText,
   Newspaper,
   Settings,
   ShieldCheck,
@@ -121,11 +126,20 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           <NavItem href="/admin/donation" label="Donation" icon={<HandCoins className="h-4 w-4" />} />
           <NavItem href="/admin/operations" label="Operations (DOB)" icon={<BookOpen className="h-4 w-4" />} />
           <NavItem href="/admin/finance" label="Financial Work Book" icon={<Wallet className="h-4 w-4" />} />
+          <NavItem href="/admin/books" label="All Books" icon={<Library className="h-4 w-4" />} />
           <NavItem href="/admin/team" label="Team" icon={<ShieldCheck className="h-4 w-4" />} />
+          <NavItem href="/admin/resources" label="Resources" icon={<Library className="h-4 w-4" />} />
+          <NavItem href="/admin/feedback" label="Feedback" icon={<MessageSquareText className="h-4 w-4" />} />
           {!isEditor && (
             <>
+              <NavItem href="/admin/assessments" label="Assessments" icon={<ClipboardList className="h-4 w-4" />} />
               <NavItem href="/admin/members" label="Members" icon={<Users className="h-4 w-4" />} />
               <NavItem href="/admin/users" label="Users" icon={<Users className="h-4 w-4" />} />
+
+              {/* ── COMMUNICATIONS (P4) ── */}
+              <NavSection label="Communications" />
+              <NavItem href="/admin/campaigns" label="Bulk Messages" icon={<Megaphone className="h-4 w-4" />} />
+              <NavItem href="/admin/templates" label="Email Templates" icon={<FileCode2 className="h-4 w-4" />} />
             </>
           )}
 
@@ -264,6 +278,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                   />
                   {!isEditor && (
                     <>
+                      <NavItem
+                        href="/admin/assessments"
+                        label="Assessments"
+                        icon={<ClipboardList className="h-4 w-4" />}
+                        onNavigate={() => setMobileMenuOpen(false)}
+                      />
                       <NavItem
                         href="/admin/members"
                         label="Members"

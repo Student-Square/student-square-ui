@@ -10,20 +10,27 @@ import {
   selectCurrentUser,
   selectUserRole,
 } from "@/redux/features/auth/authSlice";
-import { ADMIN_ROLES } from "@/lib/auth-routing";
+import { roleHome } from "@/lib/auth-routing";
 import { useLogoutMutation } from "@/redux/features/auth/authApi";
 import {
+  Bell,
   Bookmark,
   BookOpen,
+  CalendarClock,
   ChevronDown,
   ChevronRight,
+  ClipboardList,
   ExternalLink,
+  FileText,
   Heart,
   LayoutDashboard,
+  Library,
   LogOut,
   Menu,
   MessageSquare,
+  MessageSquarePlus,
   Newspaper,
+  Route,
   UserCircle,
   Wallet,
   X,
@@ -44,9 +51,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       router.replace(`/auth/login?next=${encodeURIComponent(pathname)}`);
       return;
     }
-    // Admin/editor/moderator roles belong in /admin, not here
-    if (status === "authenticated" && role && ADMIN_ROLES.has(role)) {
-      router.replace("/admin");
+    // /dashboard is the member's area. Every other role has its own home —
+    // /admin for admin roles, /panel for counsellors and mentors — and
+    // roleHome() is the one place that mapping lives.
+    if (status === "authenticated" && role && roleHome(role) !== "/dashboard") {
+      router.replace(roleHome(role));
     }
   }, [status, role, pathname, router]);
 
@@ -71,7 +80,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   }
 
   if (status === "unauthenticated") return null;
-  if (role && ADMIN_ROLES.has(role)) return null;
+  if (role && roleHome(role) !== "/dashboard") return null;
 
   const sidebar = (
     <SidebarContent
@@ -186,6 +195,44 @@ function SidebarContent({
           label="My Profile"
           icon={<UserCircle className="h-4 w-4" />}
         />
+        <NavItem
+          href="/dashboard/assessment"
+          label="Assessment"
+          icon={<ClipboardList className="h-4 w-4" />}
+        />
+
+        {/* Care (P3) */}
+        <div className="pt-3 pb-1">
+          <p className="px-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+            My Journey
+          </p>
+        </div>
+
+        <NavItem
+          href="/dashboard/roadmap"
+          label="My Roadmap"
+          icon={<Route className="h-4 w-4" />}
+        />
+        <NavItem
+          href="/dashboard/sessions"
+          label="Sessions"
+          icon={<CalendarClock className="h-4 w-4" />}
+        />
+        <NavItem
+          href="/dashboard/reports"
+          label="My Reports"
+          icon={<FileText className="h-4 w-4" />}
+        />
+        <NavItem
+          href="/dashboard/messages"
+          label="Messages"
+          icon={<MessageSquare className="h-4 w-4" />}
+        />
+        <NavItem
+          href="/dashboard/resources"
+          label="Resources"
+          icon={<Library className="h-4 w-4" />}
+        />
 
         {/* Activities group */}
         <div className="pt-3 pb-1">
@@ -238,6 +285,16 @@ function SidebarContent({
           href="/dashboard/donation"
           label="Donation"
           icon={<Heart className="h-4 w-4" />}
+        />
+        <NavItem
+          href="/dashboard/feedback"
+          label="Feedback"
+          icon={<MessageSquarePlus className="h-4 w-4" />}
+        />
+        <NavItem
+          href="/dashboard/settings"
+          label="Notifications"
+          icon={<Bell className="h-4 w-4" />}
         />
       </nav>
 

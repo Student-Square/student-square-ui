@@ -257,15 +257,46 @@ function DonationsTab() {
     }
   };
 
-  const downloadCsv = async () => {
+  /** CSV, XLSX or PDF — the same ledger, one route per format. */
+  const [reconciling, setReconciling] = useState(false);
+
+  const downloadLedger = async (format: "csv" | "xlsx" | "pdf" = "csv") => {
     try {
-      const res = await fetch(`${API_BASE}/admin/donations/export.csv`, { credentials: "include" });
+      const res = await fetch(`${API_BASE}/admin/donations/export.${format}`, {
+        credentials: "include",
+      });
+      if (!res.ok) throw new Error("Export failed");
       const blob = await res.blob();
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
-      a.href = url; a.download = "donations.csv"; a.click();
+      a.href = url; a.download = `donations.${format}`; a.click();
       URL.revokeObjectURL(url);
     } catch { toast.error("Export failed"); }
+  };
+
+  const downloadCsv = () => downloadLedger("csv");
+
+  /**
+   * FR-14-008 — reconcile on demand.
+   *
+   * The sweep runs every 15 minutes anyway; this is for when a donor is on the
+   * phone and nobody wants to wait for the next one.
+   */
+  const onReconcileNow = async () => {
+    setReconciling(true);
+    try {
+      const res = await fetch(`${API_BASE}/admin/donations/reconcile`, {
+        method: "POST",
+        credentials: "include",
+      });
+      const json = await res.json();
+      if (!res.ok || !json?.success) throw new Error(json?.message);
+      toast.success(json.message ?? "Reconciliation complete");
+    } catch {
+      toast.error("Reconciliation failed");
+    } finally {
+      setReconciling(false);
+    }
   };
 
   return (
@@ -280,14 +311,31 @@ function DonationsTab() {
           Auto-syncing with SSLCommerz every 60s
           {lastSync && <span className="text-muted-foreground/70">· last checked {fmtTime(lastSync)}</span>}
         </span>
-        <button
-          onClick={onSyncNow}
-          disabled={syncing}
-          className="inline-flex items-center gap-1.5 rounded-md border border-border bg-card px-2.5 py-1 font-semibold hover:bg-muted transition-colors disabled:opacity-50"
-        >
-          {syncing ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <RotateCcw className="h-3.5 w-3.5" />}
-          Sync now
-        </button>
+        <span className="flex items-center gap-1.5">
+          <button
+            onClick={onReconcileNow}
+            disabled={reconciling}
+            title="Re-check every pending donation with the gateway now"
+            className="inline-flex items-center gap-1.5 rounded-md border border-border bg-card px-2.5 py-1 font-semibold hover:bg-muted transition-colors disabled:opacity-50"
+          >
+            {reconciling ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <RotateCcw className="h-3.5 w-3.5" />}
+            Reconcile pending
+          </button>
+          <button
+            onClick={onSyncNow}
+            disabled={syncing}
+            className="inline-flex items-center gap-1.5 rounded-md border border-border bg-card px-2.5 py-1 font-semibold hover:bg-muted transition-colors disabled:opacity-50"
+          >
+            {syncing ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <RotateCcw className="h-3.5 w-3.5" />}
+            Sync now
+          </button>
+          <button
+            onClick={() => downloadLedger("xlsx")}
+            className="inline-flex items-center gap-1.5 rounded-md border border-border bg-card px-2.5 py-1 font-semibold hover:bg-muted transition-colors"
+          >
+            Excel
+          </button>
+        </span>
       </div>
 
       {/* Filters */}

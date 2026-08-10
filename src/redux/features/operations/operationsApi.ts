@@ -5,6 +5,18 @@ import type {
   OperationMemberOption,
   PaginatedOperations,
 } from "@/types/operations";
+import type { ExportFormat } from "@/types/finance";
+import { bookQuery, type BookFilters } from "@/redux/features/finance/financeApi";
+
+/** One path builder for both books, so the filters travel identically. */
+export const operationExportPath = (
+  scope: "mine" | "all",
+  format: ExportFormat,
+  filters?: BookFilters
+) =>
+  scope === "mine"
+    ? `/operations/mine/export.${format}${bookQuery(filters)}`
+    : `/admin/operations/export.${format}${bookQuery(filters)}`;
 
 const API_BASE =
   process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8080/api/v1";
@@ -76,10 +88,7 @@ const operationsApi = baseApi.injectEndpoints({
       ],
     }),
 
-    adminListOperations: build.query<
-      PaginatedOperations,
-      { q?: string; from?: string; to?: string; page?: number; limit?: number } | void
-    >({
+    adminListOperations: build.query<PaginatedOperations, BookFilters | void>({
       query: (params) => ({
         url: "/admin/operations",
         params: params ?? {},

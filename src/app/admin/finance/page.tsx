@@ -17,6 +17,7 @@ import {
   useAdminListFinanceQuery,
   useAdminUpdateFinanceEntryMutation,
 } from "@/redux/features/finance/financeApi";
+import { formatMoney } from "@/lib/money";
 import type { FinanceCurrency, FinanceEntry, FinanceEntryInput } from "@/types/finance";
 
 const fieldClass =
@@ -198,13 +199,13 @@ export default function AdminFinancePage() {
                   </td>
                   <td className="px-3 py-3 text-xs">{row.currency}</td>
                   <td className="px-3 py-3 text-right text-emerald-700">
-                    {row.moneyIn.toLocaleString()}
+                    {formatMoney(row.moneyIn)}
                   </td>
                   <td className="px-3 py-3 text-right text-red-600">
-                    {row.moneyOut.toLocaleString()}
+                    {formatMoney(row.moneyOut)}
                   </td>
                   <td className="px-3 py-3 text-right font-semibold">
-                    {row.balance.toLocaleString()}
+                    {formatMoney(row.balance)}
                   </td>
                   <td className="px-3 py-3">
                     <div className="flex gap-1 justify-end">
@@ -299,7 +300,7 @@ export default function AdminFinancePage() {
                 className={fieldClass}
                 value={form.quantity ?? 0}
                 onChange={(e) =>
-                  setForm((f) => ({ ...f, quantity: Number(e.target.value) }))
+                  setForm((f) => ({ ...f, quantity: e.target.value }))
                 }
                 placeholder="Qty"
               />
@@ -308,7 +309,7 @@ export default function AdminFinancePage() {
                 className={fieldClass}
                 value={form.unitCost ?? 0}
                 onChange={(e) =>
-                  setForm((f) => ({ ...f, unitCost: Number(e.target.value) }))
+                  setForm((f) => ({ ...f, unitCost: e.target.value }))
                 }
                 placeholder="Unit cost"
               />
@@ -333,18 +334,18 @@ export default function AdminFinancePage() {
               <input
                 type="number"
                 className={fieldClass}
-                value={form.moneyIn ?? 0}
+                value={form.moneyIn ?? "0"}
                 onChange={(e) =>
-                  setForm((f) => ({ ...f, moneyIn: Number(e.target.value) }))
+                  setForm((f) => ({ ...f, moneyIn: e.target.value }))
                 }
                 placeholder="Money in"
               />
               <input
                 type="number"
                 className={fieldClass}
-                value={form.moneyOut ?? 0}
+                value={form.moneyOut ?? "0"}
                 onChange={(e) =>
-                  setForm((f) => ({ ...f, moneyOut: Number(e.target.value) }))
+                  setForm((f) => ({ ...f, moneyOut: e.target.value }))
                 }
                 placeholder="Money out"
               />

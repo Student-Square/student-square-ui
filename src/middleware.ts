@@ -3,7 +3,10 @@ import { NextRequest, NextResponse } from "next/server";
 // Only these prefixes require a logged-in session.
 // Every other route — /, /blog, /about, /what-we-do, /get-involved,
 // /find-us, /donate, /campaigns, /contact — is always public.
-const PROTECTED_PREFIXES = ["/account", "/admin"];
+//
+// Role gating lives in each area's layout (see lib/auth-routing.ts); this only
+// answers "is anyone signed in", which is all a cookie can honestly tell us.
+const PROTECTED_PREFIXES = ["/account", "/admin", "/panel", "/dashboard"];
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
