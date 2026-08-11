@@ -1,5 +1,5 @@
 import NotificationsView from "@/components/notifications/NotificationsView";
 
-export default function NotificationsPage() {
+export default function AdminNotificationsPage() {
   return <NotificationsView />;
 }

@@ -12,6 +12,7 @@ import {
 } from "@/redux/features/auth/authSlice";
 import { useLogoutMutation } from "@/redux/features/auth/authApi";
 import ThemeToggle from "@/components/common/ThemeToggle";
+import NotificationBell from "@/components/notifications/NotificationBell";
 import {
   Activity,
   BookOpen,
@@ -155,6 +156,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             ]}
           />
           <NavItem href="/admin/profile" label="My Profile" icon={<UserCircle className="h-4 w-4" />} />
+          <NavItem href="/admin/settings" label="Settings" icon={<Settings className="h-4 w-4" />} />
         </nav>
 
         {/* Bottom profile widget */}
@@ -162,9 +164,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       </aside>
 
       <div className="flex-1 min-w-0">
-        {/* Mobile top bar */}
-        <header className="md:hidden border-b border-border bg-card/60 backdrop-blur px-4 py-3 flex items-center justify-between sticky top-0 z-40">
-          <div className="flex items-center gap-3">
+        {/* Top bar — mobile menu on small screens, notification bell everywhere */}
+        <header className="border-b border-border bg-card/60 backdrop-blur px-4 py-3 flex items-center justify-between sticky top-0 z-40">
+          <div className="flex items-center gap-3 md:hidden">
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               className="flex items-center justify-center h-9 w-9 rounded-lg border border-border/50 bg-transparent text-foreground hover:bg-accent transition-colors shrink-0"
@@ -174,7 +176,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             </button>
             <Image src="/images/ss-logo.png" alt="Student Square" width={100} height={28} className="h-7 w-auto" />
           </div>
-          <ThemeToggle className="h-9 w-9" />
+          <div className="hidden md:block text-sm font-semibold text-foreground">Admin Console</div>
+          <div className="flex items-center gap-1">
+            <NotificationBell />
+            <ThemeToggle className="h-9 w-9" />
+          </div>
         </header>
 
         {/* Mobile Menu Overlay */}
@@ -318,6 +324,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                     icon={<UserCircle className="h-4 w-4" />}
                     onNavigate={() => setMobileMenuOpen(false)}
                   />
+                  <NavItem
+                    href="/admin/settings"
+                    label="Settings"
+                    icon={<Settings className="h-4 w-4" />}
+                    onNavigate={() => setMobileMenuOpen(false)}
+                  />
                 </nav>
 
                 {/* Mobile Menu Footer */}
@@ -412,8 +424,16 @@ function SidebarProfile({
                 onClick={() => setOpen(false)}
                 className="flex items-center gap-2.5 px-3 py-2 text-sm rounded-lg hover:bg-muted transition-colors text-foreground"
               >
+                <UserCircle className="h-3.5 w-3.5 text-muted-foreground" />
+                My profile
+              </Link>
+              <Link
+                href="/admin/settings"
+                onClick={() => setOpen(false)}
+                className="flex items-center gap-2.5 px-3 py-2 text-sm rounded-lg hover:bg-muted transition-colors text-foreground"
+              >
                 <Settings className="h-3.5 w-3.5 text-muted-foreground" />
-                Profile settings
+                Settings
               </Link>
               <Link
                 href="/"

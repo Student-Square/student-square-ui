@@ -60,6 +60,16 @@ export function canAccessPath(role: UserRole, path: string): boolean {
 }
 
 /**
+ * Which shell the current URL belongs to, so shared components (the bell,
+ * the settings link) can build links without every caller passing a base.
+ */
+export function shellBase(pathname: string): "/admin" | "/panel" | "/dashboard" {
+  if (pathname.startsWith("/admin")) return "/admin";
+  if (pathname.startsWith("/panel")) return "/panel";
+  return "/dashboard";
+}
+
+/**
  * Resolve the destination to send a freshly-logged-in user to.
  * Honours `requestedNext` only when the role is allowed there;
  * otherwise falls back to the role's home.

@@ -1,5 +1,5 @@
 import SettingsView from "@/components/settings/SettingsView";
 
-export default function SettingsPage() {
+export default function PanelSettingsPage() {
   return <SettingsView />;
 }
