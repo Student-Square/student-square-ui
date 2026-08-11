@@ -4,14 +4,11 @@ import {
   useGetNotificationPreferencesQuery,
   useSetNotificationPreferenceMutation,
 } from "@/redux/features/comms/commsApi";
+import MfaSecurityCard from "@/components/auth/MfaSecurityCard";
 import { Bell, Loader2, Lock } from "lucide-react";
 
 /**
- * FR-18-009 — notification preferences per type and channel.
- *
- * Locked rows are shown rather than hidden, with the reason. A setting that
- * silently is not there reads as a missing feature; a setting that is visibly
- * locked reads as a decision, which is what it is.
+ * Member settings: MFA security + notification preferences.
  */
 
 const LABELS: Record<string, string> = {
@@ -43,75 +40,83 @@ export default function NotificationSettingsPage() {
   const { data: preferences, isLoading } = useGetNotificationPreferencesQuery();
   const [setPreference] = useSetNotificationPreferenceMutation();
 
-  // Staff-only alert types are filtered out — a member has no use for a row
-  // that will never fire for them.
   const rows = (preferences ?? []).filter(
     (p) => !p.type.startsWith("ADMIN_") && LABELS[p.type]
   );
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight">Notifications</h1>
+        <h1 className="text-2xl font-bold tracking-tight">Settings</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Choose what reaches you, and where.
+          Security and notification preferences.
         </p>
       </div>
 
-      {isLoading ? (
-        <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-      ) : (
-        <div className="rounded-2xl border border-border bg-card overflow-hidden">
-          <div className="grid grid-cols-[1fr_auto_auto] gap-4 px-4 py-2.5 border-b border-border bg-muted/40 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
-            <span>Notification</span>
-            <span className="w-14 text-center">In app</span>
-            <span className="w-14 text-center">Email</span>
-          </div>
+      <MfaSecurityCard />
 
-          {rows.map((row) => (
-            <div
-              key={row.type}
-              className="grid grid-cols-[1fr_auto_auto] gap-4 items-center px-4 py-3 border-b border-border last:border-0"
-            >
-              <div className="min-w-0">
-                <p className="text-sm flex items-center gap-1.5">
-                  {LABELS[row.type]}
-                  {row.locked && (
-                    <Lock className="h-3 w-3 text-muted-foreground" />
-                  )}
-                </p>
-                {row.locked && (
-                  <p className="text-[11px] text-muted-foreground">
-                    Part of your account record — always sent.
-                  </p>
-                )}
-              </div>
-
-              <Toggle
-                checked={row.inApp}
-                disabled={row.locked}
-                onChange={(enabled) =>
-                  setPreference({ type: row.type, channel: "IN_APP", enabled })
-                }
-              />
-              <Toggle
-                checked={row.email}
-                disabled={row.locked}
-                onChange={(enabled) =>
-                  setPreference({ type: row.type, channel: "EMAIL", enabled })
-                }
-              />
-            </div>
-          ))}
+      <div className="space-y-6">
+        <div>
+          <h2 className="text-lg font-bold tracking-tight flex items-center gap-2">
+            <Bell className="h-4 w-4" />
+            Notifications
+          </h2>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Choose what reaches you, and where.
+          </p>
         </div>
-      )}
 
-      <p className="flex items-start gap-2 text-xs text-muted-foreground">
-        <Bell className="h-3.5 w-3.5 shrink-0 mt-0.5" />
-        Announcements and newsletters also carry a one-click unsubscribe link.
-        Using it stops all non-essential email to your address, whatever these
-        switches say.
-      </p>
+        {isLoading ? (
+          <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+        ) : (
+          <div className="rounded-2xl border border-border bg-card overflow-hidden">
+            <div className="grid grid-cols-[1fr_auto_auto] gap-4 px-4 py-2.5 border-b border-border bg-muted/40 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+              <span>Notification</span>
+              <span className="w-14 text-center">In app</span>
+              <span className="w-14 text-center">Email</span>
+            </div>
+
+            {rows.map((row) => (
+              <div
+                key={row.type}
+                className="grid grid-cols-[1fr_auto_auto] gap-4 items-center px-4 py-3 border-b border-border last:border-0"
+              >
+                <div className="min-w-0">
+                  <p className="text-sm flex items-center gap-1.5">
+                    {LABELS[row.type]}
+                    {row.locked && (
+                      <Lock className="h-3 w-3 text-muted-foreground" />
+                    )}
+                  </p>
+                  {row.locked && row.lockReason && (
+                    <p className="text-[11px] text-muted-foreground mt-0.5">
+                      {row.lockReason}
+                    </p>
+                  )}
+                </div>
+                <div className="w-14 flex justify-center">
+                  <Toggle
+                    checked={row.inApp}
+                    disabled={row.locked}
+                    onChange={(inApp) =>
+                      setPreference({ type: row.type, inApp, email: row.email })
+                    }
+                  />
+                </div>
+                <div className="w-14 flex justify-center">
+                  <Toggle
+                    checked={row.email}
+                    disabled={row.locked}
+                    onChange={(email) =>
+                      setPreference({ type: row.type, inApp: row.inApp, email })
+                    }
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
@@ -123,7 +128,7 @@ function Toggle({
 }: {
   checked: boolean;
   disabled?: boolean;
-  onChange: (value: boolean) => void;
+  onChange: (next: boolean) => void;
 }) {
   return (
     <button

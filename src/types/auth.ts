@@ -22,6 +22,12 @@ export type ApiMe = {
   memberId?: string | null;
   role: UserRole;
   status: UserStatus;
+  /** Whether this account has confirmed TOTP MFA. */
+  mfaEnabled?: boolean;
+  /** Whether this role must use MFA under current policy. */
+  mfaRequired?: boolean;
+  /** Platform-wide enforcement switch (false = MFA optional for everyone). */
+  mfaEnforced?: boolean;
   emailVerifiedAt: string | null;
   lastLoginAt: string | null;
   createdAt: string;

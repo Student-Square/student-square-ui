@@ -74,24 +74,59 @@ const authApi = baseApi.injectEndpoints({
       invalidatesTags: ["Auth"],
     }),
 
-    beginMfaEnrolment: build.mutation<MfaEnrolResult, { enrolmentToken: string }>({
-      query: ({ enrolmentToken }) => ({
+    beginMfaEnrolment: build.mutation<
+      MfaEnrolResult,
+      { enrolmentToken?: string } | void
+    >({
+      query: (arg) => ({
         url: "/auth/mfa/enrol",
         method: "POST",
-        headers: { Authorization: `Bearer ${enrolmentToken}` },
+        headers: arg?.enrolmentToken
+          ? { Authorization: `Bearer ${arg.enrolmentToken}` }
+          : undefined,
       }),
     }),
 
     confirmMfaEnrolment: build.mutation<
       MfaConfirmResult,
-      { enrolmentToken: string; code: string }
+      { code: string; enrolmentToken?: string }
     >({
-      query: ({ enrolmentToken, code }) => ({
+      query: ({ code, enrolmentToken }) => ({
         url: "/auth/mfa/enrol/confirm",
         method: "POST",
         body: { code },
-        headers: { Authorization: `Bearer ${enrolmentToken}` },
+        headers: enrolmentToken
+          ? { Authorization: `Bearer ${enrolmentToken}` }
+          : undefined,
       }),
+      async onQueryStarted(_, { dispatch, queryFulfilled }) {
+        try {
+          await queryFulfilled;
+          const me = await dispatch(
+            authApi.endpoints.getMe.initiate(undefined, { forceRefetch: true })
+          );
+          if (me.data) dispatch(setUser(me.data as ApiMe));
+        } catch {
+          /* enrolment from login may not have a session yet */
+        }
+      },
+      invalidatesTags: ["Auth"],
+    }),
+
+    disableMfa: build.mutation<{ message: string }, void>({
+      query: () => ({ url: "/auth/mfa/disable", method: "POST" }),
+      async onQueryStarted(_, { dispatch, queryFulfilled }) {
+        try {
+          await queryFulfilled;
+          const me = await dispatch(
+            authApi.endpoints.getMe.initiate(undefined, { forceRefetch: true })
+          );
+          if (me.data) dispatch(setUser(me.data as ApiMe));
+        } catch {
+          /* baseApi toasts */
+        }
+      },
+      invalidatesTags: ["Auth"],
     }),
 
     logout: build.mutation<null, void>({
@@ -144,6 +179,7 @@ export const {
   useLoginMutation,
   useBeginMfaEnrolmentMutation,
   useConfirmMfaEnrolmentMutation,
+  useDisableMfaMutation,
   useLogoutMutation,
   useGetMeQuery,
   useForgotPasswordMutation,

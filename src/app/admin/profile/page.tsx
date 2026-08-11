@@ -7,6 +7,7 @@ import { motion } from "motion/react";
 import { selectCurrentUser } from "@/redux/features/auth/authSlice";
 import { useUpdateProfileMutation, useUploadAvatarMutation } from "@/redux/features/profile/profileApi";
 import { useChangePasswordMutation } from "@/redux/features/auth/authApi";
+import MfaSecurityCard from "@/components/auth/MfaSecurityCard";
 import {
   AlertCircle,
   Camera,
@@ -140,9 +141,11 @@ export default function AdminProfilePage() {
       <div>
         <h1 className="text-2xl font-bold text-foreground tracking-tight">My Profile</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Update your avatar, personal info, and password.
+          Update your avatar, personal info, password, and authenticator.
         </p>
       </div>
+
+      <MfaSecurityCard />
 
       {/* Identity card */}
       <div className="flex flex-col sm:flex-row items-center sm:items-start gap-5 rounded-2xl border border-border bg-card p-5 shadow-sm">
