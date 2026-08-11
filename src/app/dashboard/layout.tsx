@@ -13,7 +13,6 @@ import {
 import { roleHome } from "@/lib/auth-routing";
 import { useLogoutMutation } from "@/redux/features/auth/authApi";
 import {
-  Bell,
   Bookmark,
   BookOpen,
   CalendarClock,
@@ -31,11 +30,13 @@ import {
   MessageSquarePlus,
   Newspaper,
   Route,
+  Settings,
   UserCircle,
   Wallet,
   X,
 } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
+import NotificationBell from "@/components/notifications/NotificationBell";
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -131,19 +132,27 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
       {/* Main content */}
       <div className="flex-1 min-w-0 flex flex-col">
-        {/* Mobile top bar */}
-        <header className="md:hidden sticky top-0 z-30 border-b border-border bg-card/80 backdrop-blur px-4 py-3 flex items-center gap-3">
+        {/* Top bar — mobile menu + notification bell */}
+        <header className="sticky top-0 z-30 border-b border-border bg-card/80 backdrop-blur px-4 py-3 flex items-center gap-3">
           <button
             type="button"
             onClick={() => setMobileOpen(true)}
-            className="-ml-1.5 inline-flex h-10 w-10 items-center justify-center rounded-md hover:bg-muted transition-colors text-muted-foreground"
+            className="md:hidden -ml-1.5 inline-flex h-10 w-10 items-center justify-center rounded-md hover:bg-muted transition-colors text-muted-foreground"
             aria-label="Open menu"
           >
             <Menu className="h-5 w-5" />
           </button>
-          <Image src="/images/ss-logo.png" alt="Student Square" width={100} height={28} className="h-7 w-auto" />
-          <ChevronRight className="h-3 w-3 text-muted-foreground" />
-          <span className="text-xs font-semibold text-muted-foreground">Dashboard</span>
+          <div className="md:hidden flex items-center gap-2 min-w-0">
+            <Image src="/images/ss-logo.png" alt="Student Square" width={100} height={28} className="h-7 w-auto" />
+            <ChevronRight className="h-3 w-3 text-muted-foreground shrink-0" />
+            <span className="text-xs font-semibold text-muted-foreground truncate">Dashboard</span>
+          </div>
+          <div className="hidden md:block text-sm font-semibold text-foreground">
+            Dashboard
+          </div>
+          <div className="ml-auto">
+            <NotificationBell />
+          </div>
         </header>
 
         <div className="flex-1 p-4 sm:p-6 lg:p-8 max-w-5xl">
@@ -194,6 +203,11 @@ function SidebarContent({
           href="/dashboard/profile"
           label="My Profile"
           icon={<UserCircle className="h-4 w-4" />}
+        />
+        <NavItem
+          href="/dashboard/settings"
+          label="Settings"
+          icon={<Settings className="h-4 w-4" />}
         />
         <NavItem
           href="/dashboard/assessment"
@@ -290,11 +304,6 @@ function SidebarContent({
           href="/dashboard/feedback"
           label="Feedback"
           icon={<MessageSquarePlus className="h-4 w-4" />}
-        />
-        <NavItem
-          href="/dashboard/settings"
-          label="Notifications"
-          icon={<Bell className="h-4 w-4" />}
         />
       </nav>
 

@@ -99,7 +99,11 @@ export default function NotificationSettingsPage() {
                     checked={row.inApp}
                     disabled={row.locked}
                     onChange={(inApp) =>
-                      setPreference({ type: row.type, inApp, email: row.email })
+                      setPreference({
+                        type: row.type,
+                        channel: "IN_APP",
+                        enabled: inApp,
+                      })
                     }
                   />
                 </div>
@@ -108,7 +112,11 @@ export default function NotificationSettingsPage() {
                     checked={row.email}
                     disabled={row.locked}
                     onChange={(email) =>
-                      setPreference({ type: row.type, inApp: row.inApp, email })
+                      setPreference({
+                        type: row.type,
+                        channel: "EMAIL",
+                        enabled: email,
+                      })
                     }
                   />
                 </div>
