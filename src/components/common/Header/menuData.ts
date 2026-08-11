@@ -1,5 +1,5 @@
 import { Menu } from "@/types/menu";
-import { Target, Users, MapPin, FileText, Eye, BookOpen, Heart, Building, Globe, Award, Briefcase, Handshake } from "lucide-react";
+import { Target, Users, MapPin, FileText, Eye, BookOpen, Heart, Building, Globe, Award, Briefcase, Handshake, CalendarDays } from "lucide-react";
 
 const menuData: Menu[] = [
   {
@@ -186,6 +186,13 @@ const menuData: Menu[] = [
         path: "/blog/real-life-stories",
         newTab: false,
         icon: FileText,
+      },
+      {
+        id: 34,
+        title: "Events",
+        path: "/blog/events",
+        newTab: false,
+        icon: CalendarDays,
       },
     ],
   },

@@ -5,6 +5,7 @@ import { Analytics } from "@vercel/analytics/next";
 import { ThemeProvider } from "@/components/common/theme-provider";
 import { Providers } from "@/components/common/Providers";
 import { Toaster } from "@/components/ui/sonner";
+import AnalyticsTracker from "@/components/common/AnalyticsTracker";
 import "./globals.css";
 
 const saira = Saira({
@@ -121,6 +122,7 @@ export default function RootLayout({
             <Toaster richColors position="top-right" />
           </ThemeProvider>
         </Providers>
+        <AnalyticsTracker />
         <Analytics />
       </body>
     </html>

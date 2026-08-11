@@ -7,8 +7,13 @@ import {
   useGetCampaignsQuery,
 } from "@/redux/features/comms/commsApi";
 import { formatDateTime } from "@/lib/care";
-import type { CampaignState } from "@/types/comms";
-import { ChevronRight, Loader2, Megaphone, Plus } from "lucide-react";
+import type { CampaignChannel, CampaignState } from "@/types/comms";
+import { ChevronRight, Loader2, Megaphone, MessageSquare, Plus } from "lucide-react";
+
+export const CHANNEL_STYLE: Record<CampaignChannel, string> = {
+  EMAIL: "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300",
+  SMS: "bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300",
+};
 
 export const STATE_STYLE: Record<CampaignState, string> = {
   DRAFT: "bg-muted text-muted-foreground",
@@ -25,6 +30,7 @@ export default function AdminCampaignsPage() {
   const { data: campaigns, isLoading } = useGetCampaignsQuery();
   const [createCampaign, { isLoading: creating }] = useCreateCampaignMutation();
   const [name, setName] = useState("");
+  const [channel, setChannel] = useState<CampaignChannel>("EMAIL");
 
   return (
     <div className="space-y-6">
@@ -36,12 +42,28 @@ export default function AdminCampaignsPage() {
         </p>
       </div>
 
-      <div className="flex gap-2">
+      <div className="flex flex-wrap gap-2">
+        <div className="inline-flex rounded-lg border border-border overflow-hidden shrink-0">
+          {(["EMAIL", "SMS"] as const).map((c) => (
+            <button
+              key={c}
+              type="button"
+              onClick={() => setChannel(c)}
+              className={`px-3 py-2 text-sm font-semibold transition-colors ${
+                channel === c
+                  ? "bg-emerald-600 text-white"
+                  : "bg-card text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              {c === "EMAIL" ? "Email" : "SMS"}
+            </button>
+          ))}
+        </div>
         <input
           value={name}
           onChange={(e) => setName(e.target.value)}
           placeholder="New campaign name"
-          className="flex-1 rounded-lg border border-border bg-card px-3 py-2 text-sm outline-none focus:border-emerald-500"
+          className="flex-1 min-w-[200px] rounded-lg border border-border bg-card px-3 py-2 text-sm outline-none focus:border-emerald-500"
         />
         <button
           type="button"
@@ -49,8 +71,12 @@ export default function AdminCampaignsPage() {
           onClick={() =>
             createCampaign({
               name: name.trim(),
-              subject: "Subject line",
-              bodyHtml: "<p>Hi {{firstName}},</p>",
+              subject: channel === "SMS" ? "SMS campaign" : "Subject line",
+              bodyHtml:
+                channel === "SMS"
+                  ? "Hi {{firstName}}, "
+                  : "<p>Hi {{firstName}},</p>",
+              channel,
             })
               .unwrap()
               .then(() => setName(""))
@@ -89,6 +115,14 @@ export default function AdminCampaignsPage() {
                     <p className="text-sm font-semibold truncate">
                       {campaign.name}
                     </p>
+                    <span
+                      className={`inline-flex items-center gap-1 text-[9px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded-full ${
+                        CHANNEL_STYLE[campaign.channel]
+                      }`}
+                    >
+                      {campaign.channel === "SMS" && <MessageSquare className="h-2.5 w-2.5" />}
+                      {campaign.channel}
+                    </span>
                     <span
                       className={`text-[9px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded-full ${
                         STATE_STYLE[campaign.state]

@@ -17,16 +17,19 @@ import {
 } from "@/redux/features/comms/commsApi";
 import { formatDateTime } from "@/lib/care";
 import type { UserRole } from "@/types/auth";
-import { STATE_STYLE } from "../page";
+import { CHANNEL_STYLE, STATE_STYLE } from "../page";
 import {
   AlertTriangle,
   ArrowLeft,
   Ban,
   Check,
   Loader2,
+  MessageSquare,
   Send,
   Users,
 } from "lucide-react";
+
+const SMS_MAX_LENGTH = 918;
 
 const AUDIENCE_ROLES: UserRole[] = [
   "MEMBER",
@@ -111,6 +114,14 @@ export default function CampaignPage({
           </p>
         </div>
         <span
+          className={`inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full ${
+            CHANNEL_STYLE[campaign.channel]
+          }`}
+        >
+          {campaign.channel === "SMS" && <MessageSquare className="h-3 w-3" />}
+          {campaign.channel}
+        </span>
+        <span
           className={`text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full ${
             STATE_STYLE[campaign.state]
           }`}
@@ -132,20 +143,33 @@ export default function CampaignPage({
           placeholder="Internal name"
           className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:border-emerald-500 disabled:opacity-60"
         />
-        <input
-          value={form.subject}
-          onChange={(e) => setForm({ ...form, subject: e.target.value })}
-          disabled={!isDraft}
-          placeholder="Subject line"
-          className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:border-emerald-500 disabled:opacity-60"
-        />
+        {campaign.channel === "EMAIL" && (
+          <input
+            value={form.subject}
+            onChange={(e) => setForm({ ...form, subject: e.target.value })}
+            disabled={!isDraft}
+            placeholder="Subject line"
+            className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:border-emerald-500 disabled:opacity-60"
+          />
+        )}
         <textarea
           value={form.bodyHtml}
           onChange={(e) => setForm({ ...form, bodyHtml: e.target.value })}
           disabled={!isDraft}
-          rows={10}
+          rows={campaign.channel === "SMS" ? 5 : 10}
+          maxLength={campaign.channel === "SMS" ? SMS_MAX_LENGTH : undefined}
+          placeholder={campaign.channel === "SMS" ? "Plain text message — no HTML" : undefined}
           className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm font-mono outline-none focus:border-emerald-500 disabled:opacity-60"
         />
+        {campaign.channel === "SMS" && (
+          <p
+            className={`text-[11px] ${
+              form.bodyHtml.length > SMS_MAX_LENGTH ? "text-rose-600" : "text-muted-foreground"
+            }`}
+          >
+            {form.bodyHtml.length} / {SMS_MAX_LENGTH} characters
+          </p>
+        )}
 
         <div className="flex flex-wrap gap-1.5">
           {(variables ?? []).map((variable) => (
@@ -159,14 +183,18 @@ export default function CampaignPage({
           ))}
         </div>
         <p className="text-[11px] text-muted-foreground">
-          Only these variables can be used, and an unsubscribe link is appended
-          to every email automatically.
+          {campaign.channel === "SMS"
+            ? "Only these variables can be used. Write plain text — SMS gateways bill per character segment."
+            : "Only these variables can be used, and an unsubscribe link is appended to every email automatically."}
         </p>
 
         {isDraft && (
           <button
             type="button"
-            disabled={saving}
+            disabled={
+              saving ||
+              (campaign.channel === "SMS" && form.bodyHtml.length > SMS_MAX_LENGTH)
+            }
             onClick={() =>
               updateCampaign({
                 id,
@@ -215,7 +243,7 @@ export default function CampaignPage({
         <button
           type="button"
           disabled={resolving || roles.length === 0}
-          onClick={() => previewAudience({ roles })}
+          onClick={() => previewAudience({ roles, channel: campaign.channel })}
           className="rounded-lg border border-border px-3 py-1.5 text-xs font-semibold hover:border-emerald-500/50 disabled:opacity-60"
         >
           {resolving ? "Counting…" : "Count recipients"}
@@ -231,6 +259,7 @@ export default function CampaignPage({
           >
             <p className="text-sm font-semibold">
               {preview.count} recipient{preview.count === 1 ? "" : "s"}
+              {campaign.channel === "SMS" ? " with a phone number on file" : ""}
             </p>
             {preview.needsApproval && (
               <p className="mt-1 flex items-start gap-1.5 text-xs">
@@ -245,7 +274,9 @@ export default function CampaignPage({
               </p>
             )}
             <p className="mt-1 text-[11px] text-muted-foreground">
-              Unsubscribed addresses are already excluded from this count.
+              {campaign.channel === "SMS"
+                ? "Members without a phone number on file are already excluded from this count."
+                : "Unsubscribed addresses are already excluded from this count."}
             </p>
           </div>
         )}

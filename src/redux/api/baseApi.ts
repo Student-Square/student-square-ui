@@ -165,6 +165,10 @@ export const baseApi = createApi({
     "Feedback",
     "Resources",
     "Comms",
+    "Magazines",
+    "AdminMagazines",
+    "Events",
+    "AdminEvents",
   ],
   endpoints: () => ({}),
 });

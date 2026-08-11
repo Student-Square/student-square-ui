@@ -12,12 +12,21 @@
 
 import type { UserRole } from "@/types/auth";
 
-/** Roles that can reach the /admin area. */
+/**
+ * Roles that can reach the /admin area.
+ *
+ * It's one shell for every staff role that isn't counsellor/mentor — each
+ * role just sees a different slice of the nav (see admin/layout.tsx NAV).
+ * AUTHOR: own blog posts only. MODERATOR: moderation queue. HR_MANAGER:
+ * recruitment (placeholder until Phase 7 builds it out).
+ */
 export const ADMIN_ROLES: ReadonlySet<UserRole> = new Set<UserRole>([
   "SUPER_ADMIN",
   "ADMIN",
   "EDITOR",
   "MODERATOR",
+  "AUTHOR",
+  "HR_MANAGER",
 ]);
 
 /**

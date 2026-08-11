@@ -10,9 +10,13 @@ import { ArrowLeft, Copy, Loader2 } from "lucide-react";
 
 const ROLE_OPTIONS: Array<{ value: UserRole; label: string }> = [
   { value: "MEMBER", label: "Member" },
+  { value: "COUNSELLOR", label: "Counsellor" },
+  { value: "MENTOR", label: "Mentor" },
+  { value: "AUTHOR", label: "Author" },
   { value: "EDITOR", label: "Editor" },
   { value: "MODERATOR", label: "Moderator" },
   { value: "FINANCE_MANAGER", label: "Finance Manager" },
+  { value: "HR_MANAGER", label: "HR Manager" },
   { value: "ADMIN", label: "Admin" },
 ];
 

@@ -5,6 +5,7 @@ import type {
   AudiencePreview,
   BookmarkRefType,
   Campaign,
+  CampaignChannel,
   CommsVariable,
   Feedback,
   FeedbackKind,
@@ -334,7 +335,13 @@ const commsApi = baseApi.injectEndpoints({
 
     createCampaign: build.mutation<
       Campaign,
-      { name: string; subject: string; bodyHtml: string; audience?: Audience }
+      {
+        name: string;
+        subject: string;
+        bodyHtml: string;
+        channel?: CampaignChannel;
+        audience?: Audience;
+      }
     >({
       query: (body) => ({ url: "/admin/comms/campaigns", method: "POST", body }),
       invalidatesTags: [{ type: "Comms", id: "CAMPAIGNS" }],
@@ -346,6 +353,7 @@ const commsApi = baseApi.injectEndpoints({
         name: string;
         subject: string;
         bodyHtml: string;
+        channel: CampaignChannel;
         audience: Audience;
       }>
     >({

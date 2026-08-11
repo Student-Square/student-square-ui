@@ -181,7 +181,14 @@ export type CampaignState =
   | "CANCELLED"
   | "REJECTED";
 
-export type Audience = { roles?: UserRole[]; onlyVerified?: boolean };
+export type CampaignChannel = "EMAIL" | "SMS";
+
+export type Audience = {
+  roles?: UserRole[];
+  onlyVerified?: boolean;
+  /** Preview-only — narrows the count to members with a phone on file. */
+  channel?: CampaignChannel;
+};
 
 export type AudiencePreview = {
   count: number;
@@ -195,6 +202,7 @@ export type Campaign = {
   name: string;
   subject: string;
   bodyHtml: string;
+  channel: CampaignChannel;
   templateId: string | null;
   audience: Audience | null;
   recipientCount: number;
