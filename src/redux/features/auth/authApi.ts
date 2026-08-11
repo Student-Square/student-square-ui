@@ -11,10 +11,38 @@ type RegisterResult = {
   role?: string;
   status?: string;
 };
-type LoginInput = { email: string; password: string };
+
+type LoginInput = {
+  email: string;
+  password: string;
+  mfaCode?: string;
+  recoveryCode?: string;
+  rememberMe?: boolean;
+};
+
+export type LoginResult =
+  | { accessToken: string; refreshToken: string }
+  | { mfaRequired: true }
+  | { mfaEnrolmentRequired: true; enrolmentToken: string };
+
+type MfaEnrolResult = {
+  secret: string;
+  otpauthUrl: string;
+};
+
+type MfaConfirmResult = {
+  recoveryCodes: string[];
+};
+
 type ChangePasswordInput = { oldPassword: string; newPassword: string };
 type ForgotPasswordInput = { email: string };
 type ResetPasswordInput = { email?: string; password: string; token?: string };
+
+function isSessionLogin(
+  data: LoginResult | undefined
+): data is { accessToken: string; refreshToken: string } {
+  return Boolean(data && "accessToken" in data && data.accessToken);
+}
 
 const authApi = baseApi.injectEndpoints({
   endpoints: (build) => ({
@@ -26,11 +54,15 @@ const authApi = baseApi.injectEndpoints({
       query: (body) => ({ url: "/auth/verify-email", method: "POST", body }),
     }),
 
-    login: build.mutation<{ accessToken: string; refreshToken: string }, LoginInput>({
+    login: build.mutation<LoginResult, LoginInput>({
       query: (body) => ({ url: "/auth/login", method: "POST", body }),
       async onQueryStarted(_, { dispatch, queryFulfilled }) {
         try {
-          await queryFulfilled;
+          const { data } = await queryFulfilled;
+          // Only hydrate the session when login actually issued tokens.
+          // MFA challenge / enrolment responses are success payloads without a session.
+          if (!isSessionLogin(data)) return;
+
           const me = await dispatch(
             authApi.endpoints.getMe.initiate(undefined, { forceRefetch: true })
           );
@@ -40,6 +72,26 @@ const authApi = baseApi.injectEndpoints({
         }
       },
       invalidatesTags: ["Auth"],
+    }),
+
+    beginMfaEnrolment: build.mutation<MfaEnrolResult, { enrolmentToken: string }>({
+      query: ({ enrolmentToken }) => ({
+        url: "/auth/mfa/enrol",
+        method: "POST",
+        headers: { Authorization: `Bearer ${enrolmentToken}` },
+      }),
+    }),
+
+    confirmMfaEnrolment: build.mutation<
+      MfaConfirmResult,
+      { enrolmentToken: string; code: string }
+    >({
+      query: ({ enrolmentToken, code }) => ({
+        url: "/auth/mfa/enrol/confirm",
+        method: "POST",
+        body: { code },
+        headers: { Authorization: `Bearer ${enrolmentToken}` },
+      }),
     }),
 
     logout: build.mutation<null, void>({
@@ -90,6 +142,8 @@ export const {
   useRegisterMutation,
   useVerifyEmailMutation,
   useLoginMutation,
+  useBeginMfaEnrolmentMutation,
+  useConfirmMfaEnrolmentMutation,
   useLogoutMutation,
   useGetMeQuery,
   useForgotPasswordMutation,
