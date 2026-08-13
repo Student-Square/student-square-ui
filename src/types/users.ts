@@ -52,9 +52,23 @@ export type AdminUserListParams = {
   foundationOnly?: boolean;
   occupationStatus?: string;
   homeDistrict?: string;
+  sortBy?: AdminUserSortKey;
+  sortOrder?: "asc" | "desc";
   page?: number;
   limit?: number;
 };
+
+/** Must match the server's sort allow-list. */
+export type AdminUserSortKey =
+  | "fullName"
+  | "memberId"
+  | "role"
+  | "status"
+  | "createdAt"
+  | "lastLoginAt"
+  | "homeDistrict"
+  | "occupationStatus"
+  | "studyLevel";
 
 export type PaginatedUsers = {
   data: AdminUser[];

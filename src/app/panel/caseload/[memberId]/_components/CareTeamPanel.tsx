@@ -27,7 +27,8 @@ export function CareTeamPanel({
   team: CareAssignment[];
   role: string | null;
 }) {
-  const elevated = role === "SUPER_ADMIN" || role === "ADMIN";
+  const elevated =
+    role === "SYSTEM_ADMIN" || role === "SUPER_ADMIN" || role === "ADMIN";
   const isCounsellorForThisStudent =
     role === "COUNSELLOR" &&
     team.some((a) => a.role === "COUNSELLOR" && !a.endedAt);

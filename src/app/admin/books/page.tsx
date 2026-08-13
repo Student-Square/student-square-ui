@@ -33,6 +33,7 @@ const PANELS: UserRole[] = [
   "HR_MANAGER",
   "ADMIN",
   "SUPER_ADMIN",
+  "SYSTEM_ADMIN",
 ];
 
 const FORMATS: ExportFormat[] = ["xlsx", "csv", "pdf"];

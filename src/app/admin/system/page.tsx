@@ -11,7 +11,7 @@ import {
 } from "@/redux/features/system/systemApi";
 
 /**
- * Super Admin only. Every switch here closes a whole module — its public API
+ * System Admin only. Every switch here closes a whole module — its public API
  * and its admin API together — for everyone, immediately. Sign-in, user
  * administration, profiles and this page itself are not listed: they are what
  * you need in order to switch anything back on.
@@ -51,16 +51,16 @@ const LABELS: Record<string, string> = {
 export default function AdminSystemPage() {
   const role = useSelector(selectUserRole);
   const { data: features, isLoading, isError } = useGetFeaturesQuery(undefined, {
-    skip: role !== "SUPER_ADMIN",
+    skip: role !== "SYSTEM_ADMIN",
   });
   const [setFeature, { isLoading: isSaving }] = useSetFeatureMutation();
 
-  if (role !== "SUPER_ADMIN") {
+  if (role !== "SYSTEM_ADMIN") {
     return (
       <div className="max-w-2xl flex items-start gap-3 rounded-lg border border-border bg-card p-5">
         <ShieldAlert className="h-5 w-5 text-amber-500 shrink-0 mt-0.5" />
         <div>
-          <p className="font-semibold text-foreground">Super Admin only</p>
+          <p className="font-semibold text-foreground">System Admin only</p>
           <p className="mt-1 text-sm text-muted-foreground">
             Feature switches are restricted to the system administrator.
           </p>
@@ -84,7 +84,7 @@ export default function AdminSystemPage() {
   const disabledCount = features?.filter((f) => !f.enabled).length ?? 0;
 
   return (
-    <div className="space-y-6 max-w-3xl">
+    <div className="space-y-6 max-w-3xl 2xl:max-w-5xl">
       <div>
         <h1 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight">
           System Features

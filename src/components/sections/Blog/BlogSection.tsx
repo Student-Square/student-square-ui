@@ -51,7 +51,7 @@ export default function BlogSection() {
             <br />
             <span className="relative inline-block">
               <span className="bg-clip-text text-transparent bg-gradient-to-r from-emerald-600 via-teal-500 to-emerald-500 dark:from-emerald-400 dark:via-teal-400 dark:to-emerald-400">
-                Blog & Stories
+                Blog
               </span>
               <div className="absolute -bottom-2 left-0 right-0 h-1 bg-gradient-to-r from-emerald-600/0 via-emerald-600/50 to-emerald-600/0 rounded-full blur" />
             </span>

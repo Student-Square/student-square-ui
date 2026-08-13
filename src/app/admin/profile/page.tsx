@@ -90,7 +90,7 @@ export default function AdminProfilePage() {
   };
 
   return (
-    <div className="space-y-8 max-w-4xl 2xl:max-w-6xl">
+    <div className="space-y-8 max-w-4xl 2xl:max-w-none">
       {/* Page title */}
       <div>
         <h1 className="text-2xl font-bold text-foreground tracking-tight">My Profile</h1>

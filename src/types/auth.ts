@@ -1,6 +1,7 @@
 /** Types for the /auth API surface. */
 
 export type UserRole =
+  | "SYSTEM_ADMIN"
   | "SUPER_ADMIN"
   | "ADMIN"
   | "COUNSELLOR"

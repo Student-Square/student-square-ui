@@ -57,7 +57,7 @@ export default function ProjectDonationDetailsPage() {
   const methodMax = Math.max(1, ...perMethod.map((m) => m.total));
 
   return (
-    <div className="space-y-6 max-w-6xl">
+    <div className="space-y-6 max-w-6xl 2xl:max-w-none">
       <BackLink />
 
       {/* Header */}

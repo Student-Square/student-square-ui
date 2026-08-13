@@ -79,6 +79,7 @@ const ProjectCarousel = ({ projects: projectsProp }: ProjectCarouselProps) => {
       });
   }, [activeIndex, paused, soundOn]);
 
+
   useEffect(() => {
     const project = projects[activeIndex];
     if (!project?.vimeoVideoId) return;

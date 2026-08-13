@@ -38,6 +38,8 @@ const CATEGORIES: Array<{ value: BoardCategory; label: string; icon: React.React
   { value: "MANAGEMENT", label: "Management Team", icon: <BriefcaseBusiness className="h-3.5 w-3.5" /> },
 ];
 
+const NO_ASSIGNMENTS: ApiBoardAssignment[] = [];
+
 function slugify(str: string) {
   return str
     .toLowerCase()
@@ -50,7 +52,9 @@ function slugify(str: string) {
 export default function TeamPage() {
   const [activeCategory, setActiveCategory] = useState<BoardCategory>("BOARD");
 
-  const { data: allAssignments = [], isLoading, isFetching } =
+  // NO_ASSIGNMENTS is hoisted because `= []` in the destructure would be a new
+  // array every render, and the sync effect below depends on this identity.
+  const { data: allAssignments = NO_ASSIGNMENTS, isLoading, isFetching } =
     useAdminListAssignmentsQuery();
   const [createAssignment, { isLoading: isCreating }] = useAdminCreateAssignmentMutation();
   const [updateAssignment] = useAdminUpdateAssignmentMutation();
@@ -226,7 +230,7 @@ export default function TeamPage() {
   };
 
   return (
-    <div className="max-w-4xl 2xl:max-w-6xl space-y-6">
+    <div className="max-w-4xl 2xl:max-w-none space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-foreground tracking-tight">Team</h1>
         <p className="mt-1 text-sm text-muted-foreground">

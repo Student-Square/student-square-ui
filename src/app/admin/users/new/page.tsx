@@ -18,6 +18,7 @@ const ROLE_OPTIONS: Array<{ value: UserRole; label: string }> = [
   { value: "FINANCE_MANAGER", label: "Finance Manager" },
   { value: "HR_MANAGER", label: "HR Manager" },
   { value: "ADMIN", label: "Admin" },
+  { value: "SUPER_ADMIN", label: "Super Admin" },
 ];
 
 export default function AdminNewUserPage() {

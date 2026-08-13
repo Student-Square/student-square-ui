@@ -69,13 +69,13 @@ type NavGroupEntry = {
 type NavSectionEntry = { kind: "section"; label: string; roles?: UserRole[] };
 type NavEntry = NavItem | NavGroupEntry | NavSectionEntry;
 
-const CONTENT_ROLES: UserRole[] = ["SUPER_ADMIN", "ADMIN", "EDITOR", "AUTHOR", "MODERATOR"];
-const EDIT_ROLES: UserRole[] = ["SUPER_ADMIN", "ADMIN", "EDITOR"];
-const AUTHOR_ROLES: UserRole[] = ["SUPER_ADMIN", "ADMIN", "EDITOR", "AUTHOR"];
-const MOD_ROLES: UserRole[] = ["SUPER_ADMIN", "ADMIN", "MODERATOR"];
-const TOP_ROLES: UserRole[] = ["SUPER_ADMIN", "ADMIN"];
-const HR_ROLES: UserRole[] = ["SUPER_ADMIN", "ADMIN", "HR_MANAGER"];
-const SUPER_ONLY: UserRole[] = ["SUPER_ADMIN"];
+const CONTENT_ROLES: UserRole[] = ["SYSTEM_ADMIN", "SUPER_ADMIN", "ADMIN", "EDITOR", "AUTHOR", "MODERATOR"];
+const EDIT_ROLES: UserRole[] = ["SYSTEM_ADMIN", "SUPER_ADMIN", "ADMIN", "EDITOR"];
+const AUTHOR_ROLES: UserRole[] = ["SYSTEM_ADMIN", "SUPER_ADMIN", "ADMIN", "EDITOR", "AUTHOR"];
+const MOD_ROLES: UserRole[] = ["SYSTEM_ADMIN", "SUPER_ADMIN", "ADMIN", "MODERATOR"];
+const TOP_ROLES: UserRole[] = ["SYSTEM_ADMIN", "SUPER_ADMIN", "ADMIN"];
+const HR_ROLES: UserRole[] = ["SYSTEM_ADMIN", "SUPER_ADMIN", "ADMIN", "HR_MANAGER"];
+const SYSTEM_ONLY: UserRole[] = ["SYSTEM_ADMIN"];
 
 const NAV: NavEntry[] = [
   { kind: "item", href: "/admin", label: "Overview", icon: <Home className="h-4 w-4" />, exact: true },
@@ -120,7 +120,6 @@ const NAV: NavEntry[] = [
   { kind: "item", href: "/admin/feedback", label: "Feedback", icon: <MessageSquareText className="h-4 w-4" />, roles: EDIT_ROLES },
   { kind: "item", href: "/admin/analytics", label: "Analytics", icon: <BarChart3 className="h-4 w-4" />, roles: EDIT_ROLES },
   { kind: "item", href: "/admin/assessments", label: "Assessments", icon: <ClipboardList className="h-4 w-4" />, roles: TOP_ROLES },
-  { kind: "item", href: "/admin/members", label: "Members", icon: <Users className="h-4 w-4" />, roles: TOP_ROLES },
   { kind: "item", href: "/admin/users", label: "Users", icon: <Users className="h-4 w-4" />, roles: TOP_ROLES },
 
   { kind: "section", label: "Communications", roles: TOP_ROLES },
@@ -130,8 +129,8 @@ const NAV: NavEntry[] = [
   { kind: "section", label: "Recruitment", roles: HR_ROLES },
   { kind: "item", href: "/admin/recruitment", label: "Candidates", icon: <Briefcase className="h-4 w-4" />, roles: HR_ROLES },
 
-  { kind: "section", label: "System", roles: SUPER_ONLY },
-  { kind: "item", href: "/admin/system", label: "Feature Switches", icon: <ToggleLeft className="h-4 w-4" />, roles: SUPER_ONLY },
+  { kind: "section", label: "System", roles: SYSTEM_ONLY },
+  { kind: "item", href: "/admin/system", label: "Feature Switches", icon: <ToggleLeft className="h-4 w-4" />, roles: SYSTEM_ONLY },
 
   { kind: "section", label: "My Account" },
   {
@@ -206,7 +205,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       {/* Sidebar — sticky so profile widget never scrolls away */}
       <aside className="hidden md:flex w-60 2xl:w-64 3xl:w-72 shrink-0 border-r border-border bg-card/40 flex-col h-screen sticky top-0">
         {/* Logo */}
-        <div className="px-4 py-4 border-b border-border flex items-center justify-between">
+        <div className="px-4 py-4 border-b border-border flex items-center">
           <Link href="/" className="flex items-center gap-2 group">
             <Image
               src="/images/ss-logo.png"
@@ -217,7 +216,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               priority
             />
           </Link>
-          <ThemeToggle className="h-8 w-8" iconClassName="h-3.5 w-3.5" />
         </div>
 
         {/* Navigation */}
@@ -303,7 +301,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           )}
         </AnimatePresence>
 
-        <div className="p-4 sm:p-6 lg:p-8 2xl:p-10 3xl:p-12 max-w-6xl 2xl:max-w-7xl 3xl:max-w-[1700px] 4xl:max-w-[2100px]">{children}</div>
+        {/* Capped on laptops so text lines stay readable; from 2xl up the wide
+            admin tables get the whole viewport instead of a 1280px column. */}
+        <div className="p-4 sm:p-6 lg:p-8 2xl:p-10 3xl:p-12 max-w-6xl 2xl:max-w-none">{children}</div>
       </div>
     </main>
   );

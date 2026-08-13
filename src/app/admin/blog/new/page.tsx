@@ -259,7 +259,7 @@ export default function NewBlogPage() {
         </div>
       </div>
 
-      <div className="mx-auto max-w-7xl 3xl:max-w-[1600px] px-4 sm:px-6 lg:px-8 py-8">
+      <div className="mx-auto max-w-7xl 2xl:max-w-none px-4 sm:px-6 lg:px-8 py-8">
         <AnimatePresence mode="wait">
           {tab === "write" ? (
             <motion.div key="write" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.2 }}

@@ -93,7 +93,7 @@ export default function CampaignPage({
   const isAuthor = campaign.createdBy?.id === me?.id;
   const canApprove =
     campaign.state === "PENDING_APPROVAL" &&
-    me?.role === "SUPER_ADMIN" &&
+    me?.role === "SYSTEM_ADMIN" &&
     !isAuthor;
 
   return (
@@ -264,7 +264,7 @@ export default function CampaignPage({
             {preview.needsApproval && (
               <p className="mt-1 flex items-start gap-1.5 text-xs">
                 <AlertTriangle className="h-3.5 w-3.5 text-amber-600 shrink-0 mt-0.5" />
-                Over {preview.threshold}. A Super Admin other than you must
+                Over {preview.threshold}. A System Admin other than you must
                 approve this before it can be sent.
               </p>
             )}
@@ -382,8 +382,8 @@ export default function CampaignPage({
             ) : (
               <p className="mt-1 text-xs">
                 {isAuthor
-                  ? "You created this campaign, so another Super Admin has to approve it."
-                  : "A Super Admin must approve this."}
+                  ? "You created this campaign, so another System Admin has to approve it."
+                  : "A System Admin must approve this."}
               </p>
             )}
           </div>

@@ -21,6 +21,7 @@ import type { UserRole } from "@/types/auth";
  * recruitment (placeholder until Phase 7 builds it out).
  */
 export const ADMIN_ROLES: ReadonlySet<UserRole> = new Set<UserRole>([
+  "SYSTEM_ADMIN",
   "SUPER_ADMIN",
   "ADMIN",
   "EDITOR",
@@ -33,10 +34,11 @@ export const ADMIN_ROLES: ReadonlySet<UserRole> = new Set<UserRole>([
  * Roles that can reach /panel — the shared care panel (SRS §2.5.2 CARE_ROLES).
  *
  * Counsellor and mentor are nav variants of one shell, not two route trees.
- * Admins are here so a Super Admin can oversee a caseload without a second
+ * Admins are here so a System Admin can oversee a caseload without a second
  * codepath; the server still applies the relationship check per student.
  */
 export const PANEL_ROLES: ReadonlySet<UserRole> = new Set<UserRole>([
+  "SYSTEM_ADMIN",
   "SUPER_ADMIN",
   "ADMIN",
   "COUNSELLOR",

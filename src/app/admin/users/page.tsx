@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useSelector } from "react-redux";
 import { toast } from "sonner";
 import {
@@ -11,11 +12,25 @@ import {
 } from "@/redux/features/users/usersApi";
 import { selectCurrentUser } from "@/redux/features/auth/authSlice";
 import type { UserRole, UserStatus } from "@/types/auth";
-import type { AdminUserListParams } from "@/types/users";
-import { ChevronLeft, ChevronRight, Loader2, Pencil, Plus, Search, UserCheck, UserX } from "lucide-react";
+import type { AdminUserListParams, AdminUserSortKey } from "@/types/users";
+import { HOME_DISTRICTS, OCCUPATION_STATUSES } from "@/lib/registration";
+import {
+  ArrowDown,
+  ArrowUp,
+  ArrowUpDown,
+  ChevronLeft,
+  ChevronRight,
+  Loader2,
+  Pencil,
+  Plus,
+  Search,
+  UserCheck,
+  UserX,
+} from "lucide-react";
 
 const ROLE_OPTIONS: Array<{ value: UserRole | "ALL"; label: string }> = [
   { value: "ALL", label: "All roles" },
+  { value: "SYSTEM_ADMIN", label: "System Admin" },
   { value: "SUPER_ADMIN", label: "Super Admin" },
   { value: "ADMIN", label: "Admin" },
   { value: "COUNSELLOR", label: "Counsellor" },
@@ -44,20 +59,58 @@ const STATUS_BADGE: Record<UserStatus, string> = {
 const ROLE_BADGE =
   "bg-muted text-muted-foreground text-[10px] uppercase tracking-wide px-1.5 py-0.5 rounded font-bold";
 
+/** Most columns are member-only, so an em dash is the normal case, not an error. */
+const dash = (value?: string | null) => (value && value.trim() ? value : "—");
+
+const shortDate = (iso?: string | null) =>
+  iso
+    ? new Date(iso).toLocaleDateString("en-GB", {
+        day: "numeric",
+        month: "short",
+        year: "numeric",
+      })
+    : "—";
+
 export default function AdminUsersPage() {
   const me = useSelector(selectCurrentUser);
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const [q, setQ] = useState("");
-  const [role, setRole] = useState<UserRole | "ALL">("ALL");
+  // `?role=MEMBER` is how the old Members screen now arrives here.
+  const [role, setRole] = useState<UserRole | "ALL">(
+    (searchParams.get("role") as UserRole | null) ?? "ALL"
+  );
   const [status, setStatus] = useState<UserStatus | "ALL">("ALL");
   const [verifiedOnly, setVerifiedOnly] = useState(true);
+  const [occupationStatus, setOccupationStatus] = useState("");
+  const [homeDistrict, setHomeDistrict] = useState("");
+  const [sortBy, setSortBy] = useState<AdminUserSortKey>("createdAt");
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
+
+  const isMemberView = role === "MEMBER";
+
+  /** Same column flips direction; a new column starts ascending. */
+  const toggleSort = (key: AdminUserSortKey) => {
+    if (key === sortBy) {
+      setSortOrder((o) => (o === "asc" ? "desc" : "asc"));
+    } else {
+      setSortBy(key);
+      setSortOrder("asc");
+    }
+    setPage(1);
+  };
 
   const params: AdminUserListParams = {
     ...(q.trim() ? { q: q.trim() } : {}),
     ...(role !== "ALL" ? { role } : {}),
     ...(status !== "ALL" ? { status } : {}),
+    ...(isMemberView && occupationStatus ? { occupationStatus } : {}),
+    ...(isMemberView && homeDistrict ? { homeDistrict } : {}),
     verifiedOnly,
+    sortBy,
+    sortOrder,
     page,
     limit,
   };
@@ -106,7 +159,7 @@ export default function AdminUsersPage() {
             type="text"
             value={q}
             onChange={(e) => { setQ(e.target.value); setPage(1); }}
-            placeholder="Search name or email…"
+            placeholder="Search name, email or Member ID…"
             className="pl-8 pr-3 py-1.5 text-sm rounded-lg border border-border bg-background w-56 focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500/60"
           />
         </div>
@@ -124,6 +177,27 @@ export default function AdminUsersPage() {
         >
           {STATUS_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
         </select>
+        {/* Membership filters only mean anything for the foundation register. */}
+        {isMemberView && (
+          <>
+            <select
+              value={occupationStatus}
+              onChange={(e) => { setOccupationStatus(e.target.value); setPage(1); }}
+              className="text-sm rounded-lg border border-border bg-background px-2.5 py-1.5 focus:outline-none focus:ring-2 focus:ring-emerald-500/30"
+            >
+              <option value="">All occupations</option>
+              {OCCUPATION_STATUSES.map((o) => <option key={o} value={o}>{o}</option>)}
+            </select>
+            <select
+              value={homeDistrict}
+              onChange={(e) => { setHomeDistrict(e.target.value); setPage(1); }}
+              className="text-sm rounded-lg border border-border bg-background px-2.5 py-1.5 focus:outline-none focus:ring-2 focus:ring-emerald-500/30"
+            >
+              <option value="">All districts</option>
+              {HOME_DISTRICTS.map((d) => <option key={d} value={d}>{d}</option>)}
+            </select>
+          </>
+        )}
         <label className="flex items-center gap-1.5 text-xs text-muted-foreground cursor-pointer select-none">
           <input
             type="checkbox"
@@ -145,18 +219,34 @@ export default function AdminUsersPage() {
       {data && (
         <>
           <div className="rounded-xl border border-border overflow-hidden">
+            <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead className="bg-muted/40 text-[11px] uppercase tracking-widest text-muted-foreground">
                 <tr>
-                  <th className="px-4 py-3 text-left font-semibold">User</th>
-                  <th className="px-4 py-3 text-left font-semibold hidden sm:table-cell">Role</th>
-                  <th className="px-4 py-3 text-left font-semibold hidden md:table-cell">Status</th>
+                  <SortableHeader label="User" sortKey="fullName" active={sortBy} order={sortOrder} onSort={toggleSort} />
+                  <SortableHeader label="Member ID" sortKey="memberId" active={sortBy} order={sortOrder} onSort={toggleSort} className="hidden lg:table-cell" />
+                  <SortableHeader label="Role" sortKey="role" active={sortBy} order={sortOrder} onSort={toggleSort} className="hidden sm:table-cell" />
+                  <SortableHeader label="District" sortKey="homeDistrict" active={sortBy} order={sortOrder} onSort={toggleSort} className="hidden xl:table-cell" />
+                  <SortableHeader label="Occupation" sortKey="occupationStatus" active={sortBy} order={sortOrder} onSort={toggleSort} className="hidden xl:table-cell" />
+                  <SortableHeader label="Study" sortKey="studyLevel" active={sortBy} order={sortOrder} onSort={toggleSort} className="hidden 2xl:table-cell" />
+                  <SortableHeader label="Status" sortKey="status" active={sortBy} order={sortOrder} onSort={toggleSort} className="hidden md:table-cell" />
+                  <SortableHeader label="Joined" sortKey="createdAt" active={sortBy} order={sortOrder} onSort={toggleSort} className="hidden lg:table-cell" />
+                  <SortableHeader label="Last login" sortKey="lastLoginAt" active={sortBy} order={sortOrder} onSort={toggleSort} className="hidden 2xl:table-cell" />
                   <th className="px-4 py-3 text-right font-semibold">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
                 {data.data.map((user) => (
-                  <tr key={user.id} className="hover:bg-muted/20 transition-colors">
+                  <tr
+                    key={user.id}
+                    onClick={() => router.push(`/admin/users/${user.id}`)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") router.push(`/admin/users/${user.id}`);
+                    }}
+                    tabIndex={0}
+                    title={`Open ${user.fullName}`}
+                    className="cursor-pointer hover:bg-muted/20 focus:bg-muted/30 focus:outline-none transition-colors"
+                  >
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-3">
                         <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center overflow-hidden shrink-0">
@@ -169,21 +259,48 @@ export default function AdminUsersPage() {
                             </span>
                           )}
                         </div>
-                        <div>
+                        <div className="min-w-0">
                           <p className="font-semibold text-foreground leading-tight">{user.fullName}</p>
                           <p className="text-[11px] text-muted-foreground">{user.email}</p>
+                          {user.profile?.phone && (
+                            <p className="text-[11px] text-muted-foreground/80">{user.profile.phone}</p>
+                          )}
                         </div>
                       </div>
                     </td>
+                    <td className="px-4 py-3 hidden lg:table-cell whitespace-nowrap text-muted-foreground">
+                      {dash(user.memberId)}
+                    </td>
                     <td className="px-4 py-3 hidden sm:table-cell">
                       <span className={ROLE_BADGE}>{user.role.replace("_", " ")}</span>
+                    </td>
+                    <td className="px-4 py-3 hidden xl:table-cell whitespace-nowrap text-muted-foreground">
+                      {dash(user.memberProfile?.homeDistrict)}
+                    </td>
+                    <td className="px-4 py-3 hidden xl:table-cell whitespace-nowrap text-muted-foreground">
+                      {dash(user.memberProfile?.occupationStatus)}
+                    </td>
+                    <td className="px-4 py-3 hidden 2xl:table-cell text-muted-foreground">
+                      <p className="whitespace-nowrap">{dash(user.memberProfile?.studyLevel)}</p>
+                      {user.memberProfile?.institutionName && (
+                        <p className="text-[11px] text-muted-foreground/70 max-w-[14rem] truncate">
+                          {user.memberProfile.institutionName}
+                        </p>
+                      )}
                     </td>
                     <td className="px-4 py-3 hidden md:table-cell">
                       <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full ${STATUS_BADGE[user.status]}`}>
                         {user.status === "PENDING_VERIFICATION" ? "Unverified" : user.status.charAt(0) + user.status.slice(1).toLowerCase()}
                       </span>
                     </td>
-                    <td className="px-4 py-3">
+                    <td className="px-4 py-3 hidden lg:table-cell whitespace-nowrap text-muted-foreground">
+                      {shortDate(user.createdAt)}
+                    </td>
+                    <td className="px-4 py-3 hidden 2xl:table-cell whitespace-nowrap text-muted-foreground">
+                      {shortDate(user.lastLoginAt)}
+                    </td>
+                    {/* Row-level navigation must not fire from the action buttons. */}
+                    <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
                       <div className="flex items-center gap-1 justify-end">
                         {user.status === "ACTIVE" ? (
                           <button
@@ -218,13 +335,14 @@ export default function AdminUsersPage() {
                 ))}
                 {data.data.length === 0 && (
                   <tr>
-                    <td colSpan={4} className="px-4 py-10 text-center text-sm text-muted-foreground">
+                    <td colSpan={10} className="px-4 py-10 text-center text-sm text-muted-foreground">
                       No users match the current filters.
                     </td>
                   </tr>
                 )}
               </tbody>
             </table>
+            </div>
           </div>
 
           {/* Pagination */}
@@ -239,6 +357,41 @@ export default function AdminUsersPage() {
         </>
       )}
     </>
+  );
+}
+
+/** Header cell that sorts its column; the icon shows the current direction. */
+function SortableHeader({
+  label,
+  sortKey,
+  active,
+  order,
+  onSort,
+  className = "",
+}: {
+  label: string;
+  sortKey: AdminUserSortKey;
+  active: AdminUserSortKey;
+  order: "asc" | "desc";
+  onSort: (key: AdminUserSortKey) => void;
+  className?: string;
+}) {
+  const isActive = active === sortKey;
+  const Icon = !isActive ? ArrowUpDown : order === "asc" ? ArrowUp : ArrowDown;
+
+  return (
+    <th className={`px-4 py-3 text-left font-semibold ${className}`} aria-sort={isActive ? (order === "asc" ? "ascending" : "descending") : "none"}>
+      <button
+        type="button"
+        onClick={() => onSort(sortKey)}
+        className={`inline-flex items-center gap-1 uppercase tracking-widest transition-colors hover:text-foreground ${
+          isActive ? "text-foreground" : ""
+        }`}
+      >
+        {label}
+        <Icon className={`h-3 w-3 ${isActive ? "text-emerald-600" : "opacity-40"}`} />
+      </button>
+    </th>
   );
 }
 

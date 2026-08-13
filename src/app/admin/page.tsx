@@ -17,9 +17,9 @@ import {
 import { getInitials } from "@/lib/utils";
 import type { UserRole } from "@/types/auth";
 
-const TOP_ROLES: UserRole[] = ["SUPER_ADMIN", "ADMIN"];
-const EDIT_ROLES: UserRole[] = ["SUPER_ADMIN", "ADMIN", "EDITOR"];
-const AUTHOR_ROLES: UserRole[] = ["SUPER_ADMIN", "ADMIN", "EDITOR", "AUTHOR"];
+const TOP_ROLES: UserRole[] = ["SYSTEM_ADMIN", "SUPER_ADMIN", "ADMIN"];
+const EDIT_ROLES: UserRole[] = ["SYSTEM_ADMIN", "SUPER_ADMIN", "ADMIN", "EDITOR"];
+const AUTHOR_ROLES: UserRole[] = ["SYSTEM_ADMIN", "SUPER_ADMIN", "ADMIN", "EDITOR", "AUTHOR"];
 
 const QUICK_LINKS: Array<{
   href: string;
@@ -83,7 +83,7 @@ const QUICK_LINKS: Array<{
     label: "Moderation Queue",
     desc: "Review pending stories & comments",
     bg: "bg-orange-50 dark:bg-orange-900/20",
-    roles: ["SUPER_ADMIN", "ADMIN", "MODERATOR"],
+    roles: ["SYSTEM_ADMIN", "SUPER_ADMIN", "ADMIN", "MODERATOR"],
   },
   {
     href: "/admin/recruitment",
@@ -91,7 +91,7 @@ const QUICK_LINKS: Array<{
     label: "Recruitment",
     desc: "Candidates & hiring pipeline",
     bg: "bg-indigo-50 dark:bg-indigo-900/20",
-    roles: ["SUPER_ADMIN", "ADMIN", "HR_MANAGER"],
+    roles: ["SYSTEM_ADMIN", "SUPER_ADMIN", "ADMIN", "HR_MANAGER"],
   },
   {
     href: "/admin/activities/my-blog",
@@ -109,7 +109,7 @@ export default function AdminOverviewPage() {
   const quickLinks = QUICK_LINKS.filter((l) => !l.roles || (role && l.roles.includes(role)));
 
   return (
-    <div className="space-y-8 max-w-4xl 2xl:max-w-6xl 3xl:max-w-none">
+    <div className="space-y-8 max-w-4xl 2xl:max-w-none">
       {/* Header */}
       <div>
         <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-1">

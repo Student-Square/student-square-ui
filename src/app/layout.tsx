@@ -106,7 +106,12 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${saira.variable} ${oswald.variable} ${jetBrainsMono.variable} font-sans antialiased`}>
+      {/* Extensions such as Grammarly add attributes to <body> before React
+          hydrates, which React reports as a mismatch we cannot fix. */}
+      <body
+        suppressHydrationWarning
+        className={`${saira.variable} ${oswald.variable} ${jetBrainsMono.variable} font-sans antialiased`}
+      >
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(orgJsonLd) }}

@@ -34,7 +34,10 @@ export default function MemberCasePage({
   const { data, isLoading, error } = useGetMemberCaseQuery(memberId);
 
   const canAuthor =
-    role === "SUPER_ADMIN" || role === "ADMIN" || role === "COUNSELLOR";
+    role === "SYSTEM_ADMIN" ||
+    role === "SUPER_ADMIN" ||
+    role === "ADMIN" ||
+    role === "COUNSELLOR";
 
   if (isLoading) {
     return (

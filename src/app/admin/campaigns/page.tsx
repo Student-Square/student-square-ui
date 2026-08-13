@@ -38,7 +38,7 @@ export default function AdminCampaignsPage() {
         <h1 className="text-2xl font-bold tracking-tight">Bulk messages</h1>
         <p className="mt-1 text-sm text-muted-foreground">
           Announcements and newsletters. Anything over 500 recipients needs a
-          second Super Admin to approve it.
+          second System Admin to approve it.
         </p>
       </div>
 

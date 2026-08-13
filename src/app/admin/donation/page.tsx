@@ -69,7 +69,7 @@ export default function AdminDonationPage() {
   const [showModal, setShowModal] = useState(false);
 
   return (
-    <div className="space-y-6 max-w-6xl">
+    <div className="space-y-6 max-w-6xl 2xl:max-w-none">
       <div className="flex items-end justify-between gap-3 flex-wrap">
         <div>
           <h1 className="text-2xl font-bold text-foreground tracking-tight flex items-center gap-2">

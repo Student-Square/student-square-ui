@@ -26,7 +26,17 @@ const ROLE_OPTIONS: Array<{ value: UserRole; label: string }> = [
   { value: "HR_MANAGER", label: "HR Manager" },
   { value: "ADMIN", label: "Admin" },
   { value: "SUPER_ADMIN", label: "Super Admin" },
+  { value: "SYSTEM_ADMIN", label: "System Admin" },
 ];
+
+const ROLE_RANK: Partial<Record<UserRole, number>> = {
+  SYSTEM_ADMIN: 3,
+  SUPER_ADMIN: 2,
+  ADMIN: 1,
+};
+
+const canAssign = (caller: UserRole, target: UserRole) =>
+  (ROLE_RANK[target] ?? 0) <= (ROLE_RANK[caller] ?? 0);
 
 const STATUS_OPTIONS: Array<{ value: UserStatus; label: string }> = [
   { value: "ACTIVE", label: "Active" },
@@ -114,6 +124,8 @@ export default function AdminUserDetailPage() {
       {/* Metadata */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-8">
         {[
+          { label: "Member ID", value: user.memberId ?? "—" },
+          { label: "Phone", value: user.profile?.phone ?? "—" },
           { label: "Created", value: new Date(user.createdAt).toLocaleDateString() },
           { label: "Last login", value: user.lastLoginAt ? new Date(user.lastLoginAt).toLocaleDateString() : "—" },
           { label: "Verified", value: user.emailVerifiedAt ? new Date(user.emailVerifiedAt).toLocaleDateString() : "Not verified" },
@@ -125,6 +137,40 @@ export default function AdminUserDetailPage() {
           </div>
         ))}
       </div>
+
+      {/* Foundation registration — only members have answered this. */}
+      {user.memberProfile && (
+        <div className="mb-8">
+          <h2 className="text-[10px] uppercase tracking-widest text-muted-foreground font-bold mb-3">
+            Foundation registration
+          </h2>
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+            {[
+              { label: "Home district", value: user.memberProfile.homeDistrict },
+              { label: "Occupation", value: user.memberProfile.occupationStatus },
+              { label: "Study level", value: user.memberProfile.studyLevel },
+              { label: "Institution", value: user.memberProfile.institutionName },
+              { label: "Field of study", value: user.memberProfile.fieldOfStudy },
+              { label: "Disability status", value: user.memberProfile.disabilityStatus },
+              {
+                label: "Completed",
+                value: user.memberProfile.completedAt
+                  ? new Date(user.memberProfile.completedAt).toLocaleDateString()
+                  : "—",
+              },
+            ].map((m) => (
+              <div key={m.label} className="rounded-lg border border-border bg-card/40 px-4 py-3">
+                <p className="text-[10px] uppercase tracking-widest text-muted-foreground font-bold mb-1">
+                  {m.label}
+                </p>
+                <p className="text-sm font-semibold text-foreground break-words">
+                  {m.value?.trim() ? m.value : "—"}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       <form onSubmit={handleSave} className="max-w-lg 2xl:max-w-xl space-y-5">
         <Field label="Full name">
@@ -140,14 +186,14 @@ export default function AdminUserDetailPage() {
           <select
             value={role}
             onChange={(e) => setRole(e.target.value as UserRole)}
-            disabled={callerRole !== "SUPER_ADMIN" && role === "SUPER_ADMIN"}
+            disabled={!canAssign(callerRole, role)}
             className="form-input"
           >
             {ROLE_OPTIONS.map((o) => (
               <option
                 key={o.value}
                 value={o.value}
-                disabled={o.value === "SUPER_ADMIN" && callerRole !== "SUPER_ADMIN"}
+                disabled={!canAssign(callerRole, o.value)}
               >
                 {o.label}
               </option>

@@ -33,7 +33,7 @@ export default function AdminAnalyticsPage() {
   const { data, isLoading, isError } = useGetAnalyticsOverviewQuery({ days });
 
   return (
-    <div className="space-y-8 max-w-6xl 2xl:max-w-7xl">
+    <div className="space-y-8 max-w-6xl 2xl:max-w-none">
       <div className="flex items-end justify-between gap-4 flex-wrap">
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight">

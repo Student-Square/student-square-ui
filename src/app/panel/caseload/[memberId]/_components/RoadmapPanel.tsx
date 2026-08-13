@@ -35,7 +35,8 @@ export function RoadmapPanel({
   const [updateMilestone] = useUpdateMilestoneMutation();
   const [deleteMilestone] = useDeleteMilestoneMutation();
 
-  const elevated = role === "SUPER_ADMIN" || role === "ADMIN";
+  const elevated =
+    role === "SYSTEM_ADMIN" || role === "SUPER_ADMIN" || role === "ADMIN";
   const canEditPlan = (plan: RoadmapPlan) =>
     elevated ||
     (plan === "ASSESSMENT_PLAN" ? role === "COUNSELLOR" : role === "MENTOR");

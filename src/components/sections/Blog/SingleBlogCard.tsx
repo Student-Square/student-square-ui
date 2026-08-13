@@ -27,37 +27,31 @@ export default function SingleBlogCard({ blog, index }: { blog: ApiBlogListItem;
     >
       <Link href={`/blog/${blog.category.slug}/${blog.id}`} className="group block h-full">
         <div className="relative h-full flex flex-col overflow-hidden rounded-2xl border border-border/30 bg-background/50 backdrop-blur-sm transition-all duration-300 hover:border-emerald-500/50 hover:shadow-lg hover:shadow-emerald-500/10 hover:-translate-y-1">
-          {/* Image Container — omitted entirely for posts without a cover,
-              otherwise the card opens with a tall empty panel. */}
-          {blog.coverImage ? (
-            <div className="relative w-full h-48 sm:h-56 md:h-64 overflow-hidden bg-muted">
-              <Image
-                src={blog.coverImage.url}
-                alt={blog.coverImage.alt ?? blog.title}
-                fill
-                className="object-cover transition-transform duration-500 group-hover:scale-110"
-                sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
-              />
-              {/* Gradient overlay */}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+          {/* Image container is always rendered, blank when the post has no
+              cover, so every card in the grid has the same shape. */}
+          <div className="relative w-full h-48 sm:h-56 md:h-64 overflow-hidden bg-muted">
+            {blog.coverImage && (
+              <>
+                <Image
+                  src={blog.coverImage.url}
+                  alt={blog.coverImage.alt ?? blog.title}
+                  fill
+                  className="object-cover transition-transform duration-500 group-hover:scale-110"
+                  sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                />
+                {/* Gradient overlay */}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+              </>
+            )}
 
-              {badge && (
-                <div className="absolute top-3 right-3 sm:top-4 sm:right-4 z-10">
-                  <span className="inline-flex items-center gap-1 px-2 sm:px-4 py-1 sm:py-2 text-[10px] sm:text-sm font-semibold bg-emerald-600 text-white rounded-full backdrop-blur-sm group-hover:bg-emerald-700 transition-colors">
-                    {badge}
-                  </span>
-                </div>
-              )}
-            </div>
-          ) : (
-            badge && (
-              <div className="px-3 pt-3 sm:px-6 sm:pt-6">
-                <span className="inline-flex items-center gap-1 px-2 sm:px-4 py-1 sm:py-2 text-[10px] sm:text-sm font-semibold bg-emerald-600 text-white rounded-full transition-colors group-hover:bg-emerald-700">
+            {badge && (
+              <div className="absolute top-3 right-3 sm:top-4 sm:right-4 z-10">
+                <span className="inline-flex items-center gap-1 px-2 sm:px-4 py-1 sm:py-2 text-[10px] sm:text-sm font-semibold bg-emerald-600 text-white rounded-full backdrop-blur-sm group-hover:bg-emerald-700 transition-colors">
                   {badge}
                 </span>
               </div>
-            )
-          )}
+            )}
+          </div>
 
           {/* Content Container */}
           <div className="flex flex-col flex-grow p-3 sm:p-6 md:p-7">

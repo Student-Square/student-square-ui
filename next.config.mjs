@@ -43,6 +43,12 @@ const nextConfig = {
         destination: '/news',
         permanent: true,
       },
+      // Members was the Users list filtered to the foundation register.
+      {
+        source: '/admin/members',
+        destination: '/admin/users?role=MEMBER',
+        permanent: false,
+      },
     ]
   },
 }

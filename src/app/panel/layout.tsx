@@ -39,7 +39,7 @@ import NotificationBell from "@/components/notifications/NotificationBell";
  * with their own `roles` entries — not in a fifth copy of this file.
  */
 
-type PanelRole = "SUPER_ADMIN" | "ADMIN" | "COUNSELLOR" | "MENTOR";
+type PanelRole = "SYSTEM_ADMIN" | "SUPER_ADMIN" | "ADMIN" | "COUNSELLOR" | "MENTOR";
 
 const NAV: {
   href: string;
