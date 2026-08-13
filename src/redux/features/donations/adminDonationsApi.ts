@@ -63,11 +63,12 @@ const adminDonationsApi = baseApi.injectEndpoints({
       invalidatesTags: ["AdminDonations", "Campaigns", "AdminCampaigns"],
     }),
 
-    syncGatewayDonations: build.mutation<
+    /** Re-check every pending SSLCommerz donation with the gateway, now. */
+    reconcileDonations: build.mutation<
       { checked: number; paid: number; expired: number },
       void
     >({
-      query: () => ({ url: "/admin/donations/sync-gateway", method: "POST" }),
+      query: () => ({ url: "/admin/donations/reconcile", method: "POST" }),
       invalidatesTags: ["AdminDonations", "Campaigns", "AdminCampaigns"],
     }),
   }),
@@ -82,5 +83,5 @@ export const {
   useConfirmDonationMutation,
   useVerifyDonationMutation,
   useRefundDonationMutation,
-  useSyncGatewayDonationsMutation,
+  useReconcileDonationsMutation,
 } = adminDonationsApi;

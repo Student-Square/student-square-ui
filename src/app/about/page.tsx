@@ -40,10 +40,10 @@ const aboutCards = [
   },
   {
     id: 5,
-    title: "Press",
+    title: "News & Press",
     description: "Media coverage and news about Student Square",
     image: "/images/brain-battle-prize-ceremony.jpg",
-    href: "/about/press",
+    href: "/news",
   },
   {
     id: 6,

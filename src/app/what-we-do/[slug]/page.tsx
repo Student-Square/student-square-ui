@@ -6,6 +6,7 @@ import Header from "@/components/common/Header/Header";
 import Footer from "@/components/common/Footer/Footer";
 import { motion } from "motion/react";
 import { getServiceBySlug, services } from "@/data/services";
+import { useImpactStats } from "@/components/common/ImpactStats";
 import {
   ChevronRight,
   ArrowRight,
@@ -21,6 +22,7 @@ import {
 
 export default function ServicePage() {
   const { slug } = useParams<{ slug: string }>();
+  const impactStats = useImpactStats();
   const service = getServiceBySlug(slug);
   if (!service) redirect("/what-we-do");
 
@@ -118,11 +120,11 @@ export default function ServicePage() {
               whileInView={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.55 }}
               viewport={{ once: true }}
-              className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4"
+              className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4"
             >
-              {service.stats.map((stat, i) => (
+              {impactStats.map((stat) => (
                 <div
-                  key={i}
+                  key={stat.label}
                   className="rounded-2xl border border-border bg-card p-5 sm:p-6 hover:border-emerald-500/40 transition-colors"
                 >
                   <p className="text-2xl sm:text-3xl font-bold text-foreground leading-none">
@@ -170,15 +172,18 @@ export default function ServicePage() {
               className="mt-10 p-6 rounded-2xl border border-emerald-200 dark:border-emerald-800/60 bg-emerald-50/60 dark:bg-emerald-900/20"
             >
               <p className="text-[11px] font-bold uppercase tracking-widest text-emerald-700 dark:text-emerald-300">
-                Why this matters
+                Our impact so far
               </p>
               <ul className="mt-3 space-y-2.5">
-                {service.stats.map((s, i) => (
-                  <li key={i} className="flex items-start gap-2.5">
+                {impactStats.map((s) => (
+                  <li key={s.label} className="flex items-start gap-2.5">
                     <CheckCircle2 className="h-4 w-4 mt-0.5 text-emerald-600 flex-shrink-0" />
                     <p className="text-sm text-foreground leading-snug">
                       <span className="font-semibold">{s.value}</span>{" "}
-                      <span className="text-muted-foreground">{s.label}</span>
+                      <span className="text-muted-foreground">
+                        {s.label}
+                        {s.detail ? ` — ${s.detail}` : ""}
+                      </span>
                     </p>
                   </li>
                 ))}

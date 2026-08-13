@@ -110,6 +110,10 @@ const baseQueryWithRefreshAndToasts: BaseQueryFn<
       toast.error(message ?? "This resource already exists.");
     } else if (status === 404) {
       toast.error(message ?? "Resource not found.");
+    } else if (status === 503) {
+      // A Super Admin switched this feature off (see /admin/system). It is not
+      // a fault, so it must not read like one — the server names the feature.
+      toast.error(message ?? "This feature is currently unavailable.");
     } else if (typeof status === "number" && status >= 500) {
       toast.error("Server error — please try again later.");
     }
@@ -169,6 +173,7 @@ export const baseApi = createApi({
     "AdminMagazines",
     "Events",
     "AdminEvents",
+    "Features",
   ],
   endpoints: () => ({}),
 });

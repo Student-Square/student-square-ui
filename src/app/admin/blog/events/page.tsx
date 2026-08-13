@@ -9,6 +9,7 @@ import {
   useAdminDeleteEventMutation,
 } from "@/redux/features/events/adminEventsApi";
 import CoverImageUpload from "@/components/editor/CoverImageUpload";
+import Pagination from "@/components/common/Pagination";
 import type { EventMode } from "@/types/events";
 import {
   Calendar,
@@ -27,6 +28,8 @@ const MODE_OPTIONS: Array<{ value: EventMode; label: string }> = [
   { value: "HYBRID", label: "Hybrid" },
 ];
 
+const PAGE_SIZE = 12;
+
 function formatDateTime(iso: string) {
   return new Date(iso).toLocaleString("en-GB", {
     day: "numeric",
@@ -38,7 +41,10 @@ function formatDateTime(iso: string) {
 }
 
 export default function AdminEventsPage() {
-  const { data: events, isLoading } = useAdminListEventsQuery();
+  const [page, setPage] = useState(1);
+  const { data, isLoading } = useAdminListEventsQuery({ page, limit: PAGE_SIZE });
+  const events = data?.data;
+  const totalPages = Math.max(1, Math.ceil((data?.meta?.total ?? 0) / PAGE_SIZE));
   const [createEvent, { isLoading: creating }] = useAdminCreateEventMutation();
   const [updateEvent] = useAdminUpdateEventMutation();
   const [deleteEvent] = useAdminDeleteEventMutation();
@@ -232,6 +238,8 @@ export default function AdminEventsPage() {
           ))}
         </div>
       )}
+
+      <Pagination page={page} totalPages={totalPages} onPageChange={setPage} className="mt-8" />
 
       <style jsx>{`
         :global(.form-input) {

@@ -181,7 +181,7 @@ function StaticStoryView({ id }: { id: number }) {
                   <div className="relative w-full max-w-[280px] sm:max-w-[320px] lg:max-w-none">
                     <div className="absolute inset-0 translate-x-2 translate-y-2 sm:translate-x-3 sm:translate-y-3 rounded-2xl bg-emerald-500/20 dark:bg-emerald-400/15" />
                     <div className="relative aspect-square rounded-2xl overflow-hidden bg-muted border border-border shadow-lg shadow-emerald-500/10">
-                      <img src={story.image} alt={story.name} className="w-full h-full object-cover" />
+                      <img src={story.image} alt={story.name} className="w-full h-full object-cover object-center" />
                     </div>
                   </div>
                 </motion.div>
@@ -282,7 +282,7 @@ function StaticStoryView({ id }: { id: number }) {
                       className="group flex flex-col h-full bg-card border border-border rounded-2xl overflow-hidden hover:shadow-lg hover:shadow-emerald-500/5 hover:border-emerald-500/40 hover:-translate-y-1 transition-all duration-300"
                     >
                       <div className="aspect-[16/10] overflow-hidden bg-muted relative">
-                        <img src={r.image} alt={r.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                        <img src={r.image} alt={r.name} className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500" />
                         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent" />
                         <div className="absolute bottom-3 left-3 right-3">
                           <h3 className="text-white text-sm font-bold drop-shadow leading-snug">{r.name}</h3>
@@ -429,7 +429,7 @@ function ApiStoryView({ story }: { story: ApiStory }) {
                     <div className="absolute inset-0 translate-x-2 translate-y-2 sm:translate-x-3 sm:translate-y-3 rounded-2xl bg-emerald-500/20 dark:bg-emerald-400/15" />
                     <div className="relative aspect-square rounded-2xl overflow-hidden bg-muted border border-border shadow-lg shadow-emerald-500/10">
                       {story.coverImage ? (
-                        <img src={story.coverImage.url} alt={story.coverImage.alt ?? story.name} className="w-full h-full object-cover" />
+                        <img src={story.coverImage.url} alt={story.coverImage.alt ?? story.name} className="w-full h-full object-cover object-center" />
                       ) : (
                         <div className="w-full h-full bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-emerald-950/60 dark:to-emerald-900/40 flex items-center justify-center">
                           <Users className="h-16 w-16 text-emerald-300 dark:text-emerald-700" />
@@ -518,7 +518,7 @@ function ApiStoryView({ story }: { story: ApiStory }) {
                           <img
                             src={img.image.url}
                             alt={img.caption ?? img.image.alt ?? ""}
-                            className="w-full aspect-video object-cover rounded-xl"
+                            className="w-full aspect-video object-cover object-center rounded-xl"
                           />
                           {img.caption && (
                             <figcaption className="text-[11px] text-muted-foreground text-center">{img.caption}</figcaption>

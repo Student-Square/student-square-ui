@@ -2,48 +2,60 @@
 
 import { motion, useInView, useMotionValue, useSpring } from "motion/react"
 import { useEffect, useRef } from "react"
-import { Users, Globe2, AlertTriangle, Megaphone, Trees, Hospital, School } from "lucide-react"
+import { Users, Trees, Hospital, School } from "lucide-react"
+import { useGetPageSectionsQuery } from "@/redux/features/content/contentApi"
 
-// Stats values taken from the impact image:
-// 105.4 million children reached, 115 countries, 121 emergencies, 99 policy changes
-const stats = [
+type ImpactStat = { value: string; label: string; detail?: string }
+type ImpactStats = { heading?: string; subheading?: string; items?: ImpactStat[] }
+
+/** Card styling, applied in order. Presentation only — the copy comes from the API. */
+const STYLES = [
   {
     icon: Users,
-    number: 850,
-    suffix: "+",
-    description: "Families Supported",
     gradient: "from-amber-500/20 to-orange-500/20",
     accent: "from-amber-500 to-orange-500",
     iconColor: "text-amber-500 dark:text-amber-400",
   },
   {
     icon: School,
-    number: 2500,
-    suffix: "+",
-    description: "Students Reached",
     gradient: "from-emerald-500/20 to-teal-500/20",
     accent: "from-emerald-500 to-teal-500",
     iconColor: "text-emerald-500 dark:text-emerald-400",
   },
   {
     icon: Trees,
-    number: 625,
-    suffix: "+",
-    description: "Trees Planted",
     gradient: "from-green-500/20 to-lime-500/20",
     accent: "from-green-500 to-lime-500",
     iconColor: "text-green-500 dark:text-lime-400",
   },
   {
     icon: Hospital,
-    number: 250,
-    suffix: "+",
-    description: "Patients Treated",
     gradient: "from-blue-500/20 to-cyan-500/20",
     accent: "from-blue-500 to-cyan-500",
     iconColor: "text-blue-500 dark:text-cyan-400",
   },
 ]
+
+/** "5,000+" → 5000 plus the "+" so the counter can animate to the figure. */
+function parseValue(value: string): { number: number; suffix: string } {
+  const match = value.match(/^([\d.,]+)(.*)$/)
+  if (!match) return { number: 0, suffix: value }
+  return { number: Number(match[1].replace(/,/g, "")), suffix: match[2] }
+}
+
+/** Thousands separators so 5000 reads as the source's "5,000+". */
+function format(value: number, suffix: string): string {
+  const rounded = value % 1 === 0 ? value : Number(value.toFixed(1))
+  return `${rounded.toLocaleString("en-US")}${suffix}`
+}
+
+/** The design highlights the figure onward ("A Strong Community of | 5000+ Students"). */
+function splitHeading(heading: string): [string, string] {
+  const words = heading.split(" ")
+  const i = words.findIndex((w) => /\d/.test(w))
+  if (i === -1) return [heading, ""]
+  return [words.slice(0, i).join(" "), words.slice(i).join(" ")]
+}
 
 function AnimatedCounter({ value, suffix = "" }: { value: number; suffix?: string }) {
   const ref = useRef<HTMLSpanElement>(null)
@@ -56,27 +68,22 @@ function AnimatedCounter({ value, suffix = "" }: { value: number; suffix?: strin
 
   useEffect(() => {
     if (ref.current && !ref.current.textContent) {
-      const formatted = value % 1 === 0 ? value.toFixed(0) : value.toFixed(1)
-      ref.current.textContent = `${formatted}${suffix}`
+      ref.current.textContent = format(value, suffix)
     }
   }, [value, suffix])
 
   useEffect(() => {
     if (isInView) {
       motionValue.set(value)
-    } else {
-      if (ref.current) {
-        const formatted = value % 1 === 0 ? value.toFixed(0) : value.toFixed(1)
-        ref.current.textContent = `${formatted}${suffix}`
-      }
+    } else if (ref.current) {
+      ref.current.textContent = format(value, suffix)
     }
   }, [motionValue, isInView, value, suffix])
 
   useEffect(() => {
     const unsubscribe = springValue.on("change", (latest) => {
       if (ref.current) {
-        const formatted = latest % 1 === 0 ? latest.toFixed(0) : latest.toFixed(1)
-        ref.current.textContent = `${formatted}${suffix}`
+        ref.current.textContent = format(latest, suffix)
       }
     })
     
@@ -87,6 +94,21 @@ function AnimatedCounter({ value, suffix = "" }: { value: number; suffix?: strin
 }
 
 const Stats = () => {
+  const { data: sections } = useGetPageSectionsQuery("home")
+  const impact = (sections?.find((s) => s.sectionKey === "impact-stats")?.content ??
+    {}) as ImpactStats
+
+  const stats = (impact.items ?? []).map((item, i) => ({
+    ...STYLES[i % STYLES.length],
+    ...parseValue(item.value),
+    label: item.label,
+    detail: item.detail,
+  }))
+
+  if (stats.length === 0) return null
+
+  const [headingLead, headingAccent] = splitHeading(impact.heading ?? "")
+
   return (
     <section className="relative overflow-hidden py-10 sm:py-12 md:py-16">
       <div className="container relative mx-auto px-4 max-w-7xl 2xl:max-w-[1600px] 3xl:max-w-[1800px] 4xl:max-w-[2000px]">
@@ -114,15 +136,21 @@ const Stats = () => {
             </span>
           </motion.div> */}
           <h2 className="font-heading mb-4 px-4 text-3xl font-bold tracking-[0.02em] leading-tight text-foreground sm:mb-6 sm:text-4xl md:text-4xl lg:text-5xl xl:text-6xl">
-            A Strong Community of
-            <br />
-            <span className="bg-gradient-to-r from-emerald-600 via-emerald-500 to-teal-500 bg-clip-text text-transparent dark:from-emerald-400 dark:via-emerald-300 dark:to-teal-400">
-              5000+ Students
-            </span>
+            {headingLead}
+            {headingAccent && (
+              <>
+                <br />
+                <span className="bg-gradient-to-r from-emerald-600 via-emerald-500 to-teal-500 bg-clip-text text-transparent dark:from-emerald-400 dark:via-emerald-300 dark:to-teal-400">
+                  {headingAccent}
+                </span>
+              </>
+            )}
           </h2>
-          <p className="mx-auto max-w-2xl px-4 text-sm font-light leading-relaxed text-muted-foreground sm:text-sm md:text-base">
-            Making a difference in students&apos; lives through counselling, advocacy, and community support
-          </p>
+          {impact.subheading && (
+            <p className="mx-auto max-w-2xl px-4 text-sm font-light leading-relaxed text-muted-foreground sm:text-sm md:text-base">
+              {impact.subheading}
+            </p>
+          )}
         </motion.div>
 
         {/* Mobile Grid Layout */}
@@ -154,8 +182,13 @@ const Stats = () => {
                 </div>
 
                 <p className="text-xs leading-relaxed text-muted-foreground sm:text-sm">
-                  {stat.description}
+                  {stat.label}
                 </p>
+                {stat.detail && (
+                  <p className="mt-0.5 text-[11px] leading-snug text-muted-foreground/70">
+                    {stat.detail}
+                  </p>
+                )}
 
                 <div className={`absolute right-0 top-0 h-12 w-12 rounded-bl-full bg-gradient-to-br opacity-30 sm:h-16 sm:w-16 ${stat.gradient}`} />
               </div>
@@ -199,8 +232,13 @@ const Stats = () => {
                 </div>
 
                 <p className="text-sm leading-relaxed text-muted-foreground transition-colors duration-300 group-hover:text-foreground sm:text-sm md:text-base lg:text-base">
-                  {stat.description}
+                  {stat.label}
                 </p>
+                {stat.detail && (
+                  <p className="mt-1 text-xs leading-snug text-muted-foreground/70">
+                    {stat.detail}
+                  </p>
+                )}
 
                 <div className={`absolute right-0 top-0 h-20 w-20 rounded-bl-full bg-gradient-to-br opacity-0 transition-opacity duration-300 group-hover:opacity-50 sm:h-24 sm:w-24 ${stat.gradient}`} />
               </div>

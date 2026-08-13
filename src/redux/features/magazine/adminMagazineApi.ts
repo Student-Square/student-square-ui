@@ -1,10 +1,14 @@
 import { baseApi } from "@/redux/api/baseApi";
 import type { ApiAdminMagazine, AdminMagazineWriteInput } from "@/types/magazine";
+import type { Paginated } from "@/types/api";
 
 const adminMagazineApiSlice = baseApi.injectEndpoints({
   endpoints: (build) => ({
-    adminListMagazines: build.query<ApiAdminMagazine[], void>({
-      query: () => "/admin/magazines",
+    adminListMagazines: build.query<
+      Paginated<ApiAdminMagazine>,
+      { page?: number; limit?: number; searchTerm?: string } | void
+    >({
+      query: (params) => ({ url: "/admin/magazines", params: params ?? {} }),
       providesTags: ["AdminMagazines"],
     }),
 

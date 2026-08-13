@@ -6,12 +6,15 @@ export type Service = {
   heroImage: string;
   description: string;
   body: string[];
-  stats: { value: string; label: string }[];
 };
 
 const BIO =
   "Our vision is to foster an inclusive society where every individual's potential is nurtured and developed, free from any form of discrimination. Our mission is to empower individuals through education and skill development, creating a society free from discrimination and equipped to tackle global challenges collectively such as poverty, climate change, inequality, and health crises.";
 
+// No per-programme figures here. The ones that used to be were invented, and
+// some contradicted the foundation's own reporting — the climate entry claimed
+// "10,000+ trees planted" against a real total of 625 saplings. These pages now
+// show the seeded organisation-wide totals instead.
 export const services: Service[] = [
   {
     slug: "student-counselling",
@@ -24,11 +27,6 @@ export const services: Service[] = [
     body: [
       "Student Square's counselling programme is built around the belief that every student deserves personalised guidance. Our trained counsellors work with students across Bangladesh and the UK to identify strengths, address anxieties, and map out realistic, inspiring futures.",
       BIO,
-    ],
-    stats: [
-      { value: "350,000", label: "students reached through our programmes" },
-      { value: "7+", label: "years of counselling experience" },
-      { value: "98%", label: "student satisfaction rate" },
     ],
   },
   {
@@ -43,11 +41,6 @@ export const services: Service[] = [
       "Parents play a crucial role in a student's journey. Student Square runs dedicated parent advocacy sessions that help families understand the pressures their children face, the opportunities available, and how to communicate more effectively across generational and cultural divides.",
       BIO,
     ],
-    stats: [
-      { value: "12,000+", label: "parents engaged in workshops" },
-      { value: "85%", label: "reported improved family communication" },
-      { value: "40+", label: "parent sessions held annually" },
-    ],
   },
   {
     slug: "community-wellbeing",
@@ -60,11 +53,6 @@ export const services: Service[] = [
     body: [
       "Beyond individual counselling, Student Square works at the community level to build networks of support for young people. Our community wellbeing initiatives tackle isolation, discrimination, and lack of opportunity head-on through peer mentoring, group activities, and community events.",
       BIO,
-    ],
-    stats: [
-      { value: "200+", label: "community events organised" },
-      { value: "50+", label: "active peer mentor networks" },
-      { value: "1.3m", label: "people reached in our communities" },
     ],
   },
   {
@@ -79,11 +67,6 @@ export const services: Service[] = [
       "Student Square believes that environmental responsibility is inseparable from social progress. Our climate action programmes teach students about sustainability, run tree-planting drives, and connect youth activists across our regions to share ideas and drive change.",
       BIO,
     ],
-    stats: [
-      { value: "10,000+", label: "trees planted by student volunteers" },
-      { value: "60+", label: "schools engaged in climate curriculum" },
-      { value: "25+", label: "environmental campaigns led" },
-    ],
   },
   {
     slug: "research-publications",
@@ -97,11 +80,6 @@ export const services: Service[] = [
       "Our research and publications arm ensures that Student Square's work is grounded in data and contributes to the wider field of youth development. We publish annual impact reports, collaborate with universities, and share our findings freely with practitioners and policymakers.",
       BIO,
     ],
-    stats: [
-      { value: "15+", label: "published research papers" },
-      { value: "8", label: "university partnerships" },
-      { value: "5", label: "annual impact reports published" },
-    ],
   },
   {
     slug: "scholarships-grants",
@@ -114,11 +92,6 @@ export const services: Service[] = [
     body: [
       "Financial barriers should never stand between a student and their future. Student Square's scholarships and grants programme identifies high-potential students who lack resources and connects them with funding opportunities — from local grants to international scholarship pathways.",
       BIO,
-    ],
-    stats: [
-      { value: "500+", label: "scholarships awarded to date" },
-      { value: "£250k+", label: "in grants distributed annually" },
-      { value: "92%", label: "scholarship recipients complete higher education" },
     ],
   },
 ];

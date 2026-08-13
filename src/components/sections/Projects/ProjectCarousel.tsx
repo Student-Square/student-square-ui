@@ -5,7 +5,8 @@ import Link from "next/link";
 import { motion } from "motion/react";
 import { ArrowUpRight, Pause, Play, Plus, Volume2, VolumeX } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { projectsData, type Project } from "@/data/projects";
+import { useGetCampaignsQuery } from "@/redux/features/campaigns/campaignsApi";
+import type { ApiCampaign } from "@/types/campaigns";
 
 declare global {
   interface Window {
@@ -14,10 +15,16 @@ declare global {
 }
 
 interface ProjectCarouselProps {
-  projects?: Project[];
+  /** Overrides the API fetch; used where the caller already has the list. */
+  projects?: ApiCampaign[];
 }
 
-const ProjectCarousel = ({ projects = projectsData }: ProjectCarouselProps) => {
+const ProjectCarousel = ({ projects: projectsProp }: ProjectCarouselProps) => {
+  const { data, isLoading } = useGetCampaignsQuery(
+    { status: "ACTIVE" },
+    { skip: Boolean(projectsProp) }
+  );
+  const projects = projectsProp ?? data ?? [];
   const [activeIndex, setActiveIndex] = useState(0);
   const [soundOn, setSoundOn] = useState(false);
   const [paused, setPaused] = useState(false);
@@ -48,7 +55,7 @@ const ProjectCarousel = ({ projects = projectsData }: ProjectCarouselProps) => {
   useEffect(() => {
     videoRefs.current.forEach((video, index) => {
       if (!video) return;
-      if (!projects[index]?.videoSrc) return;
+      if (!projects[index]?.videoUrl) return;
 
       const isActive = index === activeIndex;
       video.muted = !isActive || !soundOn;
@@ -141,6 +148,26 @@ const ProjectCarousel = ({ projects = projectsData }: ProjectCarouselProps) => {
     });
   }, [activeIndex, paused, projects, soundOn]);
 
+  if (isLoading && projects.length === 0) {
+    return (
+      <div className="w-full">
+        <div className="flex flex-col gap-1 overflow-hidden rounded-md lg:h-[520px] lg:flex-row">
+          {[0, 1, 2, 3].map((i) => (
+            <div
+              key={i}
+              className={cn(
+                "animate-pulse rounded-md bg-muted lg:min-h-0 lg:basis-0",
+                i === 0 ? "h-[340px] sm:h-[420px] lg:h-auto lg:flex-[3]" : "h-[82px] sm:h-[104px] lg:h-auto lg:flex-1"
+              )}
+            />
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  if (projects.length === 0) return null;
+
   return (
     <div className="w-full">
       <motion.div
@@ -152,9 +179,10 @@ const ProjectCarousel = ({ projects = projectsData }: ProjectCarouselProps) => {
       >
         {projects.map((project, index) => {
           const isActive = index === activeIndex;
-          const videoHref = `/projects/${project.slug}/video`;
-          const hasHtmlVideo = Boolean(project.videoSrc);
+          const detailHref = `/projects/${project.slug}`;
+          const hasHtmlVideo = Boolean(project.videoUrl);
           const hasVimeoVideo = Boolean(project.vimeoVideoId);
+          const poster = project.coverImage?.url;
 
           return (
             <article
@@ -175,26 +203,36 @@ const ProjectCarousel = ({ projects = projectsData }: ProjectCarouselProps) => {
                     className="absolute inset-0 h-full w-full"
                   />
                 ) : (
-                  <img
-                    className="absolute inset-0 h-full w-full object-cover"
-                    src={project.poster}
-                    alt={project.title}
-                  />
+                  poster && (
+                    <img
+                      className="absolute inset-0 h-full w-full object-cover"
+                      src={poster}
+                      alt={project.coverImage?.alt ?? project.title}
+                    />
+                  )
                 )
-              ) : (
+              ) : hasHtmlVideo ? (
                 <video
                   ref={(node) => {
                     videoRefs.current[index] = node;
                   }}
                   className="pointer-events-none absolute inset-0 h-full w-full object-cover"
-                  src={project.videoSrc}
-                  poster={project.poster}
+                  src={project.videoUrl ?? undefined}
+                  poster={poster}
                   autoPlay
                   loop
                   playsInline
                   preload="metadata"
                   muted
                 />
+              ) : (
+                poster && (
+                  <img
+                    className="absolute inset-0 h-full w-full object-cover"
+                    src={poster}
+                    alt={project.coverImage?.alt ?? project.title}
+                  />
+                )
               )}
 
               <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[#012b49]/90 via-[#012b49]/65 to-black/35" />
@@ -241,7 +279,7 @@ const ProjectCarousel = ({ projects = projectsData }: ProjectCarouselProps) => {
                   <div className="mt-6 flex items-center justify-between gap-3">
                     <div className="flex flex-wrap items-center gap-3">
                       <Link
-                        href={videoHref}
+                        href={detailHref}
                         className="inline-flex items-center gap-1.5 border-b border-white/70 pb-1 text-sm font-semibold text-white transition-colors hover:text-cyan-300"
                       >
                         Learn More...

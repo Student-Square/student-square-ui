@@ -1,10 +1,14 @@
 import { baseApi } from "@/redux/api/baseApi";
 import type { ApiAdminEvent, AdminEventWriteInput } from "@/types/events";
+import type { Paginated } from "@/types/api";
 
 const adminEventsApiSlice = baseApi.injectEndpoints({
   endpoints: (build) => ({
-    adminListEvents: build.query<ApiAdminEvent[], void>({
-      query: () => "/admin/events",
+    adminListEvents: build.query<
+      Paginated<ApiAdminEvent>,
+      { page?: number; limit?: number; searchTerm?: string } | void
+    >({
+      query: (params) => ({ url: "/admin/events", params: params ?? {} }),
       providesTags: ["AdminEvents"],
     }),
 

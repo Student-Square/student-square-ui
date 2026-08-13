@@ -1,28 +1,43 @@
 "use client"
 
 import type React from "react"
-import { useEffect, useRef, useState } from "react"
+import { useState } from "react"
 import { motion } from "motion/react"
 import { MapPin, Phone, Send } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Checkbox } from "@/components/ui/checkbox"
+import { useSubmitContactMessageMutation } from "@/redux/features/contact/contactApi"
 
 export default function Contact() {
-  const [formState, setFormState] = useState<"idle" | "submitting" | "sent">("idle")
+  const [sent, setSent] = useState(false)
+  const [error, setError] = useState<string | null>(null)
   const [termsAccepted, setTermsAccepted] = useState(false)
   const [weeklyUpdates, setWeeklyUpdates] = useState(false)
-  const submitTimer = useRef<ReturnType<typeof setTimeout>>(undefined)
+  const [submitContactMessage, { isLoading }] = useSubmitContactMessageMutation()
 
-  // Clear any pending submit timer if the component unmounts mid-submission.
-  useEffect(() => () => clearTimeout(submitTimer.current), [])
-
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     if (!termsAccepted) return
-    setFormState("submitting")
-    submitTimer.current = setTimeout(() => setFormState("sent"), 1500)
+    setError(null)
+
+    const form = new FormData(e.currentTarget)
+    const phone = String(form.get("phone") ?? "").trim()
+
+    try {
+      await submitContactMessage({
+        name: String(form.get("full-name") ?? "").trim(),
+        email: String(form.get("email") ?? "").trim(),
+        phone: phone || undefined,
+        subject: String(form.get("subject") ?? "").trim(),
+        message: String(form.get("message") ?? "").trim(),
+        newsletterOptIn: weeklyUpdates,
+      }).unwrap()
+      setSent(true)
+    } catch {
+      setError("Sorry, your message could not be sent. Please try again, or email us directly.")
+    }
   }
 
   const mapEmbedUrl =
@@ -44,8 +59,8 @@ export default function Contact() {
             <div>
               <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-[0.02em] text-foreground mb-3 sm:mb-6">Get in Touch</h2>
               <p className="text-sm sm:text-base md:text-lg text-muted-foreground font-light leading-relaxed max-w-md mb-6">
-                Connect with our strategic investment team to discuss ventures, partnerships, or institutional
-                inquiries.
+                Whether you want counselling support, are looking to volunteer, or would like to
+                partner with us, send us a message and our team will get back to you.
               </p>
 
               <div className="space-y-6">
@@ -113,7 +128,7 @@ export default function Contact() {
             transition={{ duration: 0.6, delay: 0.1 }}
             viewport={{ once: true }}
           >
-            {formState === "sent" ? (
+            {sent ? (
               <div className="text-center py-8 sm:py-12">
                 <div className="w-16 h-16 sm:w-20 sm:h-20 bg-primary/20 text-primary rounded-full flex items-center justify-center mx-auto mb-4 sm:mb-6">
                   <Send size={28} className="sm:w-8 sm:h-8" />
@@ -123,7 +138,11 @@ export default function Contact() {
                 <Button
                   variant="outline"
                   className="mt-6 sm:mt-8 rounded-full bg-transparent"
-                  onClick={() => setFormState("idle")}
+                  onClick={() => {
+                    setSent(false)
+                    setTermsAccepted(false)
+                    setWeeklyUpdates(false)
+                  }}
                 >
                   Send another message
                 </Button>
@@ -179,7 +198,7 @@ export default function Contact() {
                   <Input
                     id="subject"
                     name="subject"
-                    placeholder="Venture Inquiry / Partnership"
+                    placeholder="Counselling support / Volunteering / Partnership"
                     className="rounded-lg sm:rounded-xl border-border/50 bg-background/50 text-sm sm:text-base"
                     required
                     aria-required="true"
@@ -218,17 +237,22 @@ export default function Contact() {
                       className="mt-0.5"
                     />
                     <span className="text-xs sm:text-sm text-muted-foreground group-hover:text-foreground transition-colors">
-                      I would like to receive weekly updates from MRG
+                      I would like to receive updates from Student Square
                     </span>
                   </label>
                 </div>
+                {error && (
+                  <p role="alert" className="text-xs sm:text-sm text-destructive">
+                    {error}
+                  </p>
+                )}
                 <Button
                   type="submit"
-                  disabled={formState === "submitting" || !termsAccepted}
-                  aria-label={formState === "submitting" ? "Submitting your inquiry" : "Submit contact form inquiry"}
+                  disabled={isLoading || !termsAccepted}
+                  aria-label={isLoading ? "Submitting your inquiry" : "Submit contact form inquiry"}
                   className="w-full bg-primary py-4 sm:py-6 rounded-lg sm:rounded-xl text-xs sm:text-base font-bold hover:shadow-lg transition-all"
                 >
-                  {formState === "submitting" ? "Sending..." : "Submit Inquiry"}
+                  {isLoading ? "Sending..." : "Submit Inquiry"}
                 </Button>
               </form>
             )}

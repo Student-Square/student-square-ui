@@ -35,7 +35,7 @@ export const projectCards: ProjectCard[] = [
   },
   {
     icon: "🕌",
-    title: "Eid Gift Project",
+    title: "Amar Vai Er Eid Project",
     description:
       "Providing complete food packages — beef (1–1.5 kg), oil (450 gm), polao rice (1.5 kg) — to underprivileged families every Eid. Spreading joy and dignity to those who need it most.",
     tags: ["850+ Families", "Annual"],

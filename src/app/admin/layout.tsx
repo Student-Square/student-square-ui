@@ -36,6 +36,7 @@ import {
   Newspaper,
   Settings,
   ShieldCheck,
+  ToggleLeft,
   UserCircle,
   Users,
   Wallet,
@@ -74,6 +75,7 @@ const AUTHOR_ROLES: UserRole[] = ["SUPER_ADMIN", "ADMIN", "EDITOR", "AUTHOR"];
 const MOD_ROLES: UserRole[] = ["SUPER_ADMIN", "ADMIN", "MODERATOR"];
 const TOP_ROLES: UserRole[] = ["SUPER_ADMIN", "ADMIN"];
 const HR_ROLES: UserRole[] = ["SUPER_ADMIN", "ADMIN", "HR_MANAGER"];
+const SUPER_ONLY: UserRole[] = ["SUPER_ADMIN"];
 
 const NAV: NavEntry[] = [
   { kind: "item", href: "/admin", label: "Overview", icon: <Home className="h-4 w-4" />, exact: true },
@@ -127,6 +129,9 @@ const NAV: NavEntry[] = [
 
   { kind: "section", label: "Recruitment", roles: HR_ROLES },
   { kind: "item", href: "/admin/recruitment", label: "Candidates", icon: <Briefcase className="h-4 w-4" />, roles: HR_ROLES },
+
+  { kind: "section", label: "System", roles: SUPER_ONLY },
+  { kind: "item", href: "/admin/system", label: "Feature Switches", icon: <ToggleLeft className="h-4 w-4" />, roles: SUPER_ONLY },
 
   { kind: "section", label: "My Account" },
   {

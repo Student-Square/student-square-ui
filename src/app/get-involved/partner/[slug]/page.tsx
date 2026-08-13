@@ -6,6 +6,7 @@ import Header from "@/components/common/Header/Header";
 import Footer from "@/components/common/Footer/Footer";
 import { motion } from "motion/react";
 import { getPartnerBySlug, partners } from "@/data/partners";
+import ImpactStats from "@/components/common/ImpactStats";
 import { ChevronRight, ArrowRight } from "lucide-react";
 
 export default function PartnerDetailPage() {
@@ -58,17 +59,8 @@ export default function PartnerDetailPage() {
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
             viewport={{ once: true }}
-            className="grid grid-cols-3 gap-4 border-t border-b border-border py-8"
           >
-            {partner.stats.map((stat, i) => (
-              <div key={i}>
-                <p className="text-2xl sm:text-3xl font-bold text-foreground">{stat.value}</p>
-                <div className="flex items-start gap-1 mt-1">
-                  <ChevronRight className="h-3 w-3 mt-0.5 flex-shrink-0 text-muted-foreground" />
-                  <p className="text-xs text-muted-foreground leading-tight">{stat.label}</p>
-                </div>
-              </div>
-            ))}
+            <ImpactStats />
           </motion.div>
 
           {/* Description paragraphs */}

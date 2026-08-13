@@ -37,6 +37,12 @@ const nextConfig = {
         destination: '/blog/real-life-stories/:id',
         permanent: true,
       },
+      // Press duplicated /news off the same coverage list; /news is the one page now.
+      {
+        source: '/about/press',
+        destination: '/news',
+        permanent: true,
+      },
     ]
   },
 }

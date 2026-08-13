@@ -30,11 +30,6 @@ export default function WhatWeDoPage() {
     );
   }, [query]);
 
-  const totalReach = services.reduce((acc, s) => {
-    const first = s.stats[0]?.value || "";
-    return acc + (first.includes("k") || first.includes("m") || first.length > 3 ? 1 : 0);
-  }, 0);
-
   return (
     <main className="min-h-screen bg-background">
       <Header />
@@ -221,23 +216,12 @@ export default function WhatWeDoPage() {
                         {service.description}
                       </p>
 
-                      {/* Top stat */}
-                      {service.stats[0] && (
-                        <div className="mt-4 pt-4 border-t border-border flex items-center justify-between gap-3">
-                          <div className="min-w-0">
-                            <p className="text-lg sm:text-xl font-bold text-foreground leading-none">
-                              {service.stats[0].value}
-                            </p>
-                            <p className="text-[10px] text-muted-foreground uppercase tracking-wider mt-1 truncate">
-                              {service.stats[0].label}
-                            </p>
-                          </div>
-                          <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-600 group-hover:gap-2.5 transition-all whitespace-nowrap">
-                            Learn more
-                            <ArrowUpRight className="h-3.5 w-3.5" />
-                          </span>
-                        </div>
-                      )}
+                      <div className="mt-4 pt-4 border-t border-border flex items-center justify-end gap-3">
+                        <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-600 group-hover:gap-2.5 transition-all whitespace-nowrap">
+                          Learn more
+                          <ArrowUpRight className="h-3.5 w-3.5" />
+                        </span>
+                      </div>
                     </div>
                   </Link>
                 </motion.article>

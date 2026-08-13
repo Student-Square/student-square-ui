@@ -9,6 +9,7 @@ import {
   useAdminDeleteMagazineMutation,
 } from "@/redux/features/magazine/adminMagazineApi";
 import CoverImageUpload from "@/components/editor/CoverImageUpload";
+import Pagination from "@/components/common/Pagination";
 import {
   Download,
   Eye,
@@ -20,6 +21,8 @@ import {
   Upload,
 } from "lucide-react";
 
+const PAGE_SIZE = 12;
+
 function formatBytes(bytes: number | null) {
   if (!bytes) return "—";
   const mb = bytes / (1024 * 1024);
@@ -27,7 +30,10 @@ function formatBytes(bytes: number | null) {
 }
 
 export default function AdminMagazinePage() {
-  const { data: issues, isLoading } = useAdminListMagazinesQuery();
+  const [page, setPage] = useState(1);
+  const { data, isLoading } = useAdminListMagazinesQuery({ page, limit: PAGE_SIZE });
+  const issues = data?.data;
+  const totalPages = Math.max(1, Math.ceil((data?.meta?.total ?? 0) / PAGE_SIZE));
   const [createMagazine, { isLoading: creating }] = useAdminCreateMagazineMutation();
   const [updateMagazine] = useAdminUpdateMagazineMutation();
   const [deleteMagazine] = useAdminDeleteMagazineMutation();
@@ -224,6 +230,8 @@ export default function AdminMagazinePage() {
           ))}
         </div>
       )}
+
+      <Pagination page={page} totalPages={totalPages} onPageChange={setPage} className="mt-8" />
 
       <style jsx>{`
         :global(.form-input) {

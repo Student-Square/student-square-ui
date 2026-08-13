@@ -25,7 +25,7 @@ export default function StoryCard({ story }: StoryCardProps) {
         <img
           src={image}
           alt={story.name}
-          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+          className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
         <div className="absolute bottom-3 left-3 right-3">

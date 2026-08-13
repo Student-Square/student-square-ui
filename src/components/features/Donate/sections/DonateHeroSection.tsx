@@ -43,7 +43,9 @@ export default function DonateHeroSection({
   onCustomAmountChange,
 }: DonateHeroSectionProps) {
   const user = useSelector(selectCurrentUser);
-  const { data: campaigns } = useGetCampaignsQuery({ status: "ACTIVE" });
+  const { data: campaigns, isLoading: campaignsLoading } = useGetCampaignsQuery({
+    status: "ACTIVE",
+  });
   const [createDonation, { isLoading }] = useCreateDonationMutation();
 
   const [target, setTarget] = useState<string>("");
@@ -172,9 +174,13 @@ export default function DonateHeroSection({
                   onChange={(e) => setTarget(e.target.value)}
                   aria-label="Project or purpose"
                 >
-                  <option value="" disabled>Select a project or purpose…</option>
-                  {campaigns?.map((c) => (
-                    <option key={c.id} value={c.id}>{c.title}</option>
+                  <option value="" disabled>
+                    {campaignsLoading ? "Loading projects…" : "Select a project or purpose…"}
+                  </option>
+                  {(campaigns ?? []).map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.title}
+                    </option>
                   ))}
                   <option value={OTHER}>Other — Zakat, Sadakah, or general fund</option>
                 </select>

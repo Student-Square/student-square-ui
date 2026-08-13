@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Header from "@/components/common/Header/Header";
 import Footer from "@/components/common/Footer/Footer";
+import Pagination from "@/components/common/Pagination";
 import { motion } from "motion/react";
 import { useGetBlogsQuery } from "@/redux/features/blogs/blogsApi";
 import type { ApiBlogListItem } from "@/types/blogs";
@@ -14,8 +15,6 @@ import {
   BookOpen,
   Briefcase,
   Calendar,
-  ChevronLeft,
-  ChevronRight,
   GraduationCap,
   Loader2,
   Search,
@@ -190,24 +189,6 @@ export default function EducationCareerContent({ initialCategory }: Props) {
     }
     return posts;
   }, [posts, featuredPost, page, debouncedQuery]);
-
-  const pageNumbers = useMemo(() => {
-    const pages: (number | "ellipsis")[] = [];
-    const max = totalPages;
-    const c = page;
-    if (max <= 7) {
-      for (let i = 1; i <= max; i++) pages.push(i);
-      return pages;
-    }
-    pages.push(1);
-    if (c > 3) pages.push("ellipsis");
-    for (let i = Math.max(2, c - 1); i <= Math.min(max - 1, c + 1); i++) {
-      pages.push(i);
-    }
-    if (c < max - 2) pages.push("ellipsis");
-    pages.push(max);
-    return pages;
-  }, [totalPages, page]);
 
   const isbusy = isLoading || isFetching;
 
@@ -452,52 +433,13 @@ export default function EducationCareerContent({ initialCategory }: Props) {
               ))}
             </div>
           )}
-
-          {/* Pagination */}
-          {!isbusy && totalPages > 1 && (
-            <nav
-              aria-label="Pagination"
-              className="mt-12 flex items-center justify-center gap-1.5 flex-wrap"
-            >
-              <button
-                onClick={() => setPage((p) => Math.max(1, p - 1))}
-                disabled={page === 1}
-                className="inline-flex items-center gap-1 px-3 py-2 rounded-lg border border-border bg-card text-xs font-semibold text-foreground hover:border-emerald-500/60 hover:text-emerald-600 disabled:opacity-40 transition-colors"
-              >
-                <ChevronLeft className="h-3.5 w-3.5" />
-                <span className="hidden sm:inline">Prev</span>
-              </button>
-
-              {pageNumbers.map((p, idx) =>
-                p === "ellipsis" ? (
-                  <span key={`e-${idx}`} className="px-2 text-xs text-muted-foreground">
-                    …
-                  </span>
-                ) : (
-                  <button
-                    key={p}
-                    onClick={() => setPage(p)}
-                    aria-current={page === p ? "page" : undefined}
-                    className={`min-w-[36px] px-3 py-2 rounded-lg text-xs font-semibold border transition-colors ${
-                      page === p
-                        ? "bg-emerald-600 border-emerald-600 text-white shadow-sm shadow-emerald-600/30"
-                        : "bg-card border-border text-foreground hover:border-emerald-500/60 hover:text-emerald-600"
-                    }`}
-                  >
-                    {p}
-                  </button>
-                )
-              )}
-
-              <button
-                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                disabled={page === totalPages}
-                className="inline-flex items-center gap-1 px-3 py-2 rounded-lg border border-border bg-card text-xs font-semibold text-foreground hover:border-emerald-500/60 hover:text-emerald-600 disabled:opacity-40 transition-colors"
-              >
-                <span className="hidden sm:inline">Next</span>
-                <ChevronRight className="h-3.5 w-3.5" />
-              </button>
-            </nav>
+          {!isbusy && (
+            <Pagination
+              page={page}
+              totalPages={totalPages}
+              onPageChange={setPage}
+              className="mt-12"
+            />
           )}
         </div>
       </section>
