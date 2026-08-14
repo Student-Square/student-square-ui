@@ -69,7 +69,7 @@ export default function AuthShell({
   if (variant === "login") {
     return (
       <main
-        className={`min-h-screen bg-[#f2f6f2] px-4 py-6 sm:px-6 sm:py-10 ${className}`}
+        className={`auth-fixed-theme min-h-screen bg-[#f2f6f2] px-4 py-6 sm:px-6 sm:py-10 ${className}`}
       >
         <div className="mx-auto grid min-h-[calc(100vh-3rem)] w-full max-w-6xl overflow-hidden rounded-3xl border border-gray-200/80 bg-white shadow-xl shadow-emerald-950/[0.08] sm:min-h-[calc(100vh-5rem)] lg:grid-cols-[44%_56%]">
           <AuthBrandPanel />
@@ -91,7 +91,7 @@ export default function AuthShell({
   if (variant === "register") {
     return (
       <main
-        className={`min-h-screen bg-[#f2f6f2] px-4 py-6 sm:px-6 sm:py-10 ${className}`}
+        className={`auth-fixed-theme min-h-screen bg-[#f2f6f2] px-4 py-6 sm:px-6 sm:py-10 ${className}`}
       >
         <div className="mx-auto grid h-[calc(100vh-3rem)] w-full max-w-7xl overflow-hidden rounded-3xl border border-gray-200/80 bg-white shadow-xl shadow-emerald-950/[0.08] sm:h-[calc(100vh-5rem)] lg:grid-cols-[36%_64%]">
           <AuthBrandPanel />
@@ -113,7 +113,7 @@ export default function AuthShell({
   if (variant === "card") {
     return (
       <main
-        className={`relative min-h-screen overflow-hidden px-4 py-8 sm:py-12 ${className}`}
+        className={`auth-fixed-theme relative min-h-screen overflow-hidden px-4 py-8 sm:py-12 ${className}`}
       >
         <AuthCrossBg tone="mint" />
 
@@ -132,7 +132,7 @@ export default function AuthShell({
 
   return (
     <main
-      className={`min-h-screen border-t-2 border-[#4caf50] bg-white dark:bg-background ${className}`}
+      className={`auth-fixed-theme min-h-screen border-t-2 border-[#4caf50] bg-white dark:bg-background ${className}`}
     >
       <div className="mx-auto grid min-h-screen w-full max-w-6xl lg:grid-cols-[0.9fr_1.1fr]">
         <aside className="hidden items-center justify-end bg-white px-8 py-12 dark:bg-background lg:flex">
