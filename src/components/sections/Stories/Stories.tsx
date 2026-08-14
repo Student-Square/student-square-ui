@@ -17,8 +17,11 @@ const SkeletonCard = () => (
   </div>
 )
 
+const cardVisibility = (index: number) =>
+  index < 4 ? "flex" : index < 6 ? "hidden sm:flex" : "hidden 2xl:flex"
+
 export default function Stories() {
-  const { data, isLoading } = useGetStoriesQuery({ limit: 6 })
+  const { data, isLoading } = useGetStoriesQuery({ limit: 8 })
   const stories = data?.data ?? []
 
   return (
@@ -43,9 +46,13 @@ export default function Stories() {
           </p>
         </motion.div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6 lg:gap-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-5 sm:gap-6 lg:gap-8">
           {isLoading
-            ? Array.from({ length: 6 }).map((_, i) => <SkeletonCard key={i} />)
+            ? Array.from({ length: 8 }).map((_, i) => (
+                <div key={i} className={cardVisibility(i)}>
+                  <SkeletonCard />
+                </div>
+              ))
             : stories.map((story, index) => (
                 <motion.div
                   key={story.id}
@@ -53,7 +60,7 @@ export default function Stories() {
                   whileInView={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.4, delay: index * 0.05 }}
                   viewport={{ once: true }}
-                  className="flex"
+                  className={cardVisibility(index)}
                 >
                   <StoryCard story={story} />
                 </motion.div>
