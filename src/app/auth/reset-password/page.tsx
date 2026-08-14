@@ -9,6 +9,8 @@ import {
   authButtonClass,
   authInputClass,
   authLinkClass,
+  authHeadingClass,
+  authSubheadingClass,
 } from "@/components/auth/auth-ui";
 import {
   AlertCircle,
@@ -156,10 +158,10 @@ function ResetPasswordForm() {
   return (
     <AuthShell variant="split">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
+        <h1 className={authHeadingClass}>
           Set new password
         </h1>
-        <p className="mt-1.5 text-sm text-muted-foreground">
+        <p className={authSubheadingClass}>
           Resetting password for{" "}
           <span className="font-semibold text-foreground">{email}</span>.
         </p>

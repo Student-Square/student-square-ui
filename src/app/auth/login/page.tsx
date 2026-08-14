@@ -17,7 +17,7 @@ import {
 } from "@/redux/features/auth/authSlice";
 import { pickPostLoginDestination } from "@/lib/auth-routing";
 import AuthShell from "@/components/auth/AuthShell";
-import { authButtonClass, authInputClass, authLinkClass } from "@/components/auth/auth-ui";
+import { authButtonClass, authInputClass, authLinkClass, authHeadingClass, authSubheadingClass } from "@/components/auth/auth-ui";
 import {
   AlertCircle,
   Copy,
@@ -247,10 +247,10 @@ function LoginForm() {
             </div>
           )}
           <div>
-            <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
+            <h1 className={authHeadingClass}>
               {title}
             </h1>
-            <p className="mt-1.5 text-sm text-muted-foreground">{subtitle}</p>
+            <p className={authSubheadingClass}>{subtitle}</p>
           </div>
         </div>
 

@@ -40,7 +40,7 @@ import {
   type OccupationStatus,
 } from "@/lib/registration";
 import AuthShell from "@/components/auth/AuthShell";
-import { authButtonClass, authInputClass, authLinkClass } from "@/components/auth/auth-ui";
+import { authButtonClass, authInputClass, authLinkClass, authHeadingClass, authSubheadingClass } from "@/components/auth/auth-ui";
 
 type Stage = "wizard" | "sent";
 type Step = 1 | 2 | 3 | 4 | 5 | 6;
@@ -424,10 +424,10 @@ function RegisterWizard() {
   return (
     <AuthShell variant="card" wide>
       <div className="text-center">
-        <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
+        <h1 className={authHeadingClass}>
           Welcome aboard!
         </h1>
-        <p className="mt-1.5 text-sm text-muted-foreground">
+        <p className={authSubheadingClass}>
           You are one step away from your success
         </p>
       </div>

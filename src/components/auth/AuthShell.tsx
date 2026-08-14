@@ -1,6 +1,7 @@
 import Link from "next/link";
 import AuthBrand from "./AuthBrand";
-import { authLegalClass } from "./auth-ui";
+import AuthCrossBg from "./AuthCrossBg";
+import { authCardClass, authLegalClass } from "./auth-ui";
 
 type AuthShellProps = {
   /** split = login-style two columns; card = signup-style green backdrop + white card */
@@ -13,11 +14,11 @@ type AuthShellProps = {
 
 export function AuthLegalFooter() {
   return (
-    <p className="mt-8 text-center text-xs text-muted-foreground">
+    <p className="mt-8 text-center text-xs text-gray-500 dark:text-muted-foreground">
       <Link href="/terms" className={authLegalClass}>
         Terms of use
       </Link>
-      <span className="mx-2">·</span>
+      <span className="mx-2 text-gray-300">·</span>
       <Link href="/privacy" className={authLegalClass}>
         Privacy Policy
       </Link>
@@ -34,17 +35,17 @@ export default function AuthShell({
   if (variant === "card") {
     return (
       <main
-        className={`min-h-screen bg-[#e8f5e9] px-4 py-8 sm:py-12 dark:bg-emerald-950/30 ${className}`}
+        className={`relative min-h-screen overflow-hidden px-4 py-8 sm:py-12 ${className}`}
       >
+        <AuthCrossBg tone="mint" />
+
         <div
-          className={`mx-auto w-full ${wide ? "max-w-4xl lg:max-w-5xl" : "max-w-md"} space-y-6`}
+          className={`relative mx-auto w-full ${wide ? "max-w-4xl lg:max-w-5xl" : "max-w-md"} space-y-6`}
         >
-          <div className="flex justify-center">
-            <AuthBrand variant="header" />
+          <div className="flex justify-center pt-2">
+            <AuthBrand variant="header" className="drop-shadow-sm" />
           </div>
-          <div className="rounded-2xl border border-gray-200/80 bg-white p-6 shadow-sm sm:p-8 dark:border-border dark:bg-card">
-            {children}
-          </div>
+          <div className={authCardClass}>{children}</div>
           <AuthLegalFooter />
         </div>
       </main>
@@ -52,13 +53,18 @@ export default function AuthShell({
   }
 
   return (
-    <main className={`min-h-screen bg-white dark:bg-background ${className}`}>
-      <div className="grid min-h-screen lg:grid-cols-2">
-        <aside className="hidden flex-col items-center justify-center border-r border-gray-100 bg-white px-10 py-12 dark:border-border lg:flex">
-          <AuthBrand variant="hero" />
+    <main className={`relative min-h-screen overflow-hidden ${className}`}>
+      <AuthCrossBg tone="subtle" />
+
+      <div className="relative grid min-h-screen lg:grid-cols-2">
+        <aside className="relative hidden flex-col items-center justify-center overflow-hidden border-r border-emerald-100/80 px-10 py-12 lg:flex">
+          <AuthCrossBg tone="light" />
+          <div className="relative z-10">
+            <AuthBrand variant="hero" />
+          </div>
         </aside>
 
-        <div className="flex flex-col justify-center px-6 py-10 sm:px-10 lg:px-16 xl:px-20">
+        <div className="relative flex flex-col justify-center bg-white/75 px-6 py-10 backdrop-blur-[2px] sm:px-10 lg:bg-white/90 lg:px-16 lg:backdrop-blur-none xl:px-20">
           <div className="mb-8 flex justify-center lg:hidden">
             <AuthBrand variant="header" />
           </div>
