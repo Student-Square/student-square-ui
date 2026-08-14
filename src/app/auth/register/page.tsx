@@ -39,7 +39,8 @@ import {
   type FoundationRegisterInput,
   type OccupationStatus,
 } from "@/lib/registration";
-import AuthBrand from "@/components/auth/AuthBrand";
+import AuthShell from "@/components/auth/AuthShell";
+import { authButtonClass, authInputClass, authLinkClass } from "@/components/auth/auth-ui";
 
 type Stage = "wizard" | "sent";
 type Step = 1 | 2 | 3 | 4 | 5 | 6;
@@ -151,8 +152,7 @@ const persistableDraft = (d: Draft): Partial<Draft> => {
   return copy as Partial<Draft>;
 };
 
-const fieldClass =
-  "w-full px-3 py-2.5 text-sm rounded-lg bg-background border border-border focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 transition-colors";
+const fieldClass = authInputClass;
 
 const labelClass =
   "block text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1.5";
@@ -161,9 +161,9 @@ export default function RegisterPage() {
   return (
     <Suspense
       fallback={
-        <main className="min-h-screen flex items-center justify-center bg-background">
-          <p className="text-sm text-muted-foreground">Loading…</p>
-        </main>
+        <AuthShell variant="card" wide>
+          <p className="text-center text-sm text-muted-foreground">Loading…</p>
+        </AuthShell>
       }
     >
       <RegisterWizard />
@@ -388,88 +388,68 @@ function RegisterWizard() {
 
   if (stage === "sent") {
     return (
-      <main className="min-h-screen bg-background flex items-center justify-center px-4 py-10 relative overflow-hidden">
-        <Backdrop />
-        <div className="w-full max-w-md text-center">
-          <div className="mb-6 flex justify-center">
-            <AuthBrand />
+      <AuthShell variant="card" wide>
+        <div className="text-center">
+          <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-emerald-50 dark:bg-emerald-900/30 ring-8 ring-emerald-100 dark:ring-emerald-900/20">
+            <CheckCircle2 className="h-10 w-10 text-emerald-600 dark:text-emerald-400" />
           </div>
-          <div className="rounded-2xl border border-border bg-card p-8 sm:p-10">
-            <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-emerald-50 dark:bg-emerald-900/30 ring-8 ring-emerald-100 dark:ring-emerald-900/20">
-              <CheckCircle2 className="h-10 w-10 text-emerald-600 dark:text-emerald-400" />
-            </div>
-            <h1 className="text-2xl font-bold text-foreground tracking-tight">
-              Thanks for registering!
-            </h1>
-            <p className="mt-3 text-sm text-muted-foreground leading-relaxed">
-              You&apos;ll receive a verification email with your unique Member
-              ID shortly
-              {sentMemberId ? (
-                <>
-                  {" "}
-                  — your ID is{" "}
-                  <span className="font-semibold text-foreground">
-                    {sentMemberId}
-                  </span>
-                </>
-              ) : null}
-              . We sent it to{" "}
-              <span className="font-semibold text-foreground">{sentEmail}</span>.
-            </p>
-            <div className="mt-6 pt-5 border-t border-border">
-              <Link
-                href="/auth/login"
-                className="inline-flex items-center gap-2 text-sm font-semibold text-muted-foreground hover:text-emerald-600 transition-colors"
-              >
-                <ArrowLeft className="h-3.5 w-3.5" />
-                Back to sign in
-              </Link>
-            </div>
-          </div>
+          <h1 className="text-2xl font-bold tracking-tight text-foreground">
+            Thanks for registering!
+          </h1>
+          <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
+            You&apos;ll receive a verification email with your unique Member
+            ID shortly
+            {sentMemberId ? (
+              <>
+                {" "}
+                — your ID is{" "}
+                <span className="font-semibold text-foreground">
+                  {sentMemberId}
+                </span>
+              </>
+            ) : null}
+            . We sent it to{" "}
+            <span className="font-semibold text-foreground">{sentEmail}</span>.
+          </p>
+          <p className="mt-6">
+            <Link href="/auth/login" className={authLinkClass}>
+              Login here
+            </Link>
+          </p>
         </div>
-      </main>
+      </AuthShell>
     );
   }
 
   return (
-    <main className="min-h-screen bg-background flex items-center justify-center px-4 py-10 sm:py-16 relative overflow-hidden">
-      <Backdrop />
-      <div className="w-full max-w-lg md:max-w-2xl lg:max-w-3xl">
-        <div className="mb-6 flex justify-center">
-          <AuthBrand />
+    <AuthShell variant="card" wide>
+      <div className="text-center">
+        <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
+          Welcome aboard!
+        </h1>
+        <p className="mt-1.5 text-sm text-muted-foreground">
+          You are one step away from your success
+        </p>
+      </div>
+
+      <div className="mt-6 flex items-center justify-between gap-3">
+        <p className="text-[11px] font-bold uppercase tracking-wider text-emerald-600">
+          Step {step} of 6
+        </p>
+        <div className="flex gap-1">
+          {[1, 2, 3, 4, 5, 6].map((n) => (
+            <div
+              key={n}
+              className={`h-1.5 w-6 rounded-full ${
+                n <= step ? "bg-emerald-600" : "bg-muted"
+              }`}
+            />
+          ))}
         </div>
-        <Link
-          href="/"
-          className="inline-flex items-center gap-2 text-xs font-semibold text-muted-foreground hover:text-emerald-600 transition-colors mb-6"
-        >
-          <ArrowLeft className="h-3.5 w-3.5" />
-          Back to Student Square
-        </Link>
+      </div>
+      <h2 className="mt-3 text-lg font-semibold text-foreground">{stepTitle}</h2>
 
-        <div className="rounded-2xl border border-border bg-card p-6 sm:p-8">
-          <div className="flex items-center justify-between gap-3 mb-1">
-            <p className="text-[11px] font-bold uppercase tracking-wider text-emerald-600">
-              Step {step} of 6
-            </p>
-            <div className="flex gap-1">
-              {[1, 2, 3, 4, 5, 6].map((n) => (
-                <div
-                  key={n}
-                  className={`h-1.5 w-6 rounded-full ${
-                    n <= step ? "bg-emerald-600" : "bg-muted"
-                  }`}
-                />
-              ))}
-            </div>
-          </div>
-          <h1 className="text-2xl font-bold text-foreground tracking-tight">
-            {stepTitle}
-          </h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Student Square Foundation registration
-          </p>
-
-          <div className="mt-6 space-y-4">
+      <div className="mt-6 space-y-4">
             {step === 1 && (
               <>
                 <p className="text-sm text-muted-foreground leading-relaxed">
@@ -1058,38 +1038,28 @@ function RegisterWizard() {
                   type="button"
                   disabled={isLoading}
                   onClick={handleSubmit}
-                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-emerald-600 text-white text-sm font-semibold hover:bg-emerald-700 transition-colors disabled:opacity-60"
+                  className={authButtonClass}
                 >
                   {isLoading ? (
-                    <>
+                    <span className="inline-flex items-center justify-center gap-2">
                       <Loader2 className="h-4 w-4 animate-spin" />
                       Submitting…
-                    </>
+                    </span>
                   ) : (
-                    <>
-                      Submit registration
-                      <ArrowRight className="h-4 w-4" />
-                    </>
+                    "Sign Up"
                   )}
                 </button>
               )}
             </div>
           </div>
 
-          <div className="mt-6 pt-5 border-t border-border text-center">
-            <p className="text-xs text-muted-foreground">
-              Already have an account?{" "}
-              <Link
-                href="/auth/login"
-                className="font-semibold text-emerald-600 hover:text-emerald-700"
-              >
-                Sign in
-              </Link>
-            </p>
-          </div>
-        </div>
-      </div>
-    </main>
+      <p className="mt-8 text-center text-sm text-muted-foreground">
+        Already have an account?{" "}
+        <Link href="/auth/login" className={authLinkClass}>
+          Login here
+        </Link>
+      </p>
+    </AuthShell>
   );
 }
 
@@ -1177,14 +1147,6 @@ function ChoiceList({
           <span className="text-sm text-foreground">{o.label}</span>
         </label>
       ))}
-    </div>
-  );
-}
-
-function Backdrop() {
-  return (
-    <div className="absolute inset-0 -z-10 pointer-events-none">
-      <div className="absolute inset-0 bg-gradient-to-br from-emerald-50 via-background to-background dark:from-emerald-950/40 dark:via-background dark:to-background" />
     </div>
   );
 }

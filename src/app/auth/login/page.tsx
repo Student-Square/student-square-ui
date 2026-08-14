@@ -16,18 +16,15 @@ import {
   selectIsAuthenticated,
 } from "@/redux/features/auth/authSlice";
 import { pickPostLoginDestination } from "@/lib/auth-routing";
-import AuthBrand from "@/components/auth/AuthBrand";
+import AuthShell from "@/components/auth/AuthShell";
+import { authButtonClass, authInputClass, authLinkClass } from "@/components/auth/auth-ui";
 import {
   AlertCircle,
-  ArrowLeft,
-  ArrowRight,
   Copy,
   Eye,
   EyeOff,
   KeyRound,
   Loader2,
-  Lock,
-  Mail,
   ShieldCheck,
 } from "lucide-react";
 
@@ -43,10 +40,9 @@ export default function LoginPage() {
 
 function LoginFallback() {
   return (
-    <main className="min-h-screen flex flex-col items-center justify-center gap-4 bg-background px-4">
-      <AuthBrand />
-      <p className="text-sm text-muted-foreground">Loading…</p>
-    </main>
+    <AuthShell variant="split">
+      <p className="text-center text-sm text-muted-foreground">Loading…</p>
+    </AuthShell>
   );
 }
 
@@ -225,7 +221,7 @@ function LoginForm() {
 
   const title =
     step === "credentials"
-      ? "Welcome back"
+      ? "Welcome back!"
       : step === "enrol"
         ? "Set up authenticator"
         : step === "recovery"
@@ -234,7 +230,7 @@ function LoginForm() {
 
   const subtitle =
     step === "credentials"
-      ? "Sign in to your Student Square account."
+      ? "Login to your account"
       : step === "enrol"
         ? "Staff accounts require an authenticator app before access."
         : step === "recovery"
@@ -242,119 +238,84 @@ function LoginForm() {
           : "Enter the code from your authenticator app.";
 
   return (
-    <main className="min-h-screen bg-background flex items-center justify-center px-4 py-10 sm:py-16 relative overflow-hidden">
-      <div className="absolute inset-0 -z-10 pointer-events-none">
-        <div className="absolute inset-0 bg-gradient-to-br from-emerald-50 via-background to-background dark:from-emerald-950/40 dark:via-background dark:to-background" />
-        <div className="absolute -top-24 -right-24 w-96 h-96 rounded-full bg-emerald-400/20 dark:bg-emerald-500/10 blur-3xl" />
-        <div className="absolute -bottom-32 -left-16 w-72 h-72 rounded-full bg-emerald-600/10 dark:bg-emerald-400/10 blur-3xl" />
-      </div>
-
-      <div className="w-full max-w-md">
-        <div className="mb-6 flex justify-center">
-          <AuthBrand />
-        </div>
-        <Link
-          href="/"
-          className="inline-flex items-center gap-2 text-xs font-semibold text-muted-foreground hover:text-emerald-600 transition-colors mb-6"
-        >
-          <ArrowLeft className="h-3.5 w-3.5" />
-          Back to Student Square
-        </Link>
-
-        <div className="rounded-2xl border border-border bg-card shadow-xl shadow-emerald-500/5 p-6 sm:p-8">
-          <div className="flex items-start gap-3">
-            {(step === "mfa" || step === "enrol" || step === "recovery") && (
-              <div className="mt-1 rounded-lg bg-emerald-500/10 p-2 text-emerald-600">
-                <ShieldCheck className="h-5 w-5" />
-              </div>
-            )}
-            <div>
-              <h1 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight">
-                {title}
-              </h1>
-              <p className="mt-1.5 text-sm text-muted-foreground">{subtitle}</p>
+    <AuthShell variant="split">
+      <div>
+        <div className="flex items-start gap-3">
+          {(step === "mfa" || step === "enrol" || step === "recovery") && (
+            <div className="mt-1 rounded-lg bg-emerald-500/10 p-2 text-emerald-600">
+              <ShieldCheck className="h-5 w-5" />
             </div>
-          </div>
-
-          {step === "credentials" && (
-            <form onSubmit={handleCredentials} className="mt-6 space-y-4">
-              <label className="block">
-                <span className="block text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1.5">
-                  Email
-                </span>
-                <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <input
-                    type="email"
-                    autoComplete="email"
-                    required
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="you@example.com"
-                    className="w-full pl-9 pr-3 py-2.5 text-sm rounded-lg bg-background border border-border focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 transition-colors"
-                  />
-                </div>
-              </label>
-
-              <label className="block">
-                <div className="flex items-center justify-between mb-1.5">
-                  <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                    Password
-                  </span>
-                  <Link
-                    href="/auth/forgot-password"
-                    className="text-[11px] font-semibold text-emerald-600 hover:text-emerald-700 transition-colors"
-                  >
-                    Forgot?
-                  </Link>
-                </div>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <input
-                    type={showPassword ? "text" : "password"}
-                    autoComplete="current-password"
-                    required
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="Your password"
-                    className="w-full pl-9 pr-10 py-2.5 text-sm rounded-lg bg-background border border-border focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 transition-colors"
-                  />
-                  <button
-                    type="button"
-                    aria-label={showPassword ? "Hide password" : "Show password"}
-                    onClick={() => setShowPassword((v) => !v)}
-                    className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-                  >
-                    {showPassword ? (
-                      <EyeOff className="h-3.5 w-3.5" />
-                    ) : (
-                      <Eye className="h-3.5 w-3.5" />
-                    )}
-                  </button>
-                </div>
-              </label>
-
-              {formError && <FormError message={formError} />}
-
-              <button
-                type="submit"
-                disabled={busy}
-                className="w-full inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg bg-emerald-600 text-white text-sm font-semibold hover:bg-emerald-700 transition-colors shadow-sm shadow-emerald-600/30 disabled:opacity-60 disabled:cursor-not-allowed"
-              >
-                {busy ? (
-                  <>
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    Signing in…
-                  </>
-                ) : (
-                  <>
-                    Sign in
-                    <ArrowRight className="h-4 w-4" />
-                  </>
-                )}
-              </button>
-            </form>
           )}
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
+              {title}
+            </h1>
+            <p className="mt-1.5 text-sm text-muted-foreground">{subtitle}</p>
+          </div>
+        </div>
+
+        {step === "credentials" && (
+          <form onSubmit={handleCredentials} className="mt-8 space-y-4">
+            <label className="block">
+              <span className="sr-only">Email address</span>
+              <input
+                type="email"
+                autoComplete="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="Email Address"
+                className={authInputClass}
+              />
+            </label>
+
+            <label className="block">
+              <span className="sr-only">Password</span>
+              <div className="relative">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  autoComplete="current-password"
+                  required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Password"
+                  className={`${authInputClass} pr-10`}
+                />
+                <button
+                  type="button"
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                  onClick={() => setShowPassword((v) => !v)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 rounded-md p-1 text-muted-foreground hover:text-foreground"
+                >
+                  {showPassword ? (
+                    <EyeOff className="h-4 w-4" />
+                  ) : (
+                    <Eye className="h-4 w-4" />
+                  )}
+                </button>
+              </div>
+            </label>
+
+            {formError && <FormError message={formError} />}
+
+            <button type="submit" disabled={busy} className={authButtonClass}>
+              {busy ? (
+                <span className="inline-flex items-center justify-center gap-2">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Signing in…
+                </span>
+              ) : (
+                "Login"
+              )}
+            </button>
+
+            <p className="pt-1 text-center">
+              <Link href="/auth/forgot-password" className={`text-sm ${authLinkClass}`}>
+                Forgot password?
+              </Link>
+            </p>
+          </form>
+        )}
 
           {step === "enrol" && (
             <form onSubmit={handleEnrolConfirm} className="mt-6 space-y-4">
@@ -419,7 +380,7 @@ function LoginForm() {
               <button
                 type="submit"
                 disabled={busy}
-                className="w-full inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg bg-emerald-600 text-white text-sm font-semibold hover:bg-emerald-700 transition-colors disabled:opacity-60"
+                className={authButtonClass}
               >
                 {busy ? (
                   <>
@@ -427,10 +388,7 @@ function LoginForm() {
                     Verifying…
                   </>
                 ) : (
-                  <>
-                    Enable authenticator
-                    <ArrowRight className="h-4 w-4" />
-                  </>
+                  "Enable authenticator"
                 )}
               </button>
 
@@ -467,10 +425,9 @@ function LoginForm() {
               <button
                 type="button"
                 onClick={handleContinueAfterRecovery}
-                className="w-full inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg bg-emerald-600 text-white text-sm font-semibold hover:bg-emerald-700"
+                className={authButtonClass}
               >
                 Continue to verification
-                <ArrowRight className="h-4 w-4" />
               </button>
             </div>
           )}
@@ -526,7 +483,7 @@ function LoginForm() {
               <button
                 type="submit"
                 disabled={busy}
-                className="w-full inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg bg-emerald-600 text-white text-sm font-semibold hover:bg-emerald-700 transition-colors disabled:opacity-60"
+                className={authButtonClass}
               >
                 {busy ? (
                   <>
@@ -534,10 +491,7 @@ function LoginForm() {
                     Verifying…
                   </>
                 ) : (
-                  <>
-                    Verify and continue
-                    <ArrowRight className="h-4 w-4" />
-                  </>
+                  "Verify and continue"
                 )}
               </button>
 
@@ -569,21 +523,15 @@ function LoginForm() {
           )}
 
           {step === "credentials" && (
-            <div className="mt-6 pt-5 border-t border-border text-center">
-              <p className="text-xs text-muted-foreground">
-                Don&apos;t have an account?{" "}
-                <Link
-                  href="/auth/register"
-                  className="font-semibold text-emerald-600 hover:text-emerald-700 transition-colors"
-                >
-                  Create one
-                </Link>
-              </p>
-            </div>
+            <p className="mt-8 text-center text-sm text-muted-foreground">
+              Don&apos;t have an account?{" "}
+              <Link href="/auth/register" className={authLinkClass}>
+                Register here
+              </Link>
+            </p>
           )}
-        </div>
       </div>
-    </main>
+    </AuthShell>
   );
 }
 
