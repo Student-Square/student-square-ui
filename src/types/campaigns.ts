@@ -17,6 +17,9 @@ export type ApiCampaign = {
   startDate: string | null;
   endDate: string | null;
   order: number;
+  /** Homepage carousel playback; Vimeo takes precedence over videoUrl. */
+  videoUrl: string | null;
+  vimeoVideoId: string | null;
   coverImage: { id: string; url: string; alt: string | null } | null;
 };
 

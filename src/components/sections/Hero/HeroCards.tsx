@@ -192,24 +192,33 @@ const HeroCards = () => {
   // Fetch all cards; RTK Query deduplicates requests automatically.
   const { data: allCards = [], isLoading, isError } = useGetCardsQuery();
 
-  const mainCards     = allCards.filter((c: ApiFeatureCard) => c.slot === "main_carousel");
-  const secondary     = allCards.find((c: ApiFeatureCard) => c.slot === "secondary");
-  const third         = allCards.find((c: ApiFeatureCard) => c.slot === "third");
-  const blog1         = allCards.find((c: ApiFeatureCard) => c.slot === "blog_1");
-  const blog2         = allCards.find((c: ApiFeatureCard) => c.slot === "blog_2");
+  /**
+   * The client's "Main Collage Section": five panels — the awareness session,
+   * the medical camp, the Feni flood response, the Eid distribution and the
+   * tree plantation.
+   */
+  const collage = allCards.filter((c: ApiFeatureCard) => c.slot === "main_carousel");
 
   const [currentMainIndex, setCurrentMainIndex] = useState(0);
   const isMobile = useMediaQuery("(max-width: 639px)");
 
-  // Rotate the main carousel. Declared BEFORE any early returns so the hook
-  // order is identical on every render (Rules of Hooks).
+  // Rotate the lead panel through all five. Declared BEFORE any early returns
+  // so the hook order is identical on every render (Rules of Hooks).
   useEffect(() => {
-    if (mainCards.length <= 1) return;
+    if (collage.length <= 1) return;
     const mainInterval = setInterval(() => {
-      setCurrentMainIndex((prev) => (prev + 1) % mainCards.length);
+      setCurrentMainIndex((prev) => (prev + 1) % collage.length);
     }, 7000);
     return () => clearInterval(mainInterval);
-  }, [mainCards.length]);
+  }, [collage.length]);
+
+  const mainFeature = collage[currentMainIndex];
+
+  // The four cards around the lead hold the other four panels, so all five
+  // captions are on screen and none is repeated.
+  const [secondary, third, blog1, blog2] = collage.filter(
+    (_, i) => i !== currentMainIndex
+  );
 
   // Loading skeleton — keeps the page from jumping when data arrives
   if (isLoading) {
@@ -248,7 +257,6 @@ const HeroCards = () => {
     );
   }
 
-  const mainFeature = mainCards[currentMainIndex];
 
   return (
     <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 2xl:max-w-[1600px] 3xl:max-w-[1800px] 4xl:max-w-[2000px]">
@@ -303,7 +311,7 @@ const HeroCards = () => {
         )}
       </div>
 
-      {/* Bottom Row - Blog Cards (Stories & Scholarships) - Hidden on mobile */}
+      {/* Bottom row — the remaining collage panels. Hidden on mobile. */}
       {!isMobile && (blog1 || blog2) && (
         <div className="mt-3 grid gap-3 sm:mt-4 sm:gap-4 md:mt-5 md:grid-cols-2 md:gap-5 lg:mt-6 lg:gap-6">
           {blog1 && (

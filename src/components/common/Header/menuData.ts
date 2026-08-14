@@ -1,5 +1,5 @@
 import { Menu } from "@/types/menu";
-import { Target, Users, MapPin, FileText, Eye, BookOpen, Heart, Building, Globe, Award, Briefcase, Handshake } from "lucide-react";
+import { Target, Users, MapPin, FileText, Eye, BookOpen, Heart, Building, Globe, Award, Briefcase, Handshake, CalendarDays, Sparkles } from "lucide-react";
 
 const menuData: Menu[] = [
   {
@@ -38,8 +38,8 @@ const menuData: Menu[] = [
       },
       {
         id: 15,
-        title: "Press",
-        path: "/about/press",
+        title: "News & Press",
+        path: "/news",
         newTab: false,
         icon: Eye,
       },
@@ -58,6 +58,13 @@ const menuData: Menu[] = [
     path: "/what-we-do",
     newTab: false,
     submenu: [
+      {
+        id: 20,
+        title: "Our Projects",
+        path: "/projects",
+        newTab: false,
+        icon: Sparkles,
+      },
       {
         id: 21,
         title: "Student Counselling",
@@ -186,6 +193,13 @@ const menuData: Menu[] = [
         path: "/blog/real-life-stories",
         newTab: false,
         icon: FileText,
+      },
+      {
+        id: 34,
+        title: "Events",
+        path: "/blog/events",
+        newTab: false,
+        icon: CalendarDays,
       },
     ],
   },

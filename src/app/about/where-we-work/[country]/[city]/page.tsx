@@ -7,6 +7,7 @@ import Header from "@/components/common/Header/Header";
 import Footer from "@/components/common/Footer/Footer";
 import { motion } from "motion/react";
 import { getCityBySlug } from "@/data/locations";
+import ImpactStats from "@/components/common/ImpactStats";
 import { ChevronRight } from "lucide-react";
 
 const CountryMap = dynamic(
@@ -91,17 +92,8 @@ export default function CityPage() {
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.1 }}
             viewport={{ once: true }}
-            className="grid grid-cols-3 gap-4 border-t border-b border-border py-8"
           >
-            {city.stats.map((stat, i) => (
-              <div key={i}>
-                <p className="text-2xl sm:text-3xl font-bold text-foreground">{stat.value}</p>
-                <div className="flex items-start gap-1 mt-1">
-                  <ChevronRight className="h-3 w-3 mt-0.5 flex-shrink-0 text-muted-foreground" />
-                  <p className="text-xs text-muted-foreground leading-tight">{stat.label}</p>
-                </div>
-              </div>
-            ))}
+            <ImpactStats />
           </motion.div>
 
           {/* Second paragraph */}

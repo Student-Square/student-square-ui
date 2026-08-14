@@ -8,6 +8,13 @@ const campaignsApiSlice = baseApi.injectEndpoints({
         url: "/campaigns",
         params: params ?? {},
       }),
+      transformResponse: (res: unknown): ApiCampaign[] => {
+        if (Array.isArray(res)) return res;
+        if (res && typeof res === "object" && Array.isArray((res as { data?: unknown }).data)) {
+          return (res as { data: ApiCampaign[] }).data;
+        }
+        return [];
+      },
       providesTags: ["Campaigns"],
     }),
 

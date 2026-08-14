@@ -1,17 +1,6 @@
 /** Types for the /notifications API surface. */
 
-export type NotificationType =
-  | "STORY_APPROVED"
-  | "STORY_REJECTED"
-  | "COMMENT_APPROVED"
-  | "COMMENT_REJECTED"
-  | "COMMENT_REPLY"
-  | "DONATION_RECEIVED"
-  | "RECEIPT_AVAILABLE"
-  | "STATEMENT_AVAILABLE"
-  | "ADMIN_NEW_STORY"
-  | "ADMIN_NEW_COMMENT"
-  | "ADMIN_NEW_DONATION";
+export type NotificationType = string;
 
 export type ApiNotification = {
   id: string;

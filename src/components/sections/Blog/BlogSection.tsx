@@ -2,13 +2,25 @@
 
 import { motion } from "motion/react"
 import Link from "next/link"
-import blogData from "@/data/blog"
 import SingleBlogCard from "./SingleBlogCard"
 import { useMediaQuery } from "@/hooks/use-media-query"
+import { useGetBlogsQuery } from "@/redux/features/blogs/blogsApi"
 
 export default function BlogSection() {
   const isMobile = useMediaQuery("(max-width: 639px)")
-  const displayedBlogs = isMobile ? blogData.slice(0, 3) : blogData.slice(0, 6)
+  const { data, isLoading } = useGetBlogsQuery({
+    limit: 12,
+    sortBy: "publishedAt",
+    sortOrder: "desc",
+  })
+  // The News section directly above already carries the press coverage, so
+  // drop that category here rather than showing it twice. The list endpoint
+  // can only filter to a category, not away from one.
+  const posts = (data?.data ?? []).filter((p) => p.category.slug !== "news")
+  const displayedBlogs = isMobile ? posts.slice(0, 3) : posts.slice(0, 6)
+
+  if (!isLoading && posts.length === 0) return null
+
   return (
     <section className="relative w-full py-10 sm:py-12 md:py-16 px-4 sm:px-6 md:px-8 overflow-hidden">
       <div className="container relative z-10 w-full max-w-7xl mx-auto 2xl:max-w-[1600px] 3xl:max-w-[1800px] 4xl:max-w-[2000px]">
@@ -39,7 +51,7 @@ export default function BlogSection() {
             <br />
             <span className="relative inline-block">
               <span className="bg-clip-text text-transparent bg-gradient-to-r from-emerald-600 via-teal-500 to-emerald-500 dark:from-emerald-400 dark:via-teal-400 dark:to-emerald-400">
-                Blog & Stories
+                Blog
               </span>
               <div className="absolute -bottom-2 left-0 right-0 h-1 bg-gradient-to-r from-emerald-600/0 via-emerald-600/50 to-emerald-600/0 rounded-full blur" />
             </span>
@@ -53,9 +65,16 @@ export default function BlogSection() {
 
         {/* Blog Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-8 mb-8 sm:mb-10 md:mb-12">
-          {displayedBlogs.map((blog, index) => (
-            <SingleBlogCard key={blog.id} blog={blog} index={index} />
-          ))}
+          {isLoading
+            ? Array.from({ length: isMobile ? 3 : 6 }).map((_, i) => (
+                <div
+                  key={i}
+                  className="h-80 animate-pulse rounded-2xl border border-border/30 bg-muted"
+                />
+              ))
+            : displayedBlogs.map((blog, index) => (
+                <SingleBlogCard key={blog.id} blog={blog} index={index} />
+              ))}
         </div>
 
         {/* View All Button */}

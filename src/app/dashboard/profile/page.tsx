@@ -1,21 +1,19 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import { useSelector } from "react-redux";
 import { toast } from "sonner";
 import { motion } from "motion/react";
 import { selectCurrentUser } from "@/redux/features/auth/authSlice";
 import { useUpdateProfileMutation, useUploadAvatarMutation } from "@/redux/features/profile/profileApi";
-import { useChangePasswordMutation } from "@/redux/features/auth/authApi";
 import {
-  AlertCircle,
   Camera,
   Check,
-  Eye,
-  EyeOff,
-  KeyRound,
+  ChevronRight,
   Loader2,
   Save,
+  ShieldCheck,
   User,
 } from "lucide-react";
 import { getInitials } from "@/lib/utils";
@@ -25,7 +23,6 @@ export default function MemberProfilePage() {
 
   const [updateProfile, { isLoading: isSaving }] = useUpdateProfileMutation();
   const [uploadAvatar, { isLoading: isUploading }] = useUploadAvatarMutation();
-  const [changePassword, { isLoading: isChangingPw }] = useChangePasswordMutation();
 
   const avatarInputRef = useRef<HTMLInputElement>(null);
 
@@ -40,16 +37,6 @@ export default function MemberProfilePage() {
   const [profession, setProfession] = useState("");
   const [workplace, setWorkplace] = useState("");
   const [profileSaved, setProfileSaved] = useState(false);
-
-  /* ── password fields ── */
-  const [oldPassword, setOldPassword] = useState("");
-  const [newPassword, setNewPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [showOld, setShowOld] = useState(false);
-  const [showNew, setShowNew] = useState(false);
-  const [showConfirm, setShowConfirm] = useState(false);
-  const [pwSaved, setPwSaved] = useState(false);
-  const [pwError, setPwError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!user?.profile) return;
@@ -102,45 +89,13 @@ export default function MemberProfilePage() {
     } catch { /* baseApi toasts */ }
   };
 
-  const handleChangePassword = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setPwError(null);
-    if (newPassword.length < 8) { setPwError("New password must be at least 8 characters."); return; }
-    if (newPassword !== confirmPassword) { setPwError("Passwords do not match."); return; }
-    try {
-      await changePassword({ oldPassword, newPassword }).unwrap();
-      setPwSaved(true);
-      toast.success("Password changed");
-      setOldPassword(""); setNewPassword(""); setConfirmPassword("");
-      setTimeout(() => setPwSaved(false), 2000);
-    } catch (err) {
-      const msg =
-        (err as { data?: { message?: string } })?.data?.message ??
-        "Failed to change password. Please try again.";
-      setPwError(msg);
-    }
-  };
-
-  /* ── password strength ── */
-  const strengthScore = (() => {
-    let s = 0;
-    if (newPassword.length >= 8) s++;
-    if (/[A-Z]/.test(newPassword)) s++;
-    if (/[0-9]/.test(newPassword)) s++;
-    if (/[^A-Za-z0-9]/.test(newPassword)) s++;
-    return s;
-  })();
-  const strengthColors = ["", "bg-red-500", "bg-yellow-500", "bg-blue-500", "bg-emerald-500"];
-  const strengthLabels = ["", "Weak", "Fair", "Good", "Strong"];
-  const strengthTextColors = ["", "text-red-500", "text-yellow-500", "text-blue-500", "text-emerald-600"];
-
   return (
     <div className="space-y-8 max-w-4xl">
       {/* Page title */}
       <div>
         <h1 className="text-2xl font-bold text-foreground tracking-tight">My Profile</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Update your avatar, personal info, and password.
+          Update your avatar and personal information.
         </p>
       </div>
 
@@ -186,6 +141,14 @@ export default function MemberProfilePage() {
         <div className="text-center sm:text-left min-w-0">
           <p className="text-lg font-bold text-foreground">{user.fullName}</p>
           <p className="text-sm text-muted-foreground">{user.email}</p>
+          {user.memberId && (
+            <p className="text-xs text-muted-foreground mt-1">
+              Member ID:{" "}
+              <span className="font-semibold text-foreground tracking-wide">
+                {user.memberId}
+              </span>
+            </p>
+          )}
           <div className="flex flex-wrap gap-2 mt-2 justify-center sm:justify-start">
             <span className="inline-flex text-[10px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400">
               {user.role.replace(/_/g, " ")}
@@ -204,15 +167,30 @@ export default function MemberProfilePage() {
         </p>
       </div>
 
-      {/* Main grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+      {/* Security lives in Settings — one place for MFA and password. */}
+      <Link
+        href="/dashboard/settings"
+        className="flex items-center gap-3 rounded-2xl border border-border bg-card p-4 shadow-sm hover:bg-muted/50 transition-colors"
+      >
+        <span className="h-9 w-9 rounded-xl bg-emerald-500/10 flex items-center justify-center shrink-0">
+          <ShieldCheck className="h-4 w-4 text-emerald-600" />
+        </span>
+        <span className="min-w-0 flex-1">
+          <span className="block text-sm font-bold text-foreground">Security</span>
+          <span className="block text-xs text-muted-foreground">
+            Password and two-factor authentication moved to Settings.
+          </span>
+        </span>
+        <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
+      </Link>
 
-        {/* ── Profile form (3/5) ── */}
+      <div>
+        {/* ── Profile form ── */}
         <motion.section
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.35 }}
-          className="lg:col-span-3 rounded-2xl border border-border bg-card p-6 shadow-sm"
+          className="rounded-2xl border border-border bg-card p-6 shadow-sm"
         >
           <div className="flex items-center gap-2.5 mb-6">
             <span className="h-8 w-8 rounded-xl bg-emerald-50 dark:bg-emerald-900/30 flex items-center justify-center shrink-0">
@@ -353,105 +331,6 @@ export default function MemberProfilePage() {
           </form>
         </motion.section>
 
-        {/* ── Password form (2/5) ── */}
-        <motion.section
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.35, delay: 0.08 }}
-          className="lg:col-span-2 rounded-2xl border border-border bg-card p-6 shadow-sm self-start"
-        >
-          <div className="flex items-center gap-2.5 mb-6">
-            <span className="h-8 w-8 rounded-xl bg-amber-50 dark:bg-amber-900/30 flex items-center justify-center shrink-0">
-              <KeyRound className="h-4 w-4 text-amber-600" />
-            </span>
-            <div>
-              <h2 className="text-sm font-bold text-foreground">Change Password</h2>
-              <p className="text-xs text-muted-foreground">Keep your account secure.</p>
-            </div>
-          </div>
-
-          <form onSubmit={handleChangePassword} className="space-y-3">
-            <Field label="Current password">
-              <PasswordInput
-                value={oldPassword}
-                onChange={setOldPassword}
-                show={showOld}
-                onToggle={() => setShowOld((v) => !v)}
-                placeholder="Your current password"
-                autoComplete="current-password"
-              />
-            </Field>
-
-            <Field label="New password">
-              <PasswordInput
-                value={newPassword}
-                onChange={setNewPassword}
-                show={showNew}
-                onToggle={() => setShowNew((v) => !v)}
-                placeholder="Min 8 characters"
-                autoComplete="new-password"
-                minLength={8}
-              />
-              {newPassword.length > 0 && (
-                <div className="mt-2 space-y-1">
-                  <div className="flex gap-1">
-                    {[1, 2, 3, 4].map((n) => (
-                      <div
-                        key={n}
-                        className={`h-1 flex-1 rounded-full transition-colors duration-300 ${
-                          n <= strengthScore ? strengthColors[strengthScore] : "bg-muted"
-                        }`}
-                      />
-                    ))}
-                  </div>
-                  <p className="text-[11px] text-muted-foreground">
-                    Strength:{" "}
-                    <span className={`font-semibold ${strengthTextColors[strengthScore]}`}>
-                      {strengthLabels[strengthScore]}
-                    </span>
-                  </p>
-                </div>
-              )}
-            </Field>
-
-            <Field label="Confirm new password">
-              <PasswordInput
-                value={confirmPassword}
-                onChange={setConfirmPassword}
-                show={showConfirm}
-                onToggle={() => setShowConfirm((v) => !v)}
-                placeholder="Repeat new password"
-                autoComplete="new-password"
-                error={confirmPassword.length > 0 && confirmPassword !== newPassword}
-              />
-              {confirmPassword.length > 0 && confirmPassword !== newPassword && (
-                <p className="mt-1 text-[11px] text-red-500 font-medium">Passwords do not match.</p>
-              )}
-            </Field>
-
-            {pwError && (
-              <div className="flex items-start gap-2.5 rounded-lg bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 px-3.5 py-3 text-sm text-red-700 dark:text-red-400">
-                <AlertCircle className="h-4 w-4 mt-0.5 flex-shrink-0" />
-                <span>{pwError}</span>
-              </div>
-            )}
-
-            <div className="pt-1">
-              <button
-                type="submit"
-                disabled={isChangingPw}
-                className="w-full inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-amber-600 text-white text-sm font-semibold hover:bg-amber-700 transition-colors disabled:opacity-60"
-              >
-                {isChangingPw
-                  ? <Loader2 className="h-4 w-4 animate-spin" />
-                  : pwSaved
-                  ? <Check className="h-4 w-4" />
-                  : <KeyRound className="h-4 w-4" />}
-                {pwSaved ? "Updated!" : "Update password"}
-              </button>
-            </div>
-          </form>
-        </motion.section>
       </div>
 
       <style jsx>{`
@@ -474,12 +353,6 @@ export default function MemberProfilePage() {
         :global(.field-input:disabled) {
           background: var(--color-muted);
         }
-        :global(.field-input.error) {
-          border-color: rgb(239 68 68 / 0.7);
-        }
-        :global(.field-input.error:focus) {
-          box-shadow: 0 0 0 3px rgb(239 68 68 / 0.12);
-        }
       `}</style>
     </div>
   );
@@ -494,49 +367,5 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
       </span>
       {children}
     </label>
-  );
-}
-
-/* ── Password input with show/hide ── */
-function PasswordInput({
-  value,
-  onChange,
-  show,
-  onToggle,
-  placeholder,
-  autoComplete,
-  minLength,
-  error,
-}: {
-  value: string;
-  onChange: (v: string) => void;
-  show: boolean;
-  onToggle: () => void;
-  placeholder?: string;
-  autoComplete?: string;
-  minLength?: number;
-  error?: boolean;
-}) {
-  return (
-    <div className="relative">
-      <input
-        type={show ? "text" : "password"}
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        required
-        minLength={minLength}
-        placeholder={placeholder}
-        autoComplete={autoComplete}
-        className={`field-input pr-10 ${error ? "error" : ""}`}
-      />
-      <button
-        type="button"
-        onClick={onToggle}
-        aria-label={show ? "Hide password" : "Show password"}
-        className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 rounded-md text-muted-foreground hover:text-foreground transition-colors"
-      >
-        {show ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
-      </button>
-    </div>
   );
 }

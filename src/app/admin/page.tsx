@@ -2,24 +2,40 @@
 
 import Link from "next/link";
 import { useSelector } from "react-redux";
-import { selectCurrentUser } from "@/redux/features/auth/authSlice";
+import { selectCurrentUser, selectUserRole } from "@/redux/features/auth/authSlice";
 import {
   Activity,
+  BarChart3,
+  Briefcase,
   FileText,
+  FlagTriangleRight,
   HandCoins,
   LayoutGrid,
   Newspaper,
   Users,
 } from "lucide-react";
 import { getInitials } from "@/lib/utils";
+import type { UserRole } from "@/types/auth";
 
-const QUICK_LINKS = [
+const TOP_ROLES: UserRole[] = ["SYSTEM_ADMIN", "SUPER_ADMIN", "ADMIN"];
+const EDIT_ROLES: UserRole[] = ["SYSTEM_ADMIN", "SUPER_ADMIN", "ADMIN", "EDITOR"];
+const AUTHOR_ROLES: UserRole[] = ["SYSTEM_ADMIN", "SUPER_ADMIN", "ADMIN", "EDITOR", "AUTHOR"];
+
+const QUICK_LINKS: Array<{
+  href: string;
+  icon: React.ReactNode;
+  label: string;
+  desc: string;
+  bg: string;
+  roles?: UserRole[];
+}> = [
   {
     href: "/admin/hero",
     icon: <LayoutGrid className="h-5 w-5 text-emerald-600" />,
     label: "Hero Cards",
     desc: "Manage homepage feature cards",
     bg: "bg-emerald-50 dark:bg-emerald-900/20",
+    roles: EDIT_ROLES,
   },
   {
     href: "/admin/blog/magazine",
@@ -27,6 +43,7 @@ const QUICK_LINKS = [
     label: "Blog",
     desc: "Magazine, stories & reports",
     bg: "bg-blue-50 dark:bg-blue-900/20",
+    roles: AUTHOR_ROLES,
   },
   {
     href: "/admin/pages/about",
@@ -34,6 +51,7 @@ const QUICK_LINKS = [
     label: "Pages",
     desc: "About us, mission, who we are",
     bg: "bg-violet-50 dark:bg-violet-900/20",
+    roles: EDIT_ROLES,
   },
   {
     href: "/admin/users",
@@ -41,6 +59,7 @@ const QUICK_LINKS = [
     label: "Users",
     desc: "Manage members & team",
     bg: "bg-amber-50 dark:bg-amber-900/20",
+    roles: TOP_ROLES,
   },
   {
     href: "/admin/donation",
@@ -48,6 +67,31 @@ const QUICK_LINKS = [
     label: "Donation",
     desc: "Campaigns & donor records",
     bg: "bg-rose-50 dark:bg-rose-900/20",
+    roles: EDIT_ROLES,
+  },
+  {
+    href: "/admin/analytics",
+    icon: <BarChart3 className="h-5 w-5 text-cyan-600" />,
+    label: "Analytics",
+    desc: "Users, traffic, engagement & content",
+    bg: "bg-cyan-50 dark:bg-cyan-900/20",
+    roles: EDIT_ROLES,
+  },
+  {
+    href: "/admin/moderation",
+    icon: <FlagTriangleRight className="h-5 w-5 text-orange-600" />,
+    label: "Moderation Queue",
+    desc: "Review pending stories & comments",
+    bg: "bg-orange-50 dark:bg-orange-900/20",
+    roles: ["SYSTEM_ADMIN", "SUPER_ADMIN", "ADMIN", "MODERATOR"],
+  },
+  {
+    href: "/admin/recruitment",
+    icon: <Briefcase className="h-5 w-5 text-indigo-600" />,
+    label: "Recruitment",
+    desc: "Candidates & hiring pipeline",
+    bg: "bg-indigo-50 dark:bg-indigo-900/20",
+    roles: ["SYSTEM_ADMIN", "SUPER_ADMIN", "ADMIN", "HR_MANAGER"],
   },
   {
     href: "/admin/activities/my-blog",
@@ -60,10 +104,12 @@ const QUICK_LINKS = [
 
 export default function AdminOverviewPage() {
   const user = useSelector(selectCurrentUser);
+  const role = useSelector(selectUserRole);
   const firstName = user?.fullName.split(" ")[0] ?? "Admin";
+  const quickLinks = QUICK_LINKS.filter((l) => !l.roles || (role && l.roles.includes(role)));
 
   return (
-    <div className="space-y-8 max-w-4xl 2xl:max-w-6xl 3xl:max-w-none">
+    <div className="space-y-8 max-w-4xl 2xl:max-w-none">
       {/* Header */}
       <div>
         <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-1">
@@ -104,7 +150,7 @@ export default function AdminOverviewPage() {
       <div>
         <h2 className="text-sm font-bold text-foreground mb-3">Quick Access</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 3xl:grid-cols-6 gap-3">
-          {QUICK_LINKS.map((item) => (
+          {quickLinks.map((item) => (
             <Link
               key={item.href}
               href={item.href}

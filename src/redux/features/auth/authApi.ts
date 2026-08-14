@@ -1,16 +1,52 @@
 import { baseApi } from "@/redux/api/baseApi";
 import { setUser, logout } from "./authSlice";
 import type { ApiMe } from "@/types/auth";
+import type { FoundationRegisterInput } from "@/lib/registration";
 
-type RegisterInput = { email: string; password: string; fullName: string };
-type LoginInput = { email: string; password: string };
+type RegisterResult = {
+  id: string;
+  email: string;
+  fullName: string;
+  memberId?: string | null;
+  role?: string;
+  status?: string;
+};
+
+type LoginInput = {
+  email: string;
+  password: string;
+  mfaCode?: string;
+  recoveryCode?: string;
+  rememberMe?: boolean;
+};
+
+export type LoginResult =
+  | { accessToken: string; refreshToken: string }
+  | { mfaRequired: true }
+  | { mfaEnrolmentRequired: true; enrolmentToken: string };
+
+type MfaEnrolResult = {
+  secret: string;
+  otpauthUrl: string;
+};
+
+type MfaConfirmResult = {
+  recoveryCodes: string[];
+};
+
 type ChangePasswordInput = { oldPassword: string; newPassword: string };
 type ForgotPasswordInput = { email: string };
 type ResetPasswordInput = { email?: string; password: string; token?: string };
 
+function isSessionLogin(
+  data: LoginResult | undefined
+): data is { accessToken: string; refreshToken: string } {
+  return Boolean(data && "accessToken" in data && data.accessToken);
+}
+
 const authApi = baseApi.injectEndpoints({
   endpoints: (build) => ({
-    register: build.mutation<{ id: string; email: string; fullName: string }, RegisterInput>({
+    register: build.mutation<RegisterResult, FoundationRegisterInput>({
       query: (body) => ({ url: "/auth/register", method: "POST", body }),
     }),
 
@@ -18,16 +54,76 @@ const authApi = baseApi.injectEndpoints({
       query: (body) => ({ url: "/auth/verify-email", method: "POST", body }),
     }),
 
-    login: build.mutation<{ accessToken: string; refreshToken: string }, LoginInput>({
+    login: build.mutation<LoginResult, LoginInput>({
       query: (body) => ({ url: "/auth/login", method: "POST", body }),
       async onQueryStarted(_, { dispatch, queryFulfilled }) {
         try {
-          await queryFulfilled;
-          // Cookie is set by the server; fetch me to populate the store
-          const me = await dispatch(authApi.endpoints.getMe.initiate(undefined, { forceRefetch: true }));
+          const { data } = await queryFulfilled;
+          // Only hydrate the session when login actually issued tokens.
+          // MFA challenge / enrolment responses are success payloads without a session.
+          if (!isSessionLogin(data)) return;
+
+          const me = await dispatch(
+            authApi.endpoints.getMe.initiate(undefined, { forceRefetch: true })
+          );
           if (me.data) dispatch(setUser(me.data as ApiMe));
         } catch {
-          // login failed — nothing to do
+          // login failed
+        }
+      },
+      invalidatesTags: ["Auth"],
+    }),
+
+    beginMfaEnrolment: build.mutation<
+      MfaEnrolResult,
+      { enrolmentToken?: string } | void
+    >({
+      query: (arg) => ({
+        url: "/auth/mfa/enrol",
+        method: "POST",
+        headers: arg?.enrolmentToken
+          ? { Authorization: `Bearer ${arg.enrolmentToken}` }
+          : undefined,
+      }),
+    }),
+
+    confirmMfaEnrolment: build.mutation<
+      MfaConfirmResult,
+      { code: string; enrolmentToken?: string }
+    >({
+      query: ({ code, enrolmentToken }) => ({
+        url: "/auth/mfa/enrol/confirm",
+        method: "POST",
+        body: { code },
+        headers: enrolmentToken
+          ? { Authorization: `Bearer ${enrolmentToken}` }
+          : undefined,
+      }),
+      async onQueryStarted(_, { dispatch, queryFulfilled }) {
+        try {
+          await queryFulfilled;
+          const me = await dispatch(
+            authApi.endpoints.getMe.initiate(undefined, { forceRefetch: true })
+          );
+          if (me.data) dispatch(setUser(me.data as ApiMe));
+        } catch {
+          /* enrolment from login may not have a session yet */
+        }
+      },
+      invalidatesTags: ["Auth"],
+    }),
+
+    disableMfa: build.mutation<{ message: string }, void>({
+      query: () => ({ url: "/auth/mfa/disable", method: "POST" }),
+      async onQueryStarted(_, { dispatch, queryFulfilled }) {
+        try {
+          await queryFulfilled;
+          const me = await dispatch(
+            authApi.endpoints.getMe.initiate(undefined, { forceRefetch: true })
+          );
+          if (me.data) dispatch(setUser(me.data as ApiMe));
+        } catch {
+          /* baseApi toasts */
         }
       },
       invalidatesTags: ["Auth"],
@@ -81,6 +177,9 @@ export const {
   useRegisterMutation,
   useVerifyEmailMutation,
   useLoginMutation,
+  useBeginMfaEnrolmentMutation,
+  useConfirmMfaEnrolmentMutation,
+  useDisableMfaMutation,
   useLogoutMutation,
   useGetMeQuery,
   useForgotPasswordMutation,

@@ -34,6 +34,8 @@ export type ApiBlogListItem = {
   displayAuthorName: string | null;
   displayAuthorTitle: string | null;
   displayAuthorImage: string | null;
+  /** Set on press coverage: the article on the outlet's own site. */
+  sourceUrl: string | null;
   coverImage: { id: string; url: string; alt: string | null } | null;
   category: ApiBlogCategory;
   tags: ApiBlogTagRef[];

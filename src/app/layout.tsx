@@ -5,6 +5,7 @@ import { Analytics } from "@vercel/analytics/next";
 import { ThemeProvider } from "@/components/common/theme-provider";
 import { Providers } from "@/components/common/Providers";
 import { Toaster } from "@/components/ui/sonner";
+import AnalyticsTracker from "@/components/common/AnalyticsTracker";
 import "./globals.css";
 
 const saira = Saira({
@@ -105,7 +106,12 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${saira.variable} ${oswald.variable} ${jetBrainsMono.variable} font-sans antialiased`}>
+      {/* Extensions such as Grammarly add attributes to <body> before React
+          hydrates, which React reports as a mismatch we cannot fix. */}
+      <body
+        suppressHydrationWarning
+        className={`${saira.variable} ${oswald.variable} ${jetBrainsMono.variable} font-sans antialiased`}
+      >
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(orgJsonLd) }}
@@ -121,6 +127,7 @@ export default function RootLayout({
             <Toaster richColors position="top-right" />
           </ThemeProvider>
         </Providers>
+        <AnalyticsTracker />
         <Analytics />
       </body>
     </html>

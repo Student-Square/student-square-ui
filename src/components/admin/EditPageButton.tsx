@@ -20,7 +20,7 @@ import {
 } from "@/redux/features/auth/authSlice";
 import type { EditablePageSlug } from "@/types/content";
 
-const EDITOR_ROLES = new Set(["SUPER_ADMIN", "ADMIN", "EDITOR"]);
+const EDITOR_ROLES = new Set(["SYSTEM_ADMIN", "SUPER_ADMIN", "ADMIN", "EDITOR"]);
 
 export default function EditPageButton({ slug }: { slug: EditablePageSlug }) {
   const isAuthenticated = useSelector(selectIsAuthenticated);

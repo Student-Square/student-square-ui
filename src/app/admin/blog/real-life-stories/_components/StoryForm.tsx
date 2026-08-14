@@ -258,7 +258,7 @@ export default function StoryForm({ story }: Props) {
               </label>
               {initialized && (
                 <RichTextEditor
-                  initialContent={body}
+                  content={body}
                   onChange={setBody}
                   placeholder="Write the full story here…"
                 />

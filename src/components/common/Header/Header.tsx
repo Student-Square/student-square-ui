@@ -11,7 +11,7 @@ import menuData from "./menuData";
 import { selectCurrentUser, selectAuthStatus } from "@/redux/features/auth/authSlice";
 import { useLogoutMutation } from "@/redux/features/auth/authApi";
 
-const ADMIN_ROLES = new Set(["SUPER_ADMIN", "ADMIN", "EDITOR", "MODERATOR", "FINANCE_MANAGER"]);
+const ADMIN_ROLES = new Set(["SYSTEM_ADMIN", "SUPER_ADMIN", "ADMIN", "EDITOR", "MODERATOR", "FINANCE_MANAGER"]);
 
 const Header = () => {
   const [navbarOpen, setNavbarOpen] = useState(false);

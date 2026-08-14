@@ -1,57 +1,23 @@
 "use client";
 
-import { Cormorant_Garamond, Outfit } from "next/font/google";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { closestAmountKey, impacts } from "./constants";
-import styles from "./DonateExperience.module.css";
 import DonateHeroSection from "./sections/DonateHeroSection";
+import DonateHowToSection from "./sections/DonateHowToSection";
+import DonateImpactSection from "./sections/DonateImpactSection";
+import DonateJoinSection from "./sections/DonateJoinSection";
 import DonatePaymentSection from "./sections/DonatePaymentSection";
 import DonateProjectsSection from "./sections/DonateProjectsSection";
 import DonateTransformSection from "./sections/DonateTransformSection";
 import DonateUtilizationSection from "./sections/DonateUtilizationSection";
-
-const cormorant = Cormorant_Garamond({
-  subsets: ["latin"],
-  variable: "--font-donate-display",
-  weight: ["400", "600", "700"],
-  style: ["normal", "italic"],
-});
-
-const outfit = Outfit({
-  subsets: ["latin"],
-  variable: "--font-donate-body",
-  weight: ["300", "400", "500", "600", "700"],
-});
 
 export default function DonateExperience() {
   const [currentAmt, setCurrentAmt] = useState<number>(500);
   const [heroCustomValue, setHeroCustomValue] = useState("");
   const [openAccordionIndex, setOpenAccordionIndex] = useState<number | null>(null);
 
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (!entry.isIntersecting) {
-            return;
-          }
-          entry.target.classList.add(styles.revealVisible);
-          observer.unobserve(entry.target);
-        });
-      },
-      { threshold: 0.12 },
-    );
-
-    const targets = document.querySelectorAll<HTMLElement>("[data-donate-reveal='true']");
-    targets.forEach((target) => observer.observe(target));
-
-    return () => observer.disconnect();
-  }, []);
-
-  const heroImpact = useMemo(() => {
-    const key = closestAmountKey(currentAmt);
-    return impacts.monthly[key];
-  }, [currentAmt]);
+  // The form takes a single gift, so the one-time wording is the honest one.
+  const heroImpact = useMemo(() => impacts.onetime[closestAmountKey(currentAmt)], [currentAmt]);
 
   const handleHeroCustomAmount = (value: string) => {
     setHeroCustomValue(value);
@@ -61,9 +27,11 @@ export default function DonateExperience() {
     }
   };
 
+  // Picking a preset fills the amount box too, so the figure being charged is
+  // always visible in one place.
   const handleHeroAmountPick = (amount: number) => {
     setCurrentAmt(amount);
-    setHeroCustomValue("");
+    setHeroCustomValue(String(amount));
   };
 
   const handleToggleAccordion = (index: number) => {
@@ -71,7 +39,8 @@ export default function DonateExperience() {
   };
 
   return (
-    <main className={`${styles.page} ${cormorant.variable} ${outfit.variable}`}>
+    <main className="min-h-screen bg-background">
+      {/* Section order follows the client's donation document. */}
       <DonateHeroSection
         currentAmt={currentAmt}
         heroCustomValue={heroCustomValue}
@@ -79,10 +48,16 @@ export default function DonateExperience() {
         onAmountPick={handleHeroAmountPick}
         onCustomAmountChange={handleHeroCustomAmount}
       />
-      <DonatePaymentSection />
+      <DonateJoinSection />
       <DonateProjectsSection />
-      <DonateUtilizationSection openAccordionIndex={openAccordionIndex} onToggleAccordion={handleToggleAccordion} />
+      <DonateUtilizationSection
+        openAccordionIndex={openAccordionIndex}
+        onToggleAccordion={handleToggleAccordion}
+      />
       <DonateTransformSection />
+      <DonateImpactSection currentAmt={currentAmt} onAmountPick={handleHeroAmountPick} />
+      <DonatePaymentSection />
+      <DonateHowToSection />
     </main>
   );
 }

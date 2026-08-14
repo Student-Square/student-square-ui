@@ -165,22 +165,22 @@ export default function RealLifeStoriesPage() {
             >
               <Link
                 href={`/blog/real-life-stories/${featured.slug}`}
-                className="group grid grid-cols-1 lg:grid-cols-5 gap-0 lg:gap-8 bg-card border border-border rounded-2xl overflow-hidden hover:shadow-xl hover:shadow-emerald-500/5 hover:border-emerald-500/40 transition-all duration-300"
+                className="group flex flex-col lg:flex-row bg-card border border-border rounded-2xl overflow-hidden hover:shadow-xl hover:shadow-emerald-500/5 hover:border-emerald-500/40 transition-all duration-300"
               >
-                <div className="lg:col-span-3 aspect-[16/10] lg:aspect-auto overflow-hidden bg-muted">
+                <div className="w-full h-[240px] sm:h-[280px] lg:w-[420px] lg:h-[320px] shrink-0 overflow-hidden bg-muted">
                   {featured.coverImage ? (
                     <img
                       src={featured.coverImage.url}
                       alt={featured.coverImage.alt ?? featured.name}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500"
                     />
                   ) : (
-                    <div className="w-full h-full min-h-[200px] bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-emerald-950/60 dark:to-emerald-900/40 flex items-center justify-center">
+                    <div className="w-full h-full bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-emerald-950/60 dark:to-emerald-900/40 flex items-center justify-center">
                       <Users className="h-20 w-20 text-emerald-300 dark:text-emerald-700" />
                     </div>
                   )}
                 </div>
-                <div className="lg:col-span-2 p-5 sm:p-6 lg:p-8 flex flex-col justify-center">
+                <div className="flex-1 p-5 sm:p-6 lg:p-8 flex flex-col justify-center">
                   <Quote className="h-7 w-7 text-emerald-600 mb-3" />
                   <blockquote className="text-base sm:text-lg lg:text-xl text-foreground italic leading-relaxed">
                     &ldquo;{featured.quote}&rdquo;

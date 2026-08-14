@@ -12,27 +12,160 @@ import {
 } from "@/redux/features/auth/authSlice";
 import { useLogoutMutation } from "@/redux/features/auth/authApi";
 import ThemeToggle from "@/components/common/ThemeToggle";
+import NotificationBell from "@/components/notifications/NotificationBell";
 import {
   Activity,
+  BarChart3,
+  Briefcase,
+  BookOpen,
   ChevronDown,
   ChevronRight,
+  ClipboardList,
   ExternalLink,
+  FileCode2,
   FileText,
+  FlagTriangleRight,
   HandCoins,
   Home,
   LayoutGrid,
+  Library,
   LogOut,
+  Megaphone,
   Menu,
+  MessageSquareText,
   Newspaper,
   Settings,
   ShieldCheck,
+  ToggleLeft,
   UserCircle,
   Users,
+  Wallet,
   X,
 } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
+import { ADMIN_ROLES } from "@/lib/auth-routing";
+import type { UserRole } from "@/types/auth";
 
-const ADMIN_ROLES = new Set(["SUPER_ADMIN", "ADMIN", "EDITOR"]);
+/**
+ * One admin shell for every non-care staff role — each role just sees a
+ * different slice of NAV below (see auth-routing.ts for why). Add a new
+ * `roles` list to gate an item/group instead of forking this file.
+ */
+type NavItem = {
+  kind: "item";
+  href: string;
+  label: string;
+  icon: React.ReactNode;
+  exact?: boolean;
+  roles?: UserRole[];
+};
+type NavGroupEntry = {
+  kind: "group";
+  label: string;
+  icon: React.ReactNode;
+  items: Array<{ href: string; label: string; roles?: UserRole[] }>;
+  roles?: UserRole[];
+};
+type NavSectionEntry = { kind: "section"; label: string; roles?: UserRole[] };
+type NavEntry = NavItem | NavGroupEntry | NavSectionEntry;
+
+const CONTENT_ROLES: UserRole[] = ["SYSTEM_ADMIN", "SUPER_ADMIN", "ADMIN", "EDITOR", "AUTHOR", "MODERATOR"];
+const EDIT_ROLES: UserRole[] = ["SYSTEM_ADMIN", "SUPER_ADMIN", "ADMIN", "EDITOR"];
+const AUTHOR_ROLES: UserRole[] = ["SYSTEM_ADMIN", "SUPER_ADMIN", "ADMIN", "EDITOR", "AUTHOR"];
+const MOD_ROLES: UserRole[] = ["SYSTEM_ADMIN", "SUPER_ADMIN", "ADMIN", "MODERATOR"];
+const TOP_ROLES: UserRole[] = ["SYSTEM_ADMIN", "SUPER_ADMIN", "ADMIN"];
+const HR_ROLES: UserRole[] = ["SYSTEM_ADMIN", "SUPER_ADMIN", "ADMIN", "HR_MANAGER"];
+const SYSTEM_ONLY: UserRole[] = ["SYSTEM_ADMIN"];
+
+const NAV: NavEntry[] = [
+  { kind: "item", href: "/admin", label: "Overview", icon: <Home className="h-4 w-4" />, exact: true },
+
+  { kind: "section", label: "Content", roles: CONTENT_ROLES },
+  { kind: "item", href: "/admin/hero", label: "Hero Cards", icon: <LayoutGrid className="h-4 w-4" />, roles: EDIT_ROLES },
+  {
+    kind: "group",
+    label: "About Us",
+    icon: <FileText className="h-4 w-4" />,
+    roles: EDIT_ROLES,
+    items: [
+      { href: "/admin/pages/about-mission-vision", label: "Our Mission & Vision" },
+      { href: "/admin/pages/about-who-we-are", label: "Who We Are" },
+    ],
+  },
+  {
+    kind: "group",
+    label: "Blog",
+    icon: <Newspaper className="h-4 w-4" />,
+    roles: CONTENT_ROLES,
+    items: [
+      { href: "/admin/blog/education-career", label: "Education & Career", roles: AUTHOR_ROLES },
+      { href: "/admin/blog/articles", label: "Articles", roles: AUTHOR_ROLES },
+      { href: "/admin/blog/real-life-stories", label: "Real Life Stories", roles: [...AUTHOR_ROLES, "MODERATOR"] },
+      { href: "/admin/blog/magazine", label: "Magazine", roles: EDIT_ROLES },
+      { href: "/admin/blog/events", label: "Events", roles: EDIT_ROLES },
+      { href: "/admin/blog/categories", label: "Categories", roles: EDIT_ROLES },
+    ],
+  },
+
+  { kind: "section", label: "Moderation", roles: MOD_ROLES },
+  { kind: "item", href: "/admin/moderation", label: "Moderation Queue", icon: <FlagTriangleRight className="h-4 w-4" />, roles: MOD_ROLES },
+
+  { kind: "section", label: "Management", roles: EDIT_ROLES },
+  { kind: "item", href: "/admin/donation", label: "Donation", icon: <HandCoins className="h-4 w-4" />, roles: EDIT_ROLES },
+  { kind: "item", href: "/admin/operations", label: "Operations (DOB)", icon: <BookOpen className="h-4 w-4" />, roles: EDIT_ROLES },
+  { kind: "item", href: "/admin/finance", label: "Financial Work Book", icon: <Wallet className="h-4 w-4" />, roles: EDIT_ROLES },
+  { kind: "item", href: "/admin/books", label: "All Books", icon: <Library className="h-4 w-4" />, roles: EDIT_ROLES },
+  { kind: "item", href: "/admin/team", label: "Team", icon: <ShieldCheck className="h-4 w-4" />, roles: EDIT_ROLES },
+  { kind: "item", href: "/admin/resources", label: "Resources", icon: <Library className="h-4 w-4" />, roles: EDIT_ROLES },
+  { kind: "item", href: "/admin/feedback", label: "Feedback", icon: <MessageSquareText className="h-4 w-4" />, roles: EDIT_ROLES },
+  { kind: "item", href: "/admin/analytics", label: "Analytics", icon: <BarChart3 className="h-4 w-4" />, roles: EDIT_ROLES },
+  { kind: "item", href: "/admin/assessments", label: "Assessments", icon: <ClipboardList className="h-4 w-4" />, roles: TOP_ROLES },
+  { kind: "item", href: "/admin/users", label: "Users", icon: <Users className="h-4 w-4" />, roles: TOP_ROLES },
+
+  { kind: "section", label: "Communications", roles: TOP_ROLES },
+  { kind: "item", href: "/admin/campaigns", label: "Bulk Messages", icon: <Megaphone className="h-4 w-4" />, roles: TOP_ROLES },
+  { kind: "item", href: "/admin/templates", label: "Email Templates", icon: <FileCode2 className="h-4 w-4" />, roles: TOP_ROLES },
+
+  { kind: "section", label: "Recruitment", roles: HR_ROLES },
+  { kind: "item", href: "/admin/recruitment", label: "Candidates", icon: <Briefcase className="h-4 w-4" />, roles: HR_ROLES },
+
+  { kind: "section", label: "System", roles: SYSTEM_ONLY },
+  { kind: "item", href: "/admin/system", label: "Feature Switches", icon: <ToggleLeft className="h-4 w-4" />, roles: SYSTEM_ONLY },
+
+  { kind: "section", label: "My Account" },
+  {
+    kind: "group",
+    label: "My Activities",
+    icon: <Activity className="h-4 w-4" />,
+    items: [
+      { href: "/admin/activities/my-blog", label: "My Blog" },
+      { href: "/admin/activities/comments", label: "Comments" },
+      { href: "/admin/activities/saved", label: "Saved Articles" },
+    ],
+  },
+  { kind: "item", href: "/admin/profile", label: "My Profile", icon: <UserCircle className="h-4 w-4" /> },
+  { kind: "item", href: "/admin/settings", label: "Settings", icon: <Settings className="h-4 w-4" /> },
+];
+
+/** Filters NAV for a role, dropping groups left empty and sections with nothing under them. */
+function navForRole(role: UserRole): NavEntry[] {
+  const visible: NavEntry[] = [];
+  for (const entry of NAV) {
+    if (entry.kind === "group") {
+      const items = entry.items.filter((i) => !i.roles || i.roles.includes(role));
+      if (items.length === 0) continue;
+      if (entry.roles && !entry.roles.includes(role)) continue;
+      visible.push({ ...entry, items });
+    } else if (!entry.roles || entry.roles.includes(role)) {
+      visible.push(entry);
+    }
+  }
+  return visible.filter((entry, i) => {
+    if (entry.kind !== "section") return true;
+    const next = visible[i + 1];
+    return !!next && next.kind !== "section";
+  });
+}
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -65,14 +198,14 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     return null;
   }
 
-  const isEditor = role === "EDITOR";
+  const navItems = navForRole(role);
 
   return (
     <main className="min-h-screen bg-background flex">
       {/* Sidebar — sticky so profile widget never scrolls away */}
       <aside className="hidden md:flex w-60 2xl:w-64 3xl:w-72 shrink-0 border-r border-border bg-card/40 flex-col h-screen sticky top-0">
         {/* Logo */}
-        <div className="px-4 py-4 border-b border-border flex items-center justify-between">
+        <div className="px-4 py-4 border-b border-border flex items-center">
           <Link href="/" className="flex items-center gap-2 group">
             <Image
               src="/images/ss-logo.png"
@@ -83,57 +216,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               priority
             />
           </Link>
-          <ThemeToggle className="h-8 w-8" iconClassName="h-3.5 w-3.5" />
         </div>
 
         {/* Navigation */}
         <nav className="flex-1 p-3 space-y-1 text-sm overflow-y-auto">
-
-          <NavItem href="/admin" label="Overview" icon={<Home className="h-4 w-4" />} exact />
-
-          {/* ── CONTENT ── */}
-          <NavSection label="Content" />
-          <NavItem href="/admin/hero" label="Hero Cards" icon={<LayoutGrid className="h-4 w-4" />} />
-          <NavGroup
-            label="About Us"
-            icon={<FileText className="h-4 w-4" />}
-            items={[
-              { href: "/admin/pages/about-mission-vision", label: "Our Mission & Vision" },
-              { href: "/admin/pages/about-who-we-are", label: "Who We Are" },
-            ]}
-          />
-          <NavGroup
-            label="Blog"
-            icon={<Newspaper className="h-4 w-4" />}
-            items={[
-              { href: "/admin/blog/education-career", label: "Education & Career" },
-              { href: "/admin/blog/articles", label: "Articles" },
-              { href: "/admin/blog/real-life-stories", label: "Real Life Stories" },
-              { href: "/admin/blog/magazine", label: "Magazine" },
-              { href: "/admin/blog/categories", label: "Categories" },
-            ]}
-          />
-
-          {/* ── MANAGEMENT ── */}
-          <NavSection label="Management" />
-          <NavItem href="/admin/donation" label="Donation" icon={<HandCoins className="h-4 w-4" />} />
-          <NavItem href="/admin/team" label="Team" icon={<ShieldCheck className="h-4 w-4" />} />
-          {!isEditor && (
-            <NavItem href="/admin/users" label="Users" icon={<Users className="h-4 w-4" />} />
-          )}
-
-          {/* ── MY ACCOUNT ── */}
-          <NavSection label="My Account" />
-          <NavGroup
-            label="My Activities"
-            icon={<Activity className="h-4 w-4" />}
-            items={[
-              { href: "/admin/activities/my-blog", label: "My Blog" },
-              { href: "/admin/activities/comments", label: "Comments" },
-              { href: "/admin/activities/saved", label: "Saved Articles" },
-            ]}
-          />
-          <NavItem href="/admin/profile" label="My Profile" icon={<UserCircle className="h-4 w-4" />} />
+          <NavList items={navItems} />
         </nav>
 
         {/* Bottom profile widget */}
@@ -141,9 +228,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       </aside>
 
       <div className="flex-1 min-w-0">
-        {/* Mobile top bar */}
-        <header className="md:hidden border-b border-border bg-card/60 backdrop-blur px-4 py-3 flex items-center justify-between sticky top-0 z-40">
-          <div className="flex items-center gap-3">
+        {/* Top bar — mobile menu on small screens, notification bell everywhere */}
+        <header className="border-b border-border bg-card/60 backdrop-blur px-4 py-3 flex items-center justify-between sticky top-0 z-40">
+          <div className="flex items-center gap-3 md:hidden">
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               className="flex items-center justify-center h-9 w-9 rounded-lg border border-border/50 bg-transparent text-foreground hover:bg-accent transition-colors shrink-0"
@@ -153,7 +240,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             </button>
             <Image src="/images/ss-logo.png" alt="Student Square" width={100} height={28} className="h-7 w-auto" />
           </div>
-          <ThemeToggle className="h-9 w-9" />
+          <div className="hidden md:block text-sm font-semibold text-foreground">Admin Console</div>
+          <div className="flex items-center gap-1">
+            <NotificationBell />
+            <ThemeToggle className="h-9 w-9" />
+          </div>
         </header>
 
         {/* Mobile Menu Overlay */}
@@ -189,88 +280,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
                 {/* Mobile Menu Content */}
                 <nav className="flex-1 overflow-y-auto p-3 space-y-1 text-sm">
-                  <NavItem
-                    href="/admin"
-                    label="Overview"
-                    icon={<Home className="h-4 w-4" />}
-                    exact
-                    onNavigate={() => setMobileMenuOpen(false)}
-                  />
-
-                  <p className="px-3 pt-3 pb-1 text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60">
-                    Content
-                  </p>
-                  <NavItem
-                    href="/admin/hero"
-                    label="Hero Cards"
-                    icon={<LayoutGrid className="h-4 w-4" />}
-                    onNavigate={() => setMobileMenuOpen(false)}
-                  />
-                  <NavGroup
-                    label="About Us"
-                    icon={<FileText className="h-4 w-4" />}
-                    items={[
-                      { href: "/admin/pages/about-mission-vision", label: "Our Mission & Vision" },
-                      { href: "/admin/pages/about-who-we-are", label: "Who We Are" },
-                    ]}
-                    onNavigate={() => setMobileMenuOpen(false)}
-                  />
-                  <NavGroup
-                    label="Blog"
-                    icon={<Newspaper className="h-4 w-4" />}
-                    items={[
-                      { href: "/admin/blog/education-career", label: "Education & Career" },
-                      { href: "/admin/blog/articles", label: "Articles" },
-                      { href: "/admin/blog/real-life-stories", label: "Real Life Stories" },
-                      { href: "/admin/blog/magazine", label: "Magazine" },
-                      { href: "/admin/blog/categories", label: "Categories" },
-                    ]}
-                    onNavigate={() => setMobileMenuOpen(false)}
-                  />
-
-                  <p className="px-3 pt-3 pb-1 text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60">
-                    Management
-                  </p>
-                  <NavItem
-                    href="/admin/donation"
-                    label="Donation"
-                    icon={<HandCoins className="h-4 w-4" />}
-                    onNavigate={() => setMobileMenuOpen(false)}
-                  />
-                  <NavItem
-                    href="/admin/team"
-                    label="Team"
-                    icon={<ShieldCheck className="h-4 w-4" />}
-                    onNavigate={() => setMobileMenuOpen(false)}
-                  />
-                  {!isEditor && (
-                    <NavItem
-                      href="/admin/users"
-                      label="Users"
-                      icon={<Users className="h-4 w-4" />}
-                      onNavigate={() => setMobileMenuOpen(false)}
-                    />
-                  )}
-
-                  <p className="px-3 pt-3 pb-1 text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60">
-                    My Account
-                  </p>
-                  <NavGroup
-                    label="My Activities"
-                    icon={<Activity className="h-4 w-4" />}
-                    items={[
-                      { href: "/admin/activities/my-blog", label: "My Blog" },
-                      { href: "/admin/activities/comments", label: "Comments" },
-                      { href: "/admin/activities/saved", label: "Saved Articles" },
-                    ]}
-                    onNavigate={() => setMobileMenuOpen(false)}
-                  />
-                  <NavItem
-                    href="/admin/profile"
-                    label="My Profile"
-                    icon={<UserCircle className="h-4 w-4" />}
-                    onNavigate={() => setMobileMenuOpen(false)}
-                  />
+                  <NavList items={navItems} onNavigate={() => setMobileMenuOpen(false)} />
                 </nav>
 
                 {/* Mobile Menu Footer */}
@@ -291,7 +301,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           )}
         </AnimatePresence>
 
-        <div className="p-4 sm:p-6 lg:p-8 2xl:p-10 3xl:p-12 max-w-6xl 2xl:max-w-7xl 3xl:max-w-[1700px] 4xl:max-w-[2100px]">{children}</div>
+        {/* Capped on laptops so text lines stay readable; from 2xl up the wide
+            admin tables get the whole viewport instead of a 1280px column. */}
+        <div className="p-4 sm:p-6 lg:p-8 2xl:p-10 3xl:p-12 max-w-6xl 2xl:max-w-none">{children}</div>
       </div>
     </main>
   );
@@ -365,8 +377,16 @@ function SidebarProfile({
                 onClick={() => setOpen(false)}
                 className="flex items-center gap-2.5 px-3 py-2 text-sm rounded-lg hover:bg-muted transition-colors text-foreground"
               >
+                <UserCircle className="h-3.5 w-3.5 text-muted-foreground" />
+                My profile
+              </Link>
+              <Link
+                href="/admin/settings"
+                onClick={() => setOpen(false)}
+                className="flex items-center gap-2.5 px-3 py-2 text-sm rounded-lg hover:bg-muted transition-colors text-foreground"
+              >
                 <Settings className="h-3.5 w-3.5 text-muted-foreground" />
-                Profile settings
+                Settings
               </Link>
               <Link
                 href="/"
@@ -390,6 +410,39 @@ function SidebarProfile({
         )}
       </AnimatePresence>
     </div>
+  );
+}
+
+function NavList({ items, onNavigate }: { items: NavEntry[]; onNavigate?: () => void }) {
+  return (
+    <>
+      {items.map((entry, i) => {
+        if (entry.kind === "section") {
+          return <NavSection key={`section-${i}`} label={entry.label} />;
+        }
+        if (entry.kind === "group") {
+          return (
+            <NavGroup
+              key={entry.label}
+              label={entry.label}
+              icon={entry.icon}
+              items={entry.items}
+              onNavigate={onNavigate}
+            />
+          );
+        }
+        return (
+          <NavItem
+            key={entry.href}
+            href={entry.href}
+            label={entry.label}
+            icon={entry.icon}
+            exact={entry.exact}
+            onNavigate={onNavigate}
+          />
+        );
+      })}
+    </>
   );
 }
 

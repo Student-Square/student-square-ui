@@ -2,10 +2,38 @@
 
 import { useEffect, useRef } from "react"
 import { TestimonialsColumn } from "@/components/ui/testimonials-column"
+import { useGetStoriesQuery } from "@/redux/features/stories/storiesApi"
+
+/** Keep cards a similar height by cutting at the sentence nearest 220 chars. */
+function excerpt(text: string, limit = 220): string {
+  if (text.length <= limit) return text
+  const cut = text.slice(0, limit)
+  const lastStop = Math.max(cut.lastIndexOf(". "), cut.lastIndexOf("! "), cut.lastIndexOf("? "))
+  return lastStop > limit / 2 ? cut.slice(0, lastStop + 1) : `${cut.trimEnd()}…`
+}
 
 export function TestimonialsSection() {
   const sectionRef = useRef<HTMLElement>(null)
+  const { data } = useGetStoriesQuery({ limit: 12 })
 
+  // Real students, in their own words: the summary is the opening of the story
+  // each of them wrote, first person. The `quote` field is not used here — for
+  // most of these stories it carries the source document's headline ("From
+  // Father's Shop to RU Glory") rather than anything the student said, and
+  // setting that in quotation marks would put words in their mouth.
+  const testimonials = (data?.data ?? [])
+    .filter((story) => story.summary)
+    .map((story) => ({
+      text: excerpt(story.summary as string),
+      name: story.name,
+      role: [story.department, story.university].filter(Boolean).join(", "),
+      image: story.coverImage?.url,
+    }))
+
+  const hasTestimonials = testimonials.length > 0
+
+  // Depends on hasTestimonials because the section is not in the DOM until the
+  // stories arrive — observing on mount alone would leave it stuck at opacity 0.
   useEffect(() => {
     const timers: ReturnType<typeof setTimeout>[] = []
     const observer = new IntersectionObserver(
@@ -34,58 +62,9 @@ export function TestimonialsSection() {
       observer.disconnect()
       timers.forEach(clearTimeout)
     }
-  }, [])
+  }, [hasTestimonials])
 
-  const testimonials = [
-    {
-      text: "Student Square helped me navigate through my toughest academic challenges. Their counselling services gave me clarity and direction when I needed it most.",
-      name: "Counselling Workshop",
-      role: "Educational Support",
-      image: "/images/student-square-16th-group-counselling-workshop-godagari-rajshahi.jpg",
-    },
-    {
-      text: "The advocacy team fought for my rights when I faced unfair treatment. I felt truly supported throughout the entire process.",
-      name: "Prize Recognition",
-      role: "Achievement Celebration",
-      image: "/images/brain-battle-prize-ceremony.jpg",
-    },
-    {
-      text: "Thanks to Student Square's wellbeing programs, I learned to manage stress and maintain a healthy work-life balance during exams.",
-      name: "Community Service",
-      role: "Social Impact",
-      image: "/images/emergency-tran-bitoron-activities-5.jpg",
-    },
-    {
-      text: "Their community events helped me connect with like-minded students. I found my support network through their workshops.",
-      name: "Relief Initiatives",
-      role: "Community Support",
-      image: "/images/emergency-tran-bitoron-activities-2.jpg",
-    },
-    {
-      text: "The mental health resources provided by Student Square were instrumental in my recovery journey. Professional, compassionate, and always available.",
-      name: "Cooperative Programs",
-      role: "Social Building",
-      image: "/images/relation-will-be-cooperative-for-social-building2.jpg",
-    },
-    {
-      text: "As an international student, Student Square made me feel at home. Their cultural programs and support services are exceptional.",
-      name: "Environmental Action",
-      role: "Community Growth",
-      image: "/images/student-square-one-minute-investment-project-2.jpg",
-    },
-    {
-      text: "The career counselling sessions helped me discover my passion and plan my future with confidence. Highly recommended!",
-      name: "Emergency Response",
-      role: "Community Resilience",
-      image: "/images/emergency-tran-bitoron-activities-4.jpg",
-    },
-    {
-      text: "Student Square's peer mentorship program connected me with seniors who guided me through my first year challenges.",
-      name: "Water Relief Support",
-      role: "Disaster Response",
-      image: "/images/emergency-tran-bitoron-activities-3.jpg",
-    },
-  ]
+  if (!hasTestimonials) return null
 
   return (
     <section id="testimonials" ref={sectionRef} className="relative py-10 sm:py-12 md:py-16 px-4 sm:px-6 lg:px-8 overflow-hidden">
@@ -118,7 +97,7 @@ export function TestimonialsSection() {
             </span>
           </h2>
           <p className="fade-in-element opacity-0 translate-y-8 transition-all duration-1000 ease-out text-base sm:text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-            Discover how students across Ireland are transforming their academic journey with our counselling, advocacy, and wellbeing services
+            Students across Bangladesh on what changed for them through our counselling, advocacy, and wellbeing programmes
           </p>
         </div>
 

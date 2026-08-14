@@ -1,11 +1,16 @@
 /** Types for the /auth API surface. */
 
 export type UserRole =
+  | "SYSTEM_ADMIN"
   | "SUPER_ADMIN"
   | "ADMIN"
+  | "COUNSELLOR"
+  | "MENTOR"
   | "MODERATOR"
   | "EDITOR"
+  | "AUTHOR"
   | "FINANCE_MANAGER"
+  | "HR_MANAGER"
   | "MEMBER";
 
 export type UserStatus = "ACTIVE" | "SUSPENDED" | "PENDING_VERIFICATION";
@@ -15,8 +20,15 @@ export type ApiMe = {
   email: string;
   fullName: string;
   slug: string | null;
+  memberId?: string | null;
   role: UserRole;
   status: UserStatus;
+  /** Whether this account has confirmed TOTP MFA. */
+  mfaEnabled?: boolean;
+  /** Whether this role must use MFA under current policy. */
+  mfaRequired?: boolean;
+  /** Platform-wide enforcement switch (false = MFA optional for everyone). */
+  mfaEnforced?: boolean;
   emailVerifiedAt: string | null;
   lastLoginAt: string | null;
   createdAt: string;
@@ -35,6 +47,26 @@ export type ApiMe = {
     profession: string | null;
     workplace: string | null;
     preferredAnonymous: boolean;
+  } | null;
+  memberProfile?: {
+    id: string;
+    phone: string;
+    address: string;
+    ageBand: string;
+    gender: string;
+    homeDistrict: string;
+    studyLevel: string;
+    institutionType: string;
+    institutionTypeOther: string | null;
+    institutionName: string;
+    fieldOfStudy: string;
+    subjectDepartment: string;
+    subjectFeeling: string;
+    subjectFeelingWhy: string | null;
+    facedSubjectConfusion: boolean;
+    occupationStatus: string;
+    disabilityStatus: string;
+    completedAt: string;
   } | null;
 };
 

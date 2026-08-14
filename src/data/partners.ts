@@ -5,15 +5,11 @@ export type Partner = {
   description: string;
   keyPoints: { bold: string; text: string }[];
   campaigns: { bold: string; text: string }[];
-  stats: { value: string; label: string }[];
 };
 
-const STATS = [
-  { value: "7.1m",    label: "people in need of humanitarian assistance" },
-  { value: "1.3m",    label: "people do not have enough to eat" },
-  { value: "350,000", label: "people displaced inside of Mali" },
-];
-
+// These entries carry no figures. The partner pages render the foundation's
+// real, organisation-wide totals via <ImpactStats /> instead; the numbers that
+// used to live here described the humanitarian situation in Mali.
 export const partners: Partner[] = [
   {
     slug: "campaign-partner",
@@ -31,7 +27,6 @@ export const partners: Partner[] = [
       { bold: "Skill Development:", text: " Offering training programs to equip women with the skills necessary for employment or self-employment." },
       { bold: "Empowerment and Dignity:", text: " Helping women regain their confidence and reintegrate into society with dignity." },
     ],
-    stats: STATS,
   },
   {
     slug: "project-partner",
@@ -49,7 +44,6 @@ export const partners: Partner[] = [
       { bold: "Skills Training:", text: " Delivering vocational and life-skills programmes for young people." },
       { bold: "Community Resilience:", text: " Building long-term capacity within local communities." },
     ],
-    stats: STATS,
   },
   {
     slug: "institution-partner",
@@ -67,7 +61,6 @@ export const partners: Partner[] = [
       { bold: "School Programmes:", text: " Integrating wellbeing curricula into school timetables." },
       { bold: "Government Initiatives:", text: " Supporting policy development at local and national levels." },
     ],
-    stats: STATS,
   },
   {
     slug: "career-partner",
@@ -85,7 +78,6 @@ export const partners: Partner[] = [
       { bold: "Skills Workshops:", text: " Delivering industry-relevant workshops at our centres." },
       { bold: "Diversity Goals:", text: " Supporting your organisation's diversity and inclusion commitments." },
     ],
-    stats: STATS,
   },
 ];
 

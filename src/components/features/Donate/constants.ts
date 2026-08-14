@@ -35,7 +35,7 @@ export const projectCards: ProjectCard[] = [
   },
   {
     icon: "🕌",
-    title: "Eid Gift Project",
+    title: "Amar Bhai Er Eid Project",
     description:
       "Providing complete food packages — beef (1–1.5 kg), oil (450 gm), polao rice (1.5 kg) — to underprivileged families every Eid. Spreading joy and dignity to those who need it most.",
     tags: ["850+ Families", "Annual"],
@@ -146,19 +146,12 @@ export const transformCards: TransformCard[] = [
   },
 ];
 
-export const impactStripStats: StatItem[] = [
-  { number: "850+", label: "Families Supported" },
-  { number: "2,500+", label: "Students Reached" },
-  { number: "625+", label: "Saplings Planted" },
-  { number: "250+", label: "Patients Treated" },
-  { number: "5", label: "Districts Covered" },
-];
-
+/** Fallback only — the live figures come from the seeded impact stats. */
 export const heroStats: StatItem[] = [
   { number: "850+", label: "Families Supported" },
-  { number: "2,500+", label: "Students Reached" },
-  { number: "625+", label: "Trees Planted" },
-  { number: "250+", label: "Patients Treated" },
+  { number: "5,000+", label: "Students Reached" },
+  { number: "625+", label: "Saplings Planted" },
+  { number: "250+", label: "Rural Patients" },
 ];
 
 export const closestAmountKey = (amount: number): DonationPresetAmount =>

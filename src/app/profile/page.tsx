@@ -288,7 +288,7 @@ export default function ProfilePage() {
                 <Link href="/" className="flex items-center gap-2 px-3 py-2 rounded-xl text-sm text-foreground hover:bg-muted transition-colors">
                   ← Back to site
                 </Link>
-                {["SUPER_ADMIN", "ADMIN", "EDITOR"].includes(user.role) && (
+                {["SYSTEM_ADMIN", "SUPER_ADMIN", "ADMIN", "EDITOR"].includes(user.role) && (
                   <Link href="/admin" className="flex items-center gap-2 px-3 py-2 rounded-xl text-sm text-foreground hover:bg-muted transition-colors">
                     Admin dashboard
                   </Link>

@@ -184,8 +184,10 @@ const contentApiSlice = baseApi.injectEndpoints({
       providesTags: ["Cards"],
     }),
 
+    // Raw rows. /content/pages/:slug returns the assembled ApiEditablePage
+    // instead, which drops sections that aren't banner/hero/body-N.
     getPageSections: build.query<ApiPageSection[], string>({
-      query: (pageSlug) => `/content/pages/${encodeURIComponent(pageSlug)}`,
+      query: (pageSlug) => `/content/sections/${encodeURIComponent(pageSlug)}`,
       providesTags: (_result, _err, slug) => [{ type: "Content", id: slug }],
     }),
 

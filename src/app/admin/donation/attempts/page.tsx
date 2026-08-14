@@ -82,7 +82,7 @@ export default function PaymentAttemptsPage() {
   };
 
   return (
-    <div className="space-y-6 max-w-6xl">
+    <div className="space-y-6 max-w-6xl 2xl:max-w-none">
       <Link href="/admin/donation" className="inline-flex items-center gap-1.5 text-sm font-semibold text-muted-foreground hover:text-foreground">
         <ArrowLeft className="h-4 w-4" /> Back to donations
       </Link>

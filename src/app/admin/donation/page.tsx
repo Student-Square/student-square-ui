@@ -30,7 +30,7 @@ import {
   useConfirmDonationMutation,
   useVerifyDonationMutation,
   useRefundDonationMutation,
-  useSyncGatewayDonationsMutation,
+  useReconcileDonationsMutation,
 } from "@/redux/features/donations/adminDonationsApi";
 import {
   useGetAdminCampaignsQuery,
@@ -52,11 +52,9 @@ const PAGE_SIZE = 12;
 const bdt = (n: number) => `৳${n.toLocaleString()}`;
 const fmtDate = (iso: string) =>
   new Date(iso).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
-const fmtTime = (d: Date) => d.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", second: "2-digit" });
 
 // Methods an admin may confirm by hand (money received off-platform).
 const OFFLINE_METHODS = new Set(["BANK_TRANSFER", "MOBILE_BANKING", "MANUAL"]);
-const AUTO_SYNC_MS = 60_000; // re-check SSLCommerz pending donations every minute
 
 const statusStyle: Record<DonationStatus, string> = {
   PAID: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300",
@@ -71,7 +69,7 @@ export default function AdminDonationPage() {
   const [showModal, setShowModal] = useState(false);
 
   return (
-    <div className="space-y-6 max-w-6xl">
+    <div className="space-y-6 max-w-6xl 2xl:max-w-none">
       <div className="flex items-end justify-between gap-3 flex-wrap">
         <div>
           <h1 className="text-2xl font-bold text-foreground tracking-tight flex items-center gap-2">
@@ -185,7 +183,6 @@ function DonationsTab() {
   const [status, setStatus] = useState("");
   const [method, setMethod] = useState("");
   const [campaignId, setCampaignId] = useState("");
-  const [lastSync, setLastSync] = useState<Date | null>(null);
   const [pendingConfirm, setPendingConfirm] = useState<AdminDonation | null>(null);
 
   const { data: campaignsData } = useGetAdminCampaignsQuery({ status: "" });
@@ -205,26 +202,8 @@ function DonationsTab() {
   const [confirmDonation, { isLoading: confirming }] = useConfirmDonationMutation();
   const [verifyDonation] = useVerifyDonationMutation();
   const [refundDonation, { isLoading: refunding }] = useRefundDonationMutation();
-  const [syncGateway, { isLoading: syncing }] = useSyncGatewayDonationsMutation();
+  const [reconcile, { isLoading: reconciling }] = useReconcileDonationsMutation();
   const [verifyingId, setVerifyingId] = useState<string | null>(null);
-
-  // Auto-sync SSLCommerz pending donations on mount + every minute (no button needed).
-  const syncRef = useRef(syncGateway);
-  syncRef.current = syncGateway;
-  useEffect(() => {
-    let alive = true;
-    const run = async () => {
-      try {
-        await syncRef.current().unwrap();
-        if (alive) setLastSync(new Date());
-      } catch {
-        /* silent — manual button still available */
-      }
-    };
-    run();
-    const id = setInterval(run, AUTO_SYNC_MS);
-    return () => { alive = false; clearInterval(id); };
-  }, []);
 
   const rows = data?.data ?? [];
   const total = data?.meta.total ?? 0;
@@ -247,47 +226,62 @@ function DonationsTab() {
   const onRefund = async (id: string) => {
     try { await refundDonation(id).unwrap(); toast.success("Donation refunded"); } catch {}
   };
-  const onSyncNow = async () => {
+
+  /**
+   * FR-14-008 — re-check every pending donation with SSLCommerz now.
+   *
+   * The server sweep runs every 15 minutes anyway; this is for when a donor is
+   * on the phone and nobody wants to wait for the next one.
+   */
+  const onReconcileNow = async () => {
     try {
-      const res = await syncGateway().unwrap();
-      setLastSync(new Date());
-      toast.success(`Gateway sync: ${res.paid} marked paid (${res.checked} checked)`);
+      const res = await reconcile().unwrap();
+      toast.success(`Checked ${res.checked} pending — ${res.paid} now paid`);
     } catch {
-      toast.error("Gateway sync failed");
+      /* baseApi already toasts the failure */
     }
   };
 
-  const downloadCsv = async () => {
+  /** CSV, XLSX or PDF — the same ledger, one route per format. */
+  const downloadLedger = async (format: "csv" | "xlsx" | "pdf" = "csv") => {
     try {
-      const res = await fetch(`${API_BASE}/admin/donations/export.csv`, { credentials: "include" });
+      const res = await fetch(`${API_BASE}/admin/donations/export.${format}`, {
+        credentials: "include",
+      });
+      if (!res.ok) throw new Error("Export failed");
       const blob = await res.blob();
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
-      a.href = url; a.download = "donations.csv"; a.click();
+      a.href = url; a.download = `donations.${format}`; a.click();
       URL.revokeObjectURL(url);
     } catch { toast.error("Export failed"); }
   };
 
+  const downloadCsv = () => downloadLedger("csv");
+
   return (
     <div className="space-y-3">
-      {/* Auto-sync status bar */}
       <div className="flex items-center justify-between gap-2 rounded-lg border border-border bg-muted/30 px-3 py-2 text-xs">
-        <span className="flex items-center gap-2 text-muted-foreground">
-          <span className="relative flex h-2 w-2">
-            <span className={`absolute inline-flex h-full w-full rounded-full bg-emerald-400 ${syncing ? "animate-ping" : ""} opacity-75`} />
-            <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
-          </span>
-          Auto-syncing with SSLCommerz every 60s
-          {lastSync && <span className="text-muted-foreground/70">· last checked {fmtTime(lastSync)}</span>}
+        <span className="text-muted-foreground">
+          The server re-checks pending SSLCommerz payments every 15 minutes.
         </span>
-        <button
-          onClick={onSyncNow}
-          disabled={syncing}
-          className="inline-flex items-center gap-1.5 rounded-md border border-border bg-card px-2.5 py-1 font-semibold hover:bg-muted transition-colors disabled:opacity-50"
-        >
-          {syncing ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <RotateCcw className="h-3.5 w-3.5" />}
-          Sync now
-        </button>
+        <span className="flex items-center gap-1.5">
+          <button
+            onClick={onReconcileNow}
+            disabled={reconciling}
+            title="Re-check every pending donation with the gateway now"
+            className="inline-flex items-center gap-1.5 rounded-md border border-border bg-card px-2.5 py-1 font-semibold hover:bg-muted transition-colors disabled:opacity-50"
+          >
+            {reconciling ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <RotateCcw className="h-3.5 w-3.5" />}
+            Check pending now
+          </button>
+          <button
+            onClick={() => downloadLedger("xlsx")}
+            className="inline-flex items-center gap-1.5 rounded-md border border-border bg-card px-2.5 py-1 font-semibold hover:bg-muted transition-colors"
+          >
+            Excel
+          </button>
+        </span>
       </div>
 
       {/* Filters */}

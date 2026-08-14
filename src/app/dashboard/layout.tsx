@@ -10,23 +10,33 @@ import {
   selectCurrentUser,
   selectUserRole,
 } from "@/redux/features/auth/authSlice";
-import { ADMIN_ROLES } from "@/lib/auth-routing";
+import { roleHome } from "@/lib/auth-routing";
 import { useLogoutMutation } from "@/redux/features/auth/authApi";
 import {
   Bookmark,
+  BookOpen,
+  CalendarClock,
   ChevronDown,
   ChevronRight,
+  ClipboardList,
   ExternalLink,
+  FileText,
   Heart,
   LayoutDashboard,
+  Library,
   LogOut,
   Menu,
   MessageSquare,
+  MessageSquarePlus,
   Newspaper,
+  Route,
+  Settings,
   UserCircle,
+  Wallet,
   X,
 } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
+import NotificationBell from "@/components/notifications/NotificationBell";
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -42,9 +52,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       router.replace(`/auth/login?next=${encodeURIComponent(pathname)}`);
       return;
     }
-    // Admin/editor/moderator roles belong in /admin, not here
-    if (status === "authenticated" && role && ADMIN_ROLES.has(role)) {
-      router.replace("/admin");
+    // /dashboard is the member's area. Every other role has its own home —
+    // /admin for admin roles, /panel for counsellors and mentors — and
+    // roleHome() is the one place that mapping lives.
+    if (status === "authenticated" && role && roleHome(role) !== "/dashboard") {
+      router.replace(roleHome(role));
     }
   }, [status, role, pathname, router]);
 
@@ -69,7 +81,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   }
 
   if (status === "unauthenticated") return null;
-  if (role && ADMIN_ROLES.has(role)) return null;
+  if (role && roleHome(role) !== "/dashboard") return null;
 
   const sidebar = (
     <SidebarContent
@@ -120,22 +132,30 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
       {/* Main content */}
       <div className="flex-1 min-w-0 flex flex-col">
-        {/* Mobile top bar */}
-        <header className="md:hidden sticky top-0 z-30 border-b border-border bg-card/80 backdrop-blur px-4 py-3 flex items-center gap-3">
+        {/* Top bar — mobile menu + notification bell */}
+        <header className="sticky top-0 z-30 border-b border-border bg-card/80 backdrop-blur px-4 py-3 flex items-center gap-3">
           <button
             type="button"
             onClick={() => setMobileOpen(true)}
-            className="-ml-1.5 inline-flex h-10 w-10 items-center justify-center rounded-md hover:bg-muted transition-colors text-muted-foreground"
+            className="md:hidden -ml-1.5 inline-flex h-10 w-10 items-center justify-center rounded-md hover:bg-muted transition-colors text-muted-foreground"
             aria-label="Open menu"
           >
             <Menu className="h-5 w-5" />
           </button>
-          <Image src="/images/ss-logo.png" alt="Student Square" width={100} height={28} className="h-7 w-auto" />
-          <ChevronRight className="h-3 w-3 text-muted-foreground" />
-          <span className="text-xs font-semibold text-muted-foreground">Dashboard</span>
+          <div className="md:hidden flex items-center gap-2 min-w-0">
+            <Image src="/images/ss-logo.png" alt="Student Square" width={100} height={28} className="h-7 w-auto" />
+            <ChevronRight className="h-3 w-3 text-muted-foreground shrink-0" />
+            <span className="text-xs font-semibold text-muted-foreground truncate">Dashboard</span>
+          </div>
+          <div className="hidden md:block text-sm font-semibold text-foreground">
+            Dashboard
+          </div>
+          <div className="ml-auto">
+            <NotificationBell />
+          </div>
         </header>
 
-        <div className="flex-1 p-4 sm:p-6 lg:p-8 max-w-5xl">
+        <div className="flex-1 p-4 sm:p-6 lg:p-8 max-w-5xl 2xl:max-w-none">
           {children}
         </div>
       </div>
@@ -184,6 +204,49 @@ function SidebarContent({
           label="My Profile"
           icon={<UserCircle className="h-4 w-4" />}
         />
+        <NavItem
+          href="/dashboard/settings"
+          label="Settings"
+          icon={<Settings className="h-4 w-4" />}
+        />
+        <NavItem
+          href="/dashboard/assessment"
+          label="Assessment"
+          icon={<ClipboardList className="h-4 w-4" />}
+        />
+
+        {/* Care (P3) */}
+        <div className="pt-3 pb-1">
+          <p className="px-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+            My Journey
+          </p>
+        </div>
+
+        <NavItem
+          href="/dashboard/roadmap"
+          label="My Roadmap"
+          icon={<Route className="h-4 w-4" />}
+        />
+        <NavItem
+          href="/dashboard/sessions"
+          label="Sessions"
+          icon={<CalendarClock className="h-4 w-4" />}
+        />
+        <NavItem
+          href="/dashboard/reports"
+          label="My Reports"
+          icon={<FileText className="h-4 w-4" />}
+        />
+        <NavItem
+          href="/dashboard/messages"
+          label="Messages"
+          icon={<MessageSquare className="h-4 w-4" />}
+        />
+        <NavItem
+          href="/dashboard/resources"
+          label="Resources"
+          icon={<Library className="h-4 w-4" />}
+        />
 
         {/* Activities group */}
         <div className="pt-3 pb-1">
@@ -211,6 +274,23 @@ function SidebarContent({
         {/* Donation */}
         <div className="pt-3 pb-1">
           <p className="px-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+            Operations
+          </p>
+        </div>
+
+        <NavItem
+          href="/dashboard/operations"
+          label="Daily Operation Book"
+          icon={<BookOpen className="h-4 w-4" />}
+        />
+        <NavItem
+          href="/dashboard/finance"
+          label="Financial Work Book"
+          icon={<Wallet className="h-4 w-4" />}
+        />
+
+        <div className="pt-3 pb-1">
+          <p className="px-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
             Support
           </p>
         </div>
@@ -219,6 +299,11 @@ function SidebarContent({
           href="/dashboard/donation"
           label="Donation"
           icon={<Heart className="h-4 w-4" />}
+        />
+        <NavItem
+          href="/dashboard/feedback"
+          label="Feedback"
+          icon={<MessageSquarePlus className="h-4 w-4" />}
         />
       </nav>
 
