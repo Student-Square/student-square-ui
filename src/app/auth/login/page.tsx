@@ -16,6 +16,7 @@ import {
   selectIsAuthenticated,
 } from "@/redux/features/auth/authSlice";
 import { pickPostLoginDestination } from "@/lib/auth-routing";
+import AuthBrand from "@/components/auth/AuthBrand";
 import {
   AlertCircle,
   ArrowLeft,
@@ -42,7 +43,8 @@ export default function LoginPage() {
 
 function LoginFallback() {
   return (
-    <main className="min-h-screen flex items-center justify-center bg-background">
+    <main className="min-h-screen flex flex-col items-center justify-center gap-4 bg-background px-4">
+      <AuthBrand />
       <p className="text-sm text-muted-foreground">Loading…</p>
     </main>
   );
@@ -248,6 +250,9 @@ function LoginForm() {
       </div>
 
       <div className="w-full max-w-md">
+        <div className="mb-6 flex justify-center">
+          <AuthBrand />
+        </div>
         <Link
           href="/"
           className="inline-flex items-center gap-2 text-xs font-semibold text-muted-foreground hover:text-emerald-600 transition-colors mb-6"

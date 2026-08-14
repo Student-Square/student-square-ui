@@ -92,8 +92,12 @@ const baseQueryWithRefreshAndToasts: BaseQueryFn<
 
     const silent = opts.silent === true;
     const silent404 = status === 404 && opts.silentOn404 === true;
+    const aborted =
+      status === "FETCH_ERROR" &&
+      typeof (result.error as { error?: string }).error === "string" &&
+      /abort/i.test((result.error as { error: string }).error);
 
-    if (silent || silent404) {
+    if (silent || silent404 || aborted) {
       // caller handles the error UX
     } else if (status === "FETCH_ERROR") {
       toast.error("Network error — check your connection.");

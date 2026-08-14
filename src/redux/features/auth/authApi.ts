@@ -131,6 +131,7 @@ const authApi = baseApi.injectEndpoints({
 
     logout: build.mutation<null, void>({
       query: () => ({ url: "/auth/logout", method: "POST" }),
+      extraOptions: { silent: true },
       async onQueryStarted(_, { dispatch, queryFulfilled }) {
         try {
           await queryFulfilled;

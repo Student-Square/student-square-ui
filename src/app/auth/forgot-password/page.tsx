@@ -3,6 +3,7 @@
 import { Suspense, useState } from "react";
 import Link from "next/link";
 import { useForgotPasswordMutation } from "@/redux/features/auth/authApi";
+import AuthBrand from "@/components/auth/AuthBrand";
 import {
   AlertCircle,
   ArrowLeft,
@@ -14,7 +15,7 @@ import {
 
 export default function ForgotPasswordPage() {
   return (
-    <Suspense fallback={<main className="min-h-screen flex items-center justify-center bg-background"><p className="text-sm text-muted-foreground">Loading…</p></main>}>
+    <Suspense fallback={<main className="min-h-screen flex flex-col items-center justify-center gap-4 bg-background px-4"><AuthBrand /><p className="text-sm text-muted-foreground">Loading…</p></main>}>
       <ForgotPasswordForm />
     </Suspense>
   );
@@ -57,6 +58,9 @@ function ForgotPasswordForm() {
       <main className="min-h-screen bg-background flex items-center justify-center px-4 py-10 sm:py-16 relative overflow-hidden">
         <Backdrop />
         <div className="w-full max-w-md text-center">
+          <div className="mb-6 flex justify-center">
+            <AuthBrand />
+          </div>
           <div className="rounded-2xl border border-border bg-card shadow-xl shadow-emerald-500/5 p-8 sm:p-10">
             <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-emerald-50 dark:bg-emerald-900/30 ring-8 ring-emerald-100 dark:ring-emerald-900/20">
               <CheckCircle2 className="h-10 w-10 text-emerald-600 dark:text-emerald-400" />
@@ -104,6 +108,9 @@ function ForgotPasswordForm() {
     <main className="min-h-screen bg-background flex items-center justify-center px-4 py-10 sm:py-16 relative overflow-hidden">
       <Backdrop />
       <div className="w-full max-w-md">
+        <div className="mb-6 flex justify-center">
+          <AuthBrand />
+        </div>
         <Link
           href="/auth/login"
           className="inline-flex items-center gap-2 text-xs font-semibold text-muted-foreground hover:text-emerald-600 transition-colors mb-6"
