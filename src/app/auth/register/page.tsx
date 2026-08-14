@@ -161,7 +161,7 @@ export default function RegisterPage() {
   return (
     <Suspense
       fallback={
-        <AuthShell variant="card" wide>
+        <AuthShell variant="register" wide>
           <p className="text-center text-sm text-muted-foreground">Loading…</p>
         </AuthShell>
       }
@@ -181,6 +181,7 @@ function RegisterWizard() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [sentEmail, setSentEmail] = useState("");
   const [sentMemberId, setSentMemberId] = useState<string | null>(null);
   const [hydrated, setHydrated] = useState(false);
@@ -200,8 +201,14 @@ function RegisterWizard() {
     localStorage.setItem(DRAFT_KEY, JSON.stringify(persistableDraft(draft)));
   }, [draft, hydrated]);
 
-  const patch = (partial: Partial<Draft>) =>
+  const patch = (partial: Partial<Draft>) => {
     setDraft((d) => ({ ...d, ...partial }));
+    setFieldErrors((current) => {
+      const next = { ...current };
+      Object.keys(partial).forEach((key) => delete next[key]);
+      return next;
+    });
+  };
 
   const stepTitle = useMemo(
     () =>
@@ -285,8 +292,41 @@ function RegisterWizard() {
     return null;
   }
 
+  function validateIdentityFields() {
+    const errors: Record<string, string> = {};
+    if (!draft.fullName.trim()) errors.fullName = "Full name is required.";
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(draft.email.trim()))
+      errors.email = "Enter a valid email address.";
+    if (!/^\d{10,15}$/.test(draft.phone.trim()))
+      errors.phone = "Use 10–15 digits only.";
+    if (!draft.address.trim()) errors.address = "Address is required.";
+    if (!draft.ageBand) errors.ageBand = "Select your age.";
+    if (!draft.homeDistrict)
+      errors.homeDistrict = "Select your home district.";
+    if (!draft.gender) errors.gender = "Select a gender option.";
+
+    if (isMinorAgeBand(draft.ageBand)) {
+      if (!draft.guardianName.trim())
+        errors.guardianName = "Guardian name is required.";
+      if (!/^01[3-9]\d{8}$/.test(draft.guardianPhone.replace(/[\s-]/g, "")))
+        errors.guardianPhone = "Enter a valid guardian mobile number.";
+      if (!draft.guardianConsent)
+        errors.guardianConsent = "Guardian consent is required.";
+    }
+
+    return errors;
+  }
+
   function goNext() {
     setFormError(null);
+    setFieldErrors({});
+    if (step === 2) {
+      const errors = validateIdentityFields();
+      if (Object.keys(errors).length > 0) {
+        setFieldErrors(errors);
+        return;
+      }
+    }
     const err = validateStep();
     if (err) {
       setFormError(err);
@@ -297,6 +337,7 @@ function RegisterWizard() {
 
   function goBack() {
     setFormError(null);
+    setFieldErrors({});
     if (step > 1) setStep((s) => (s - 1) as Step);
   }
 
@@ -388,7 +429,7 @@ function RegisterWizard() {
 
   if (stage === "sent") {
     return (
-      <AuthShell variant="card" wide>
+      <AuthShell variant="register" wide>
         <div className="text-center">
           <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-emerald-50 dark:bg-emerald-900/30 ring-8 ring-emerald-100 dark:ring-emerald-900/20">
             <CheckCircle2 className="h-10 w-10 text-emerald-600 dark:text-emerald-400" />
@@ -422,7 +463,7 @@ function RegisterWizard() {
   }
 
   return (
-    <AuthShell variant="card" wide>
+    <AuthShell variant="register" wide>
       <div className="text-center">
         <h1 className={authHeadingClass}>
           Welcome aboard!
@@ -449,7 +490,13 @@ function RegisterWizard() {
       </div>
       <h2 className="mt-3 text-lg font-semibold text-foreground">{stepTitle}</h2>
 
-      <div className="mt-6 space-y-4">
+      <div
+        className={
+          step === 1
+            ? "mt-6 space-y-4"
+            : "mt-6 grid grid-cols-1 gap-4 md:grid-cols-2"
+        }
+      >
             {step === 1 && (
               <>
                 <p className="text-sm text-muted-foreground leading-relaxed">
@@ -570,7 +617,11 @@ function RegisterWizard() {
 
             {step === 2 && (
               <>
-                <Field label="Full name">
+                <Field
+                  label="Full name"
+                  className="md:col-span-2"
+                  error={fieldErrors.fullName}
+                >
                   <input
                     className={fieldClass}
                     value={draft.fullName}
@@ -578,7 +629,7 @@ function RegisterWizard() {
                     autoComplete="name"
                   />
                 </Field>
-                <Field label="Email">
+                <Field label="Email" error={fieldErrors.email}>
                   <input
                     type="email"
                     className={fieldClass}
@@ -587,7 +638,10 @@ function RegisterWizard() {
                     autoComplete="email"
                   />
                 </Field>
-                <Field label="Phone number (WhatsApp)">
+                <Field
+                  label="Phone number (WhatsApp)"
+                  error={fieldErrors.phone}
+                >
                   <input
                     inputMode="numeric"
                     className={fieldClass}
@@ -598,7 +652,11 @@ function RegisterWizard() {
                     placeholder="Digits only"
                   />
                 </Field>
-                <Field label="Address">
+                <Field
+                  label="Address"
+                  className="md:col-span-2"
+                  error={fieldErrors.address}
+                >
                   <textarea
                     className={fieldClass}
                     rows={3}
@@ -606,26 +664,34 @@ function RegisterWizard() {
                     onChange={(e) => patch({ address: e.target.value })}
                   />
                 </Field>
-                <Field label="Age">
+                <Field label="Age" error={fieldErrors.ageBand}>
                   <Select
                     value={draft.ageBand}
                     onChange={(v) => patch({ ageBand: v })}
                     options={AGE_BANDS}
                   />
                 </Field>
-                <Field label="Gender">
+                <Field
+                  label="Home district"
+                  error={fieldErrors.homeDistrict}
+                >
+                  <Select
+                    value={draft.homeDistrict}
+                    onChange={(v) => patch({ homeDistrict: v })}
+                    options={HOME_DISTRICTS}
+                  />
+                </Field>
+                <Field
+                  label="Gender"
+                  className="md:col-span-2"
+                  error={fieldErrors.gender}
+                >
                   <ChoiceList
                     name="gender"
                     value={draft.gender}
                     onChange={(v) => patch({ gender: v })}
                     options={GENDERS}
-                  />
-                </Field>
-                <Field label="Home district">
-                  <Select
-                    value={draft.homeDistrict}
-                    onChange={(v) => patch({ homeDistrict: v })}
-                    options={HOME_DISTRICTS}
+                    columns={2}
                   />
                 </Field>
 
@@ -633,7 +699,7 @@ function RegisterWizard() {
                     step where age band is chosen, so they are in place before
                     step 5 asks anything sensitive. */}
                 {isMinorAgeBand(draft.ageBand) && (
-                  <div className="rounded-lg border-2 border-sky-300 dark:border-sky-800 bg-sky-50/60 dark:bg-sky-950/30 p-4 space-y-4">
+                  <div className="rounded-lg border-2 border-sky-300 dark:border-sky-800 bg-sky-50/60 dark:bg-sky-950/30 p-4 space-y-4 md:col-span-2">
                     <p className="text-sm font-bold text-foreground">
                       Parent or guardian details
                     </p>
@@ -643,7 +709,10 @@ function RegisterWizard() {
                       any questions about health or accessibility.
                     </p>
 
-                    <Field label="Guardian full name">
+                    <Field
+                      label="Guardian full name"
+                      error={fieldErrors.guardianName}
+                    >
                       <input
                         className={fieldClass}
                         value={draft.guardianName}
@@ -652,7 +721,10 @@ function RegisterWizard() {
                       />
                     </Field>
 
-                    <Field label="Guardian mobile number">
+                    <Field
+                      label="Guardian mobile number"
+                      error={fieldErrors.guardianPhone}
+                    >
                       <input
                         className={fieldClass}
                         value={draft.guardianPhone}
@@ -678,6 +750,11 @@ function RegisterWizard() {
                         be collected.
                       </span>
                     </label>
+                    {fieldErrors.guardianConsent && (
+                      <p className="text-xs font-medium text-red-600">
+                        {fieldErrors.guardianConsent}
+                      </p>
+                    )}
                   </div>
                 )}
               </>
@@ -692,30 +769,19 @@ function RegisterWizard() {
                     options={STUDY_LEVELS}
                   />
                 </Field>
+                <Field label="Institution name">
+                  <input
+                    className={fieldClass}
+                    value={draft.institutionName}
+                    onChange={(e) => patch({ institutionName: e.target.value })}
+                  />
+                </Field>
                 <Field label="Institution type">
                   <ChoiceList
                     name="institutionType"
                     value={draft.institutionType}
                     onChange={(v) => patch({ institutionType: v })}
                     options={INSTITUTION_TYPES}
-                  />
-                </Field>
-                {draft.institutionType === "Other" && (
-                  <Field label="Specify institution type">
-                    <input
-                      className={fieldClass}
-                      value={draft.institutionTypeOther}
-                      onChange={(e) =>
-                        patch({ institutionTypeOther: e.target.value })
-                      }
-                    />
-                  </Field>
-                )}
-                <Field label="Institution name">
-                  <input
-                    className={fieldClass}
-                    value={draft.institutionName}
-                    onChange={(e) => patch({ institutionName: e.target.value })}
                   />
                 </Field>
                 <Field label="Field of study">
@@ -726,24 +792,57 @@ function RegisterWizard() {
                     options={FIELDS_OF_STUDY}
                   />
                 </Field>
-                <Field label="Subject / department">
-                  <input
-                    className={fieldClass}
-                    value={draft.subjectDepartment}
-                    onChange={(e) =>
-                      patch({ subjectDepartment: e.target.value })
-                    }
-                  />
-                </Field>
-                <Field label="How do you feel about your subject?">
-                  <ChoiceList
-                    name="subjectFeeling"
-                    value={draft.subjectFeeling}
-                    onChange={(v) => patch({ subjectFeeling: v })}
-                    options={SUBJECT_FEELINGS}
-                  />
-                </Field>
-                <Field label="Why? (optional)">
+                {draft.institutionType === "Other" && (
+                  <Field
+                    label="Specify institution type"
+                    className="md:col-span-2"
+                  >
+                    <input
+                      className={fieldClass}
+                      value={draft.institutionTypeOther}
+                      onChange={(e) =>
+                        patch({ institutionTypeOther: e.target.value })
+                      }
+                    />
+                  </Field>
+                )}
+                <div className="grid gap-4 md:col-span-2 md:grid-cols-2">
+                  <div className="space-y-4">
+                    <Field label="Subject / department">
+                      <input
+                        className={fieldClass}
+                        value={draft.subjectDepartment}
+                        onChange={(e) =>
+                          patch({ subjectDepartment: e.target.value })
+                        }
+                      />
+                    </Field>
+                    <Field label="Did you face confusion choosing your subject?">
+                      <ChoiceList
+                        name="facedSubjectConfusion"
+                        value={draft.facedSubjectConfusion}
+                        onChange={(v) =>
+                          patch({
+                            facedSubjectConfusion: v as "" | "yes" | "no",
+                          })
+                        }
+                        options={[
+                          { value: "yes", label: "Yes" },
+                          { value: "no", label: "No" },
+                        ]}
+                      />
+                    </Field>
+                  </div>
+                  <Field label="How do you feel about your subject?">
+                    <ChoiceList
+                      name="subjectFeeling"
+                      value={draft.subjectFeeling}
+                      onChange={(v) => patch({ subjectFeeling: v })}
+                      options={SUBJECT_FEELINGS}
+                    />
+                  </Field>
+                </div>
+                <Field label="Why? (optional)" className="md:col-span-2">
                   <textarea
                     className={fieldClass}
                     rows={2}
@@ -751,21 +850,6 @@ function RegisterWizard() {
                     onChange={(e) =>
                       patch({ subjectFeelingWhy: e.target.value })
                     }
-                  />
-                </Field>
-                <Field label="Did you face confusion choosing your subject?">
-                  <ChoiceList
-                    name="facedSubjectConfusion"
-                    value={draft.facedSubjectConfusion}
-                    onChange={(v) =>
-                      patch({
-                        facedSubjectConfusion: v as "" | "yes" | "no",
-                      })
-                    }
-                    options={[
-                      { value: "yes", label: "Yes" },
-                      { value: "no", label: "No" },
-                    ]}
                   />
                 </Field>
               </>
@@ -840,7 +924,10 @@ function RegisterWizard() {
               <>
                 {/* FR-01-007: three equally weighted options, and no forced
                     follow-up after "Yes". */}
-                <Field label="Do you have any disability or condition that makes certain tasks difficult?">
+                <Field
+                  label="Do you have any disability or condition that makes certain tasks difficult?"
+                  className="md:col-span-2"
+                >
                   <ChoiceList
                     name="disabilityStatus"
                     value={draft.disabilityStatus}
@@ -849,11 +936,15 @@ function RegisterWizard() {
                     labels={(v) =>
                       DISABILITY_LABELS[v as keyof typeof DISABILITY_LABELS].en
                     }
+                    columns={3}
                   />
                 </Field>
 
                 {draft.disabilityStatus === "YES" && (
-                  <Field label="Anything you would like us to know? (optional)">
+                  <Field
+                    label="Anything you would like us to know? (optional)"
+                    className="md:col-span-2"
+                  >
                     <textarea
                       className={fieldClass}
                       rows={3}
@@ -867,12 +958,19 @@ function RegisterWizard() {
                   </Field>
                 )}
 
-                <div className="pt-2 border-t border-border">
-                  <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-3">
+                <div className="grid gap-4 rounded-xl border border-border bg-muted/20 p-4 md:col-span-2 md:grid-cols-2">
+                  <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground md:col-span-2">
                     Background (all optional)
                   </p>
 
-                  <Field label="Do you have relatives working in institutions or industries?">
+                  <Field
+                    label="Do you have relatives working in institutions or industries?"
+                    className={
+                      draft.hasInstitutionalRelatives === "yes"
+                        ? ""
+                        : "md:col-span-2"
+                    }
+                  >
                     <ChoiceList
                       name="hasInstitutionalRelatives"
                       value={draft.hasInstitutionalRelatives}
@@ -885,6 +983,7 @@ function RegisterWizard() {
                       }
                       options={["yes", "no"] as const}
                       labels={(v) => (v === "yes" ? "Yes" : "No")}
+                      columns={2}
                     />
                   </Field>
 
@@ -941,7 +1040,7 @@ function RegisterWizard() {
 
             {step === 6 && (
               <>
-                <p className="text-sm text-muted-foreground">
+                <p className="text-sm text-muted-foreground md:col-span-2">
                   Create your login password. Profile picture can be added after
                   email verification from your dashboard (min 200×200px, max
                   2–5MB, square 1:1 recommended).
@@ -1004,13 +1103,13 @@ function RegisterWizard() {
             )}
 
             {formError && (
-              <div className="flex items-start gap-2.5 rounded-lg bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 px-3.5 py-3 text-sm text-red-700 dark:text-red-400">
+              <div className="flex items-start gap-2.5 rounded-lg bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 px-3.5 py-3 text-sm text-red-700 dark:text-red-400 md:col-span-2">
                 <AlertCircle className="h-4 w-4 mt-0.5 flex-shrink-0" />
                 <span>{formError}</span>
               </div>
             )}
 
-            <div className="flex items-center gap-3 pt-2">
+            <div className="flex items-center gap-3 pt-2 md:col-span-2">
               {step > 1 ? (
                 <button
                   type="button"
@@ -1066,14 +1165,23 @@ function RegisterWizard() {
 function Field({
   label,
   children,
+  className = "",
+  error,
 }: {
   label: string;
   children: React.ReactNode;
+  className?: string;
+  error?: string;
 }) {
   return (
-    <label className="block">
+    <label className={`block ${className}`}>
       <span className={labelClass}>{label}</span>
       {children}
+      {error && (
+        <span className="mt-1.5 block text-xs font-medium text-red-600">
+          {error}
+        </span>
+      )}
     </label>
   );
 }
@@ -1109,6 +1217,7 @@ function ChoiceList({
   onChange,
   options,
   labels,
+  columns,
 }: {
   name: string;
   value: string;
@@ -1120,6 +1229,7 @@ function ChoiceList({
    * be the same string.
    */
   labels?: (value: string) => string;
+  columns?: 2 | 3;
 }) {
   const normalised = options.map((o) =>
     typeof o === "string"
@@ -1127,7 +1237,15 @@ function ChoiceList({
       : o
   );
   return (
-    <div className="space-y-2">
+    <div
+      className={
+        columns === 3
+          ? "grid grid-cols-1 gap-2 sm:grid-cols-3"
+          : columns === 2
+            ? "grid grid-cols-2 gap-2"
+            : "space-y-2"
+      }
+    >
       {normalised.map((o) => (
         <label
           key={o.value}

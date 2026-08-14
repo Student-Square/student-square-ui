@@ -17,9 +17,17 @@ import {
 } from "@/redux/features/auth/authSlice";
 import { pickPostLoginDestination } from "@/lib/auth-routing";
 import AuthShell from "@/components/auth/AuthShell";
-import { authButtonClass, authInputClass, authLinkClass, authHeadingClass, authSubheadingClass } from "@/components/auth/auth-ui";
+import {
+  authButtonClass,
+  authHeadingClass,
+  authLoginButtonClass,
+  authLoginInputClass,
+  authLoginLinkClass,
+  authSubheadingClass,
+} from "@/components/auth/auth-ui";
 import {
   AlertCircle,
+  ArrowRight,
   Copy,
   Eye,
   EyeOff,
@@ -40,7 +48,7 @@ export default function LoginPage() {
 
 function LoginFallback() {
   return (
-    <AuthShell variant="split">
+    <AuthShell variant="login">
       <p className="text-center text-sm text-muted-foreground">Loading…</p>
     </AuthShell>
   );
@@ -238,8 +246,13 @@ function LoginForm() {
           : "Enter the code from your authenticator app.";
 
   return (
-    <AuthShell variant="split">
+    <AuthShell variant="login">
       <div>
+        {step === "credentials" && (
+          <p className="mb-7 text-xs font-semibold uppercase tracking-[0.18em] text-emerald-700">
+            Secure member access
+          </p>
+        )}
         <div className="flex items-start gap-3">
           {(step === "mfa" || step === "enrol" || step === "recovery") && (
             <div className="mt-1 rounded-lg bg-emerald-500/10 p-2 text-emerald-600">
@@ -255,22 +268,38 @@ function LoginForm() {
         </div>
 
         {step === "credentials" && (
-          <form onSubmit={handleCredentials} className="mt-8 space-y-4">
+          <form onSubmit={handleCredentials} className="mt-7 space-y-4">
+            <div className="grid grid-cols-2 rounded-xl bg-gray-100 p-1 text-center text-sm text-gray-500">
+              <span className="rounded-lg bg-white px-4 py-3 font-semibold text-gray-900 shadow-sm">
+                Log in
+              </span>
+              <Link
+                href="/auth/register"
+                className="rounded-lg px-4 py-3 transition-colors hover:text-gray-900"
+              >
+                Register
+              </Link>
+            </div>
+
             <label className="block">
-              <span className="sr-only">Email address</span>
+              <span className="mb-2 block text-xs font-semibold text-gray-700">
+                Email Address
+              </span>
               <input
                 type="email"
                 autoComplete="email"
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="Email Address"
-                className={authInputClass}
+                placeholder="Enter your email"
+                className={authLoginInputClass}
               />
             </label>
 
             <label className="block">
-              <span className="sr-only">Password</span>
+              <span className="mb-2 block text-xs font-semibold text-gray-700">
+                Password
+              </span>
               <div className="relative">
                 <input
                   type={showPassword ? "text" : "password"}
@@ -278,8 +307,8 @@ function LoginForm() {
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Password"
-                  className={`${authInputClass} pr-10`}
+                  placeholder="Enter your password"
+                  className={`${authLoginInputClass} pr-10`}
                 />
                 <button
                   type="button"
@@ -298,22 +327,32 @@ function LoginForm() {
 
             {formError && <FormError message={formError} />}
 
-            <button type="submit" disabled={busy} className={authButtonClass}>
+            <p className="text-right">
+              <Link
+                href="/auth/forgot-password"
+                className={`text-xs ${authLoginLinkClass}`}
+              >
+                Forgot password?
+              </Link>
+            </p>
+
+            <button
+              type="submit"
+              disabled={busy}
+              className={authLoginButtonClass}
+            >
               {busy ? (
                 <span className="inline-flex items-center justify-center gap-2">
                   <Loader2 className="h-4 w-4 animate-spin" />
                   Signing in…
                 </span>
               ) : (
-                "Login"
+                <span className="inline-flex items-center justify-center gap-2">
+                  Login
+                  <ArrowRight className="h-4 w-4" />
+                </span>
               )}
             </button>
-
-            <p className="pt-1 text-center">
-              <Link href="/auth/forgot-password" className={`text-sm ${authLinkClass}`}>
-                Forgot password?
-              </Link>
-            </p>
           </form>
         )}
 
@@ -525,7 +564,7 @@ function LoginForm() {
           {step === "credentials" && (
             <p className="mt-8 text-center text-sm text-muted-foreground">
               Don&apos;t have an account?{" "}
-              <Link href="/auth/register" className={authLinkClass}>
+              <Link href="/auth/register" className={authLoginLinkClass}>
                 Register here
               </Link>
             </p>
