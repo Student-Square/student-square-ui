@@ -50,7 +50,14 @@ export type Thread = {
   messages: ThreadMessage[];
 };
 
-export type PersonalNote = { body: string; updatedAt: string | null };
+export type PersonalNoteVersion = { id: string; body: string; savedAt: string };
+
+export type PersonalNote = {
+  body: string;
+  updatedAt: string | null;
+  /** Earlier saves, newest first — the current note is never repeated here. */
+  history: PersonalNoteVersion[];
+};
 
 export type SignedFile = {
   url: string;

@@ -145,6 +145,8 @@ const financeApi = baseApi.injectEndpoints({
         entryIds: string[];
         userId?: string;
         dueAt?: string;
+        title?: string;
+        reference?: string;
         billToName?: string;
         notes?: string;
       }
@@ -153,6 +155,29 @@ const financeApi = baseApi.injectEndpoints({
       invalidatesTags: [
         { type: "Finance", id: "INVOICES" },
         { type: "Finance", id: "MINE" },
+        { type: "AdminFinance", id: "LIST" },
+      ],
+    }),
+
+    adminCreateInvoice: build.mutation<
+      Invoice,
+      {
+        entryIds: string[];
+        userId: string;
+        dueAt?: string;
+        billToName?: string;
+        notes?: string;
+      }
+    >({
+      query: (body) => ({
+        url: "/admin/finance/invoices",
+        method: "POST",
+        body,
+      }),
+      invalidatesTags: [
+        { type: "Finance", id: "INVOICES" },
+        { type: "Finance", id: "MINE" },
+        { type: "AdminFinance", id: "LIST" },
       ],
     }),
 
@@ -198,6 +223,7 @@ export const {
   useCloseFinancePeriodMutation,
   useListInvoicesQuery,
   useCreateInvoiceMutation,
+  useAdminCreateInvoiceMutation,
   useGetBooksSummaryQuery,
 } = financeApi;
 

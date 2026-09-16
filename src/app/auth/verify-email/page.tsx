@@ -11,6 +11,7 @@ import {
   MailOpen,
   XCircle,
 } from "lucide-react";
+import { useLanguage } from "@/components/i18n/LanguageProvider";
 
 export default function VerifyEmailPage() {
   return (
@@ -31,6 +32,7 @@ function VerifyFallback() {
 type Stage = "loading" | "success" | "already" | "error" | "missing";
 
 function VerifyEmail() {
+  const { t, rich } = useLanguage();
   const searchParams = useSearchParams();
   const token = searchParams.get("token");
   const email = searchParams.get("email") ?? "";
@@ -52,8 +54,7 @@ function VerifyEmail() {
         setStage(data?.alreadyVerified ? "already" : "success");
       })
       .catch((err) => {
-        const msg: string =
-          err?.data?.message ?? "Invalid or expired verification link.";
+        const msg: string = err?.data?.message ?? "";
         setErrorMsg(msg);
         setStage("error");
       });
@@ -78,10 +79,10 @@ function VerifyEmail() {
                 <Loader2 className="h-9 w-9 text-emerald-600 animate-spin" />
               </div>
               <h1 className="text-xl font-bold text-foreground tracking-tight">
-                Verifying your email…
+                {t("verify.loadingTitle")}
               </h1>
               <p className="mt-2 text-sm text-muted-foreground">
-                This will only take a moment.
+                {t("verify.loadingBody")}
               </p>
             </>
           )}
@@ -93,23 +94,22 @@ function VerifyEmail() {
                 <CheckCircle2 className="h-10 w-10 text-emerald-600 dark:text-emerald-400" />
               </div>
               <h1 className="text-2xl font-bold text-foreground tracking-tight">
-                Email verified!
+                {t("verify.successTitle")}
               </h1>
               {email && (
                 <p className="mt-2 text-sm text-muted-foreground">
-                  <span className="font-semibold text-foreground">{email}</span>{" "}
-                  is now confirmed.
+                  {rich("verify.confirmed", { email: <span className="font-semibold text-foreground">{email}</span> })}
                 </p>
               )}
               <p className="mt-1.5 text-sm text-muted-foreground">
-                Your account is active. You can now sign in to Student Square.
+                {t("verify.active")}
               </p>
 
               <Link
                 href="/auth/login"
                 className="mt-6 inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-emerald-700 transition-colors shadow-sm shadow-emerald-600/30"
               >
-                Continue to sign in
+                {t("verify.continue")}
                 <ArrowRight className="h-4 w-4" />
               </Link>
 
@@ -118,7 +118,7 @@ function VerifyEmail() {
                   href="/"
                   className="text-xs text-muted-foreground hover:text-emerald-600 transition-colors font-medium"
                 >
-                  Back to Student Square
+                  {t("auth.backHome")}
                 </Link>
               </div>
             </>
@@ -131,18 +131,17 @@ function VerifyEmail() {
                 <MailOpen className="h-10 w-10 text-blue-500" />
               </div>
               <h1 className="text-2xl font-bold text-foreground tracking-tight">
-                Already verified
+                {t("verify.alreadyTitle")}
               </h1>
               <p className="mt-2 text-sm text-muted-foreground">
-                This email address has already been verified. You can sign in
-                right away.
+                {t("verify.alreadyBody")}
               </p>
 
               <Link
                 href="/auth/login"
                 className="mt-6 inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-emerald-700 transition-colors shadow-sm shadow-emerald-600/30"
               >
-                Go to sign in
+                {t("verify.goSignIn")}
                 <ArrowRight className="h-4 w-4" />
               </Link>
             </>
@@ -155,25 +154,28 @@ function VerifyEmail() {
                 <XCircle className="h-10 w-10 text-red-500" />
               </div>
               <h1 className="text-2xl font-bold text-foreground tracking-tight">
-                Verification failed
+                {t("verify.failedTitle")}
               </h1>
               <p className="mt-2 text-sm text-muted-foreground">
-                {errorMsg}
+                {errorMsg || t("verify.errDefault")}
               </p>
 
               <div className="mt-6 rounded-xl bg-muted/50 border border-border px-4 py-3.5 text-left space-y-1.5">
-                <p className="text-xs font-semibold text-foreground">What you can do:</p>
+                <p className="text-xs font-semibold text-foreground">{t("verify.whatToDo")}</p>
                 <ul className="list-disc list-inside space-y-1 text-xs text-muted-foreground">
-                  <li>Make sure you clicked the most recent verification email.</li>
-                  <li>Verification links expire after 24 hours.</li>
+                  <li>{t("verify.tip1")}</li>
+                  <li>{t("verify.tip2")}</li>
                   <li>
-                    <Link
-                      href="/auth/register"
-                      className="font-semibold text-emerald-600 hover:text-emerald-700 transition-colors"
-                    >
-                      Register again
-                    </Link>{" "}
-                    to receive a new link.
+                    {rich("verify.tip3", {
+                      register: (
+                        <Link
+                          href="/auth/register"
+                          className="font-semibold text-emerald-600 hover:text-emerald-700 transition-colors"
+                        >
+                          {t("verify.registerAgain")}
+                        </Link>
+                      ),
+                    })}
                   </li>
                 </ul>
               </div>
@@ -183,14 +185,14 @@ function VerifyEmail() {
                   href="/auth/login"
                   className="font-semibold text-muted-foreground hover:text-foreground transition-colors"
                 >
-                  Sign in
+                  {t("auth.signIn")}
                 </Link>
                 <span className="text-border">·</span>
                 <Link
                   href="/"
                   className="font-semibold text-muted-foreground hover:text-foreground transition-colors"
                 >
-                  Home
+                  {t("common.home")}
                 </Link>
               </div>
             </>
@@ -203,11 +205,10 @@ function VerifyEmail() {
                 <XCircle className="h-10 w-10 text-yellow-500" />
               </div>
               <h1 className="text-2xl font-bold text-foreground tracking-tight">
-                Invalid link
+                {t("verify.invalidTitle")}
               </h1>
               <p className="mt-2 text-sm text-muted-foreground">
-                This verification link is missing required parameters. Please use
-                the link from your email.
+                {t("verify.invalidBody")}
               </p>
 
               <div className="mt-6 flex items-center justify-center gap-4 text-xs pt-5 border-t border-border">
@@ -215,14 +216,14 @@ function VerifyEmail() {
                   href="/auth/register"
                   className="font-semibold text-emerald-600 hover:text-emerald-700 transition-colors"
                 >
-                  Register
+                  {t("login.tabRegister")}
                 </Link>
                 <span className="text-border">·</span>
                 <Link
                   href="/auth/login"
                   className="font-semibold text-muted-foreground hover:text-foreground transition-colors"
                 >
-                  Sign in
+                  {t("auth.signIn")}
                 </Link>
               </div>
             </>

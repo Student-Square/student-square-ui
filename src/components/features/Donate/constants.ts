@@ -25,34 +25,42 @@ export const oneTimeInlineImpacts: Record<DonationPresetAmount, string> = {
   5000: "৳5,000 funds a free medical camp for a rural community.",
 };
 
+/**
+ * Shown only until the live project list loads (and in server-rendered HTML,
+ * which is all crawlers and link previews see). It mirrors the five seeded
+ * projects — same order, same summaries as seed-data/projects.ts — so the
+ * fallback never shows a different list from the real one.
+ */
 export const projectCards: ProjectCard[] = [
   {
-    icon: "🌿",
-    title: "Counter Climate Project",
+    icon: "🎯",
+    title: "Beyond The Journey Project",
     description:
-      "625+ Palmyra saplings planted in partnership with the Ministry of Environment, Forest and Climate Change. Combating climate change one tree at a time with 40+ community volunteers.",
-    tags: ["625+ Saplings", "40+ Volunteers"],
+      "A special initiative that presents accurate career information, ongoing research and prospective fields of work for the various departments of the country's public universities, in the light of the experience of faculty members, specialists and professionals.",
+  },
+  {
+    icon: "🏥",
+    title: "Project Health Care for All",
+    description:
+      "Health camps are held at fixed intervals every year to bring healthcare within reach of people in marginal areas, with particular emphasis on the char lands and the Barind region.",
   },
   {
     icon: "🕌",
     title: "Amar Bhai Er Eid Project",
     description:
-      "Providing complete food packages — beef (1–1.5 kg), oil (450 gm), polao rice (1.5 kg) — to underprivileged families every Eid. Spreading joy and dignity to those who need it most.",
-    tags: ["850+ Families", "Annual"],
+      "Every Eid-ul-Fitr, Eid food supplies including beef are gifted to families in need so they can share in the joy of the festival. The project also takes part in relief and rehabilitation during emergencies such as floods and COVID-19.",
   },
   {
     icon: "📚",
     title: "One Minute Investment Project",
     description:
-      "Career guidance, mental health awareness, and skill development sessions in 20+ schools and colleges across 5 districts — empowering the next generation of Bangladeshi leaders.",
-    tags: ["2,500+ Students", "5 Districts"],
+      "Ensuring sustainable human development through students' education, mental wellbeing, career development and social empowerment.",
   },
   {
-    icon: "🏥",
-    title: "Health For All",
+    icon: "🌿",
+    title: "Counter Climate Change Project",
     description:
-      "Free medical camps in rural areas offering consultations in Medicine, Surgery, Diabetes Testing, and Gynecology — delivered by 40+ volunteer doctors to those without access to healthcare.",
-    tags: ["250+ Patients", "3 Camps"],
+      "An initiative to plant one hundred thousand palmyra palm trees to cool extreme weather and halt the falling water table. 500 saplings have already been planted.",
   },
 ];
 

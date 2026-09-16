@@ -15,6 +15,8 @@ export type BlogCategory =
 export type Blog = {
   id: number
   title: string
+  /** Bangla title; the body stays English (legacy sample posts). */
+  titleBn?: string
   paragraph: string
   body: string[]
   image: string

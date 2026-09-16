@@ -42,10 +42,11 @@ export type OperationEntryInput = {
   taskName: string;
   startsAt: string;
   endsAt: string;
-  mentorIds: string[];
+  mentorIds?: string[];
   mentorsOther?: string | null;
-  description: string;
-  attendeeMode: AttendeeMode;
+  /** Optional — task-only entries may leave this empty. */
+  description?: string;
+  attendeeMode?: AttendeeMode;
   attendeeNames?: string[];
   attendeeCount?: number;
   attendeeMemberIds?: string[];

@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import Header from "@/components/common/Header/Header";
 import Footer from "@/components/common/Footer/Footer";
 import Pagination from "@/components/common/Pagination";
@@ -23,11 +23,13 @@ import {
   Users,
   X,
 } from "lucide-react";
+import { useLanguage } from "@/components/i18n/LanguageProvider";
 
 const PAGE_SIZE = 9;
 
 type SubCategory = {
   slug: string;
+  /** English name; the pill label comes from the `edu.cat.<slug>` dictionary key. */
   name: string;
   icon: React.ReactNode;
 };
@@ -44,18 +46,10 @@ export const SUB_CATEGORIES: SubCategory[] = [
   { slug: "olympiads", name: "Olympiads", icon: <GraduationCap className="h-3 w-3" /> },
 ];
 
-function formatDate(iso: string | null): string {
-  if (!iso) return "";
-  return new Date(iso).toLocaleDateString("en-GB", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-  });
-}
-
 function BlogCard({ post, index }: { post: ApiBlogListItem; index: number }) {
-  const publishedAt = formatDate(post.publishedAt);
-  const tags = post.tags.map((t) => t.tag.name);
+  const { t, pick, tr, date } = useLanguage();
+  const publishedAt = date(post.publishedAt);
+  const tags = post.tags.map((tagRef) => tr(tagRef.tag.name));
 
   return (
     <motion.article
@@ -71,7 +65,7 @@ function BlogCard({ post, index }: { post: ApiBlogListItem; index: number }) {
           {post.coverImage ? (
             <img
               src={post.coverImage.url}
-              alt={post.coverImage.alt ?? post.title}
+              alt={post.coverImage.alt ?? pick(post.title, post.titleBn)}
               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
             />
           ) : (
@@ -80,7 +74,7 @@ function BlogCard({ post, index }: { post: ApiBlogListItem; index: number }) {
             </div>
           )}
           <span className="absolute top-3 left-3 text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full bg-white/95 dark:bg-black/80 backdrop-blur text-emerald-700 dark:text-emerald-300 border border-white/40 dark:border-emerald-800/60 shadow-sm">
-            {post.category.name}
+            {pick(post.category.name, post.category.nameBn)}
           </span>
         </div>
 
@@ -91,11 +85,11 @@ function BlogCard({ post, index }: { post: ApiBlogListItem; index: number }) {
           </div>
 
           <h3 className="text-base font-bold text-foreground leading-snug group-hover:text-emerald-600 transition-colors line-clamp-2">
-            {post.title}
+            {pick(post.title, post.titleBn)}
           </h3>
 
           <p className="mt-2 text-xs text-muted-foreground leading-relaxed line-clamp-3 flex-1">
-            {post.excerpt}
+            {pick(post.excerpt, post.excerptBn)}
           </p>
 
           {tags.length > 0 && (
@@ -116,7 +110,7 @@ function BlogCard({ post, index }: { post: ApiBlogListItem; index: number }) {
               {post.displayAuthorImage ? (
                 <img
                   src={post.displayAuthorImage}
-                  alt={post.displayAuthorName ?? "Author"}
+                  alt={post.displayAuthorName ?? t("common.author")}
                   className="w-7 h-7 rounded-full object-cover border border-border shrink-0"
                 />
               ) : (
@@ -125,7 +119,7 @@ function BlogCard({ post, index }: { post: ApiBlogListItem; index: number }) {
                 </div>
               )}
               <p className="text-[11px] font-semibold text-foreground truncate">
-                {post.displayAuthorName ?? "Student Square"}
+                {post.displayAuthorName ?? t("common.studentSquare")}
               </p>
             </div>
             <ArrowRight className="h-4 w-4 flex-shrink-0 text-muted-foreground group-hover:text-emerald-600 group-hover:translate-x-1 transition-all" />
@@ -141,19 +135,46 @@ interface Props {
 }
 
 export default function EducationCareerContent({ initialCategory }: Props) {
+  const { t, pick, tr, date } = useLanguage();
   const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const skipFilterReset = useRef(true);
+
   const [activeCategory, setActiveCategory] = useState(initialCategory);
   const [query, setQuery] = useState("");
   const [debouncedQuery, setDebouncedQuery] = useState("");
-  const [page, setPage] = useState(1);
+
+  const page = Math.max(1, Number(searchParams.get("page") || "1") || 1);
+
+  const setPage = useCallback(
+    (next: number) => {
+      const params = new URLSearchParams(searchParams.toString());
+      if (next <= 1) params.delete("page");
+      else params.set("page", String(next));
+      const qs = params.toString();
+      router.push(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
+    },
+    [pathname, router, searchParams]
+  );
 
   useEffect(() => {
-    const t = setTimeout(() => setDebouncedQuery(query), 350);
-    return () => clearTimeout(t);
+    const timer = setTimeout(() => setDebouncedQuery(query), 350);
+    return () => clearTimeout(timer);
   }, [query]);
 
   useEffect(() => {
-    setPage(1);
+    if (skipFilterReset.current) {
+      skipFilterReset.current = false;
+      return;
+    }
+    const params = new URLSearchParams(searchParams.toString());
+    if (!params.has("page")) return;
+    params.delete("page");
+    const qs = params.toString();
+    router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
+    // Intentionally ignore searchParams: only reset page when filters change.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeCategory, debouncedQuery]);
 
   const queryParams = useMemo(() => {
@@ -212,7 +233,7 @@ export default function EducationCareerContent({ initialCategory }: Props) {
             className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-100/80 dark:bg-emerald-900/40 border border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300 text-[11px] font-semibold uppercase tracking-wider mb-5"
           >
             <GraduationCap className="h-3 w-3" />
-            Education &amp; Career
+            {t("edu.badge")}
           </motion.div>
 
           <motion.h1
@@ -221,9 +242,9 @@ export default function EducationCareerContent({ initialCategory }: Props) {
             transition={{ duration: 0.6 }}
             className="text-3xl sm:text-4xl lg:text-5xl font-bold text-foreground tracking-tight max-w-3xl leading-tight"
           >
-            Guidance for every step of your{" "}
+            {t("edu.headingLead")}{" "}
             <span className="bg-gradient-to-r from-emerald-600 to-emerald-400 bg-clip-text text-transparent">
-              education &amp; career journey.
+              {t("edu.headingAccent")}
             </span>
           </motion.h1>
 
@@ -233,8 +254,7 @@ export default function EducationCareerContent({ initialCategory }: Props) {
             transition={{ duration: 0.6, delay: 0.1 }}
             className="mt-4 text-sm sm:text-base text-muted-foreground max-w-2xl"
           >
-            Articles on parenting, self-development, career choices, higher study, scholarships,
-            competitions, and olympiads — written by Student Square experts.
+            {t("edu.intro")}
           </motion.p>
 
           {/* Sub-category pills */}
@@ -264,7 +284,7 @@ export default function EducationCareerContent({ initialCategory }: Props) {
                   }`}
                 >
                   {cat.icon}
-                  {cat.name}
+                  {t(`edu.cat.${cat.slug}`)}
                 </button>
               );
             })}
@@ -277,7 +297,7 @@ export default function EducationCareerContent({ initialCategory }: Props) {
         <section className="py-10 sm:py-14 lg:py-16">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-12">
             <h2 className="text-xs font-bold uppercase tracking-widest text-emerald-600 mb-5 sm:mb-6">
-              Featured Article
+              {t("edu.featured")}
             </h2>
 
             <motion.div
@@ -294,7 +314,7 @@ export default function EducationCareerContent({ initialCategory }: Props) {
                   {featuredPost.coverImage ? (
                     <img
                       src={featuredPost.coverImage.url}
-                      alt={featuredPost.coverImage.alt ?? featuredPost.title}
+                      alt={featuredPost.coverImage.alt ?? pick(featuredPost.title, featuredPost.titleBn)}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                     />
                   ) : (
@@ -306,22 +326,22 @@ export default function EducationCareerContent({ initialCategory }: Props) {
                 <div className="lg:col-span-2 p-5 sm:p-6 lg:p-8 flex flex-col justify-center">
                   <div className="flex flex-wrap items-center gap-2 mb-4">
                     <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded-full bg-emerald-600 text-white">
-                      {featuredPost.category.name}
+                      {pick(featuredPost.category.name, featuredPost.category.nameBn)}
                     </span>
-                    {featuredPost.tags.slice(0, 2).map((t) => (
+                    {featuredPost.tags.slice(0, 2).map((tagRef) => (
                       <span
-                        key={t.tag.id}
+                        key={tagRef.tag.id}
                         className="text-[10px] font-semibold uppercase tracking-wider px-2 py-1 rounded-full bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 border border-emerald-200/70 dark:border-emerald-800/70"
                       >
-                        {t.tag.name}
+                        {tr(tagRef.tag.name)}
                       </span>
                     ))}
                   </div>
                   <h3 className="text-xl sm:text-2xl lg:text-3xl font-bold text-foreground leading-tight group-hover:text-emerald-600 transition-colors">
-                    {featuredPost.title}
+                    {pick(featuredPost.title, featuredPost.titleBn)}
                   </h3>
                   <p className="mt-3 text-sm text-muted-foreground leading-relaxed line-clamp-3">
-                    {featuredPost.excerpt}
+                    {pick(featuredPost.excerpt, featuredPost.excerptBn)}
                   </p>
 
                   <div className="mt-6 flex items-center justify-between gap-4 pt-5 border-t border-border">
@@ -329,7 +349,7 @@ export default function EducationCareerContent({ initialCategory }: Props) {
                       {featuredPost.displayAuthorImage ? (
                         <img
                           src={featuredPost.displayAuthorImage}
-                          alt={featuredPost.displayAuthorName ?? "Author"}
+                          alt={featuredPost.displayAuthorName ?? t("common.author")}
                           className="w-9 h-9 rounded-full object-cover border border-border shrink-0"
                         />
                       ) : (
@@ -339,16 +359,16 @@ export default function EducationCareerContent({ initialCategory }: Props) {
                       )}
                       <div className="min-w-0">
                         <p className="text-xs font-semibold text-foreground truncate">
-                          {featuredPost.displayAuthorName ?? "Student Square"}
+                          {featuredPost.displayAuthorName ?? t("common.studentSquare")}
                         </p>
                         <p className="text-[10px] text-muted-foreground flex items-center gap-1">
                           <Calendar className="h-2.5 w-2.5" />
-                          {formatDate(featuredPost.publishedAt)}
+                          {date(featuredPost.publishedAt)}
                         </p>
                       </div>
                     </div>
                     <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-600 group-hover:gap-2.5 transition-all whitespace-nowrap">
-                      Read article
+                      {t("common.readArticle")}
                       <ArrowUpRight className="h-3.5 w-3.5" />
                     </span>
                   </div>
@@ -370,13 +390,13 @@ export default function EducationCareerContent({ initialCategory }: Props) {
                 type="text"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                placeholder="Search articles..."
+                placeholder={t("edu.searchPlaceholder")}
                 className="w-full pl-9 pr-9 py-2.5 text-sm rounded-lg bg-card border border-border focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 transition-colors"
               />
               {query && (
                 <button
                   onClick={() => setQuery("")}
-                  aria-label="Clear search"
+                  aria-label={t("common.clearSearch")}
                   className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
                 >
                   <X className="h-3.5 w-3.5" />
@@ -387,8 +407,8 @@ export default function EducationCareerContent({ initialCategory }: Props) {
             <p className="text-xs text-muted-foreground sm:ml-auto">
               {meta ? (
                 <>
-                  {meta.total} article{meta.total === 1 ? "" : "s"}
-                  {meta.total > 0 && totalPages > 1 && ` — page ${page} of ${totalPages}`}
+                  {t(meta.total === 1 ? "blog.countOne" : "blog.countMany", { count: meta.total })}
+                  {meta.total > 0 && totalPages > 1 && t("common.pageOf", { page, total: totalPages })}
                 </>
               ) : null}
             </p>
@@ -398,7 +418,7 @@ export default function EducationCareerContent({ initialCategory }: Props) {
           {isbusy && (
             <div className="flex items-center justify-center gap-2 py-24 text-sm text-muted-foreground">
               <Loader2 className="h-5 w-5 animate-spin text-emerald-600" />
-              Loading articles…
+              {t("blog.loading")}
             </div>
           )}
 
@@ -406,9 +426,9 @@ export default function EducationCareerContent({ initialCategory }: Props) {
           {!isbusy && gridPosts.length === 0 && !featuredPost && (
             <div className="text-center py-16 border border-dashed border-border rounded-2xl bg-card/40">
               <GraduationCap className="h-10 w-10 text-muted-foreground mx-auto mb-3" />
-              <p className="text-sm font-semibold text-foreground">No articles found.</p>
+              <p className="text-sm font-semibold text-foreground">{t("edu.empty")}</p>
               <p className="text-xs text-muted-foreground mt-1">
-                Try a different category or search term.
+                {t("edu.emptyHint")}
               </p>
               {(debouncedQuery || activeCategory !== "all") && (
                 <button
@@ -419,7 +439,7 @@ export default function EducationCareerContent({ initialCategory }: Props) {
                   }}
                   className="mt-5 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-emerald-600 text-white hover:bg-emerald-700 transition-colors"
                 >
-                  Reset filters
+                  {t("common.resetFilters")}
                 </button>
               )}
             </div>

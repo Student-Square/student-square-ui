@@ -2,6 +2,7 @@
 
 import { ChevronRight } from "lucide-react"
 import { useGetPageSectionsQuery } from "@/redux/features/content/contentApi"
+import { useLanguage } from "@/components/i18n/LanguageProvider"
 
 export type ImpactStat = { value: string; label: string; detail?: string }
 
@@ -12,10 +13,17 @@ export type ImpactStat = { value: string; label: string; detail?: string }
  */
 export function useImpactStats(): ImpactStat[] {
   const { data } = useGetPageSectionsQuery("home")
+  const { tr, digits } = useLanguage()
   const content = data?.find((s) => s.sectionKey === "impact-stats")?.content as
     | { items?: ImpactStat[] }
     | undefined
-  return content?.items ?? []
+  // Returned already in the visitor's language, so every page that shows the
+  // figures gets Bangla labels and digits without doing it itself.
+  return (content?.items ?? []).map((item) => ({
+    value: digits(item.value),
+    label: tr(item.label),
+    detail: item.detail ? tr(item.detail) : undefined,
+  }))
 }
 
 /**

@@ -4,6 +4,7 @@ import type { ApiBlogListItem } from "@/types/blogs";
 import type { ApiStoryListItem } from "@/types/stories";
 import type { ApiEvent } from "@/types/events";
 import type { ApiCampaign } from "@/types/campaigns";
+import type { ApiReportListItem } from "@/types/reports";
 
 const baseUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://studentsquare.org";
 
@@ -46,6 +47,15 @@ async function eventRoutes(): Promise<MetadataRoute.Sitemap> {
   }));
 }
 
+async function reportRoutes(): Promise<MetadataRoute.Sitemap> {
+  const result = await serverGet<ApiReportListItem[]>("/reports?limit=100");
+  if (!result) return [];
+  return result.map((report) => ({
+    url: `${baseUrl}/about/reports/${report.slug}`,
+    lastModified: report.publishedAt ? new Date(report.publishedAt) : new Date(),
+  }));
+}
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const staticRoutes: MetadataRoute.Sitemap = [
     { url: `${baseUrl}/`, lastModified: new Date() },
@@ -58,14 +68,16 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${baseUrl}/blog/real-life-stories`, lastModified: new Date() },
     { url: `${baseUrl}/blog/magazine`, lastModified: new Date() },
     { url: `${baseUrl}/blog/events`, lastModified: new Date() },
+    { url: `${baseUrl}/about/reports`, lastModified: new Date() },
   ];
 
-  const [projects, blogs, stories, events] = await Promise.all([
+  const [projects, blogs, stories, events, reports] = await Promise.all([
     projectRoutes(),
     blogRoutes(),
     storyRoutes(),
     eventRoutes(),
+    reportRoutes(),
   ]);
 
-  return [...staticRoutes, ...projects, ...blogs, ...stories, ...events];
+  return [...staticRoutes, ...projects, ...blogs, ...stories, ...events, ...reports];
 }

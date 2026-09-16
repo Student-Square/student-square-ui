@@ -1,5 +1,35 @@
 import { Menu } from "@/types/menu";
-import { Target, Users, MapPin, FileText, Eye, BookOpen, Heart, Building, Globe, Award, Briefcase, Handshake, CalendarDays, Sparkles } from "lucide-react";
+import {
+  Archive,
+  Award,
+  BookOpen,
+  Briefcase,
+  CalendarDays,
+  FileText,
+  Globe,
+  GraduationCap,
+  HandHeart,
+  Handshake,
+  Heart,
+  HeartHandshake,
+  Leaf,
+  Library,
+  Lightbulb,
+  MapPin,
+  Medal,
+  MessageCircleHeart,
+  Microscope,
+  Newspaper,
+  Quote,
+  Sprout,
+  Target,
+  Trophy,
+  Users,
+} from "lucide-react";
+
+// One icon per meaning — no two items in the same dropdown share an icon, and
+// each one should read as its label (QA #17: Research and Scholarships were
+// both an Award, and Counselling borrowed Donate's heart).
 
 const menuData: Menu[] = [
   {
@@ -41,14 +71,14 @@ const menuData: Menu[] = [
         title: "News & Press",
         path: "/news",
         newTab: false,
-        icon: Eye,
+        icon: Newspaper,
       },
       {
         id: 16,
         title: "Archive",
         path: "/about/archive",
         newTab: false,
-        icon: BookOpen,
+        icon: Archive,
       },
     ],
   },
@@ -63,49 +93,49 @@ const menuData: Menu[] = [
         title: "Our Projects",
         path: "/projects",
         newTab: false,
-        icon: Sparkles,
+        icon: Lightbulb,
       },
       {
         id: 21,
         title: "Student Counselling",
         path: "/what-we-do/student-counselling",
         newTab: false,
-        icon: Heart,
+        icon: MessageCircleHeart,
       },
       {
         id: 22,
         title: "Parent Advocacy",
         path: "/what-we-do/parent-advocacy",
         newTab: false,
-        icon: Users,
+        icon: HeartHandshake,
       },
       {
         id: 23,
         title: "Minor Community Wellbeing",
         path: "/what-we-do/community-wellbeing",
         newTab: false,
-        icon: Building,
+        icon: HandHeart,
       },
       {
         id: 24,
         title: "Climate Action and Environmental Stewardship",
         path: "/what-we-do/climate-action",
         newTab: false,
-        icon: Globe,
+        icon: Leaf,
       },
       {
         id: 25,
         title: "Research & Publications",
         path: "/what-we-do/research-publications",
         newTab: false,
-        icon: Award,
+        icon: Microscope,
       },
       {
         id: 26,
         title: "Scholarships & Grants",
         path: "/what-we-do/scholarships-grants",
         newTab: false,
-        icon: Award,
+        icon: GraduationCap,
       },
     ],
   },
@@ -127,7 +157,7 @@ const menuData: Menu[] = [
         title: "Education and Career Blog",
         path: "/blog/education-career",
         newTab: false,
-        icon: BookOpen,
+        icon: Library,
         submenu: [
           {
             id: 321,
@@ -141,14 +171,14 @@ const menuData: Menu[] = [
             title: "Higher Study",
             path: "/blog/education-career/higher-study",
             newTab: false,
-            icon: BookOpen,
+            icon: GraduationCap,
           },
           {
             id: 323,
             title: "Self-Development",
             path: "/blog/education-career/self-development",
             newTab: false,
-            icon: Target,
+            icon: Sprout,
           },
           {
             id: 324,
@@ -176,14 +206,14 @@ const menuData: Menu[] = [
             title: "Competitions",
             path: "/blog/education-career/competitions",
             newTab: false,
-            icon: Award,
+            icon: Trophy,
           },
           {
             id: 328,
             title: "Olympiads",
             path: "/blog/education-career/olympiads",
             newTab: false,
-            icon: Award,
+            icon: Medal,
           },
         ],
       },
@@ -192,7 +222,7 @@ const menuData: Menu[] = [
         title: "Real Life Stories",
         path: "/blog/real-life-stories",
         newTab: false,
-        icon: FileText,
+        icon: Quote,
       },
       {
         id: 34,
@@ -222,13 +252,8 @@ const menuData: Menu[] = [
         newTab: false,
         icon: Handshake,
       },
-      {
-        id: 43,
-        title: "Careers",
-        path: "/get-involved/careers",
-        newTab: false,
-        icon: Briefcase,
-      },
+      // "Careers" lived here and led to a 404 — there is no careers page or
+      // content yet. Add it back alongside a real /get-involved/careers route.
     ],
   },
   {

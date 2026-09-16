@@ -9,8 +9,18 @@ import type {
 
 const donationsApi = baseApi.injectEndpoints({
   endpoints: (build) => ({
-    createDonation: build.mutation<CreateDonationResult, CreateDonationBody>({
-      query: (body) => ({ url: "/donations", method: "POST", body }),
+    createDonation: build.mutation<
+      CreateDonationResult,
+      { body: CreateDonationBody; idempotencyKey: string }
+    >({
+      // The key makes a retried submit (a timeout, a second tap) return the
+      // donation the first attempt created instead of opening another one.
+      query: ({ body, idempotencyKey }) => ({
+        url: "/donations",
+        method: "POST",
+        body,
+        headers: { "Idempotency-Key": idempotencyKey },
+      }),
       invalidatesTags: ["Donations"],
     }),
 

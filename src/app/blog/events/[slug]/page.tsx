@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { serverGet } from "@/lib/serverApi";
 import type { ApiEvent } from "@/types/events";
 import EventView from "./_components/EventView";
+import { serializeJsonLd } from "@/lib/jsonLd";
 
 type PageProps = { params: Promise<{ slug: string }> };
 
@@ -54,7 +55,7 @@ export default async function EventDetailPage({ params }: PageProps) {
   return (
     <>
       {jsonLd && (
-        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: serializeJsonLd(jsonLd) }} />
       )}
       <EventView slug={slug} />
     </>

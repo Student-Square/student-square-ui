@@ -5,25 +5,19 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import Header from "@/components/common/Header/Header";
+import { HERO_TOP_SCRIM } from "@/components/common/Header/navbarHeight";
 import Footer from "@/components/common/Footer/Footer";
 import { motion } from "motion/react";
 import { ChevronRight, ArrowRight } from "lucide-react";
 import { useGetBlogBySlugQuery, useGetBlogsQuery } from "@/redux/features/blogs/blogsApi";
+import { useLanguage } from "@/components/i18n/LanguageProvider";
 
 const PLACEHOLDER = "/images/emergency-tran-bitoron-activities-4.jpg";
-
-const formatDate = (iso: string | null) => {
-  if (!iso) return "";
-  return new Date(iso).toLocaleDateString("en-GB", {
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-  });
-};
 
 export default function NewsDetailPage() {
   const { slug } = useParams<{ slug: string }>();
   const router = useRouter();
+  const { t, pick, date } = useLanguage();
 
   const { data: item, isLoading, isError } = useGetBlogBySlugQuery(slug);
   const { data: allNews } = useGetBlogsQuery({ categorySlug: "news", limit: 4 });
@@ -34,25 +28,27 @@ export default function NewsDetailPage() {
   }
 
   const related = allNews?.data?.filter((n) => n.slug !== slug).slice(0, 2) ?? [];
+  const title = item ? pick(item.title, item.titleBn) : "";
 
   return (
     <main className="min-h-screen">
       <Header />
 
       {/* Hero */}
-      <section className="relative mt-12 sm:mt-14 lg:mt-16 h-[40vh] min-h-[240px] w-full overflow-hidden">
+      <section className="relative h-[40vh] min-h-[240px] w-full overflow-hidden">
         {isLoading ? (
           <div className="absolute inset-0 bg-gray-200 dark:bg-gray-800 animate-pulse" />
         ) : (
           <Image
             src={item?.coverImage?.url ?? PLACEHOLDER}
-            alt={item?.title ?? "News"}
+            alt={title || t("news.fallbackLabel")}
             fill
             className="object-cover"
             priority
           />
         )}
         <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/35 to-black/10" />
+        <div className={HERO_TOP_SCRIM} />
         {item && (
           <div className="absolute bottom-0 left-0 px-6 pb-8 sm:px-10 lg:px-16 max-w-3xl">
             <motion.h1
@@ -61,7 +57,7 @@ export default function NewsDetailPage() {
               transition={{ duration: 0.6 }}
               className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white leading-snug"
             >
-              {item.title}
+              {title}
             </motion.h1>
           </div>
         )}
@@ -73,9 +69,9 @@ export default function NewsDetailPage() {
 
           {/* Breadcrumb */}
           <div className="flex items-center gap-2 text-xs text-muted-foreground flex-wrap">
-            <Link href="/news" className="hover:text-emerald-600 transition-colors">News</Link>
+            <Link href="/news" className="hover:text-emerald-600 transition-colors">{t("news.fallbackLabel")}</Link>
             <ChevronRight className="h-3 w-3" />
-            <span className="text-foreground line-clamp-1">{item?.title}</span>
+            <span className="text-foreground line-clamp-1">{title}</span>
           </div>
 
           {/* Meta */}
@@ -87,11 +83,11 @@ export default function NewsDetailPage() {
           >
             {item?.category && (
               <span className="text-[10px] font-semibold uppercase tracking-wide px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
-                {item.category.name}
+                {pick(item.category.name, item.category.nameBn)}
               </span>
             )}
             {item?.publishedAt && (
-              <span className="text-xs text-muted-foreground">{formatDate(item.publishedAt)}</span>
+              <span className="text-xs text-muted-foreground">{date(item.publishedAt, "long")}</span>
             )}
           </motion.div>
 
@@ -109,7 +105,7 @@ export default function NewsDetailPage() {
               transition={{ duration: 0.5, delay: 0.1 }}
               className="space-y-4"
             >
-              {item?.body?.split("\n\n").map((para, i) => (
+              {(item ? pick(item.body, item.bodyBn) : "").split("\n\n").map((para, i) => (
                 <p key={i} className="text-sm text-foreground leading-relaxed">{para}</p>
               ))}
             </motion.div>
@@ -123,7 +119,7 @@ export default function NewsDetailPage() {
               transition={{ duration: 0.5, delay: 0.1 }}
               viewport={{ once: true }}
             >
-              <h2 className="text-base font-bold text-foreground mb-4">More News</h2>
+              <h2 className="text-base font-bold text-foreground mb-4">{t("news.more")}</h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {related.map((r) => (
                   <Link
@@ -134,7 +130,7 @@ export default function NewsDetailPage() {
                     <div className="aspect-[4/3] overflow-hidden bg-muted relative">
                       <Image
                         src={r.coverImage?.url ?? PLACEHOLDER}
-                        alt={r.title}
+                        alt={pick(r.title, r.titleBn)}
                         fill
                         className="object-cover group-hover:scale-105 transition-transform duration-300"
                         sizes="(max-width: 640px) 100vw, 50vw"
@@ -142,7 +138,7 @@ export default function NewsDetailPage() {
                     </div>
                     <div className="p-3 flex items-end justify-between gap-2">
                       <p className="text-xs font-semibold text-foreground leading-snug group-hover:text-emerald-600 transition-colors line-clamp-2">
-                        {r.title}
+                        {pick(r.title, r.titleBn)}
                       </p>
                       <ArrowRight className="h-3.5 w-3.5 flex-shrink-0 text-muted-foreground group-hover:text-emerald-600" />
                     </div>

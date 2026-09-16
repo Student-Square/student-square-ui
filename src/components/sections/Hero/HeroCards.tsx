@@ -9,6 +9,7 @@ import { useState, useEffect } from "react";
 import { useGetCardsQuery } from "@/redux/features/content/contentApi";
 import type { ApiFeatureCard } from "@/types/content";
 import { useMediaQuery } from "@/hooks/use-media-query";
+import { useLanguage } from "@/components/i18n/LanguageProvider";
 
 const PLACEHOLDER_IMAGE = "/images/student-square-school-session.jpg";
 
@@ -191,6 +192,9 @@ const SkeletonCard = ({ isMain = false }: { isMain?: boolean }) => (
 const HeroCards = () => {
   // Fetch all cards; RTK Query deduplicates requests automatically.
   const { data: allCards = [], isLoading, isError } = useGetCardsQuery();
+  // Cards carry titleBn but no summaryBn or categoryBn; the seeded summaries
+  // and categories come through tr() from the known-content table.
+  const { lang, pick, tr, t } = useLanguage();
 
   /**
    * The client's "Main Collage Section": five panels — the awareness session,
@@ -247,10 +251,10 @@ const HeroCards = () => {
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="rounded-2xl border border-dashed border-border bg-card/40 p-10 text-center">
           <p className="text-sm font-semibold text-foreground">
-            Featured content will be back shortly.
+            {t("home.heroUnavailableTitle")}
           </p>
           <p className="mt-1 text-xs text-muted-foreground">
-            We&apos;re refreshing what&apos;s on display. Check back in a moment.
+            {t("home.heroUnavailableSubtitle")}
           </p>
         </div>
       </div>
@@ -274,9 +278,15 @@ const HeroCards = () => {
             >
               <FeatureCard
                 image={mainFeature.image}
-                title={mainFeature.title}
-                subtitle={mainFeature.summary ?? mainFeature.titleBn}
-                category={mainFeature.category}
+                title={pick(mainFeature.title, mainFeature.titleBn)}
+                // Cards have no summaryBn. In BN the title already shows titleBn,
+                // so falling back to it here would print the headline twice.
+                subtitle={
+                  lang === "BN"
+                    ? tr(mainFeature.summary)
+                    : mainFeature.summary ?? mainFeature.titleBn
+                }
+                category={tr(mainFeature.category)}
                 href={mainFeature.href}
                 isMain
               />
@@ -289,8 +299,8 @@ const HeroCards = () => {
           <div className="lg:col-span-1">
             <FeatureCard
               image={secondary.image}
-              title={secondary.title}
-              category={secondary.category}
+              title={pick(secondary.title, secondary.titleBn)}
+              category={tr(secondary.category)}
               href={secondary.href}
               delay={0.1}
             />
@@ -302,8 +312,8 @@ const HeroCards = () => {
           <div className="lg:col-span-1">
             <FeatureCard
               image={third.image}
-              title={third.title}
-              category={third.category}
+              title={pick(third.title, third.titleBn)}
+              category={tr(third.category)}
               href={third.href}
               delay={0.2}
             />
@@ -317,8 +327,8 @@ const HeroCards = () => {
           {blog1 && (
             <FeatureCard
               image={blog1.image}
-              title={blog1.title}
-              category={blog1.category}
+              title={pick(blog1.title, blog1.titleBn)}
+              category={tr(blog1.category)}
               href={blog1.href}
               delay={0.3}
             />
@@ -326,8 +336,8 @@ const HeroCards = () => {
           {blog2 && (
             <FeatureCard
               image={blog2.image}
-              title={blog2.title}
-              category={blog2.category}
+              title={pick(blog2.title, blog2.titleBn)}
+              category={tr(blog2.category)}
               href={blog2.href}
               delay={0.4}
             />

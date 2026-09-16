@@ -8,8 +8,10 @@ import { useSelector } from "react-redux";
 import { Search, Sun, Moon, X, Heart, ChevronDown, Menu, Languages, LogOut, Settings, LayoutGrid, User } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import menuData from "./menuData";
+import { NAVBAR_HEIGHT } from "./navbarHeight";
 import { selectCurrentUser, selectAuthStatus } from "@/redux/features/auth/authSlice";
 import { useLogoutMutation } from "@/redux/features/auth/authApi";
+import { useLanguage } from "@/components/i18n/LanguageProvider";
 
 const ADMIN_ROLES = new Set(["SYSTEM_ADMIN", "SUPER_ADMIN", "ADMIN", "EDITOR", "MODERATOR", "FINANCE_MANAGER"]);
 
@@ -23,7 +25,10 @@ const Header = () => {
   const [donateRipple, setDonateRipple] = useState(false);
   const [scrollProgress, setScrollProgress] = useState(0);
   const [languageMenuOpen, setLanguageMenuOpen] = useState(false);
-  const [language, setLanguage] = useState<"EN" | "BN">("EN");
+  const { lang: language, setLang: setLanguage, t, nav } = useLanguage();
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [searchValue, setSearchValue] = useState("");
+  const searchRef = useRef<HTMLDivElement>(null);
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
   const languageMenuRef = useRef<HTMLDivElement>(null);
   const profileMenuRef = useRef<HTMLDivElement>(null);
@@ -74,14 +79,33 @@ const Header = () => {
     };
   }, [profileMenuOpen]);
 
+  // Language is read + persisted by LanguageProvider; the header just consumes it.
+
+  const submitSearch = useCallback(
+    (e: React.FormEvent) => {
+      e.preventDefault();
+      const q = searchValue.trim();
+      if (q.length < 2) return;
+      setSearchOpen(false);
+      setNavbarOpen(false);
+      router.push(`/search?q=${encodeURIComponent(q)}`);
+    },
+    [searchValue, router]
+  );
+
+  // Close the search popover on outside click.
   useEffect(() => {
-    try {
-      const saved = window.localStorage.getItem("ss_language");
-      if (saved === "EN" || saved === "BN") setLanguage(saved);
-    } catch {
-      // ignore
-    }
-  }, []);
+    if (!searchOpen) return;
+    const onClick = (e: MouseEvent | TouchEvent) => {
+      if (searchRef.current && !searchRef.current.contains(e.target as Node)) setSearchOpen(false);
+    };
+    document.addEventListener("mousedown", onClick);
+    document.addEventListener("touchstart", onClick);
+    return () => {
+      document.removeEventListener("mousedown", onClick);
+      document.removeEventListener("touchstart", onClick);
+    };
+  }, [searchOpen]);
 
   const handleStickyNavbar = useCallback(() => {
     const scrollTop = window.scrollY || document.documentElement.scrollTop;
@@ -120,6 +144,7 @@ const Header = () => {
     setOpenSubIndex(-1);
     setLanguageMenuOpen(false);
     setProfileMenuOpen(false);
+    setSearchOpen(false);
   }, [pathname]);
 
   // Prevent body scroll when mobile menu is open
@@ -156,7 +181,7 @@ const Header = () => {
       }`}
     >
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 2xl:max-w-[1600px] 3xl:max-w-[1800px] 4xl:max-w-[2000px]">
-        <div className="flex h-12 items-center justify-between sm:h-14 lg:h-16 2xl:h-20 3xl:h-24 4xl:h-28">
+        <div className={`flex items-center justify-between ${NAVBAR_HEIGHT}`}>
           {/* Logo */}
           <Link href="/" className="relative z-50 flex items-center">
             <motion.div
@@ -166,7 +191,7 @@ const Header = () => {
             >
               <Image
                 src="/images/ss-logo.png"
-                alt="Student Square Logo"
+                alt={t("common.logoAlt")}
                 width={160}
                 height={44}
                 className="h-8 w-auto sm:h-10 lg:h-11 2xl:h-14 3xl:h-16 4xl:h-20"
@@ -182,13 +207,13 @@ const Header = () => {
                 {!menuItem.submenu ? (
                   <Link
                     href={menuItem.path || "/"}
-                    className={`group relative px-4 py-2 font-medium uppercase tracking-wide transition-colors text-[16px] font-oswald 2xl:text-lg 2xl:px-5 3xl:text-xl 3xl:px-6 4xl:text-2xl 4xl:px-8 ${
+                    className={`group relative px-4 py-2 font-medium uppercase tracking-wide xl:whitespace-nowrap transition-colors text-[16px] font-oswald 2xl:text-lg 2xl:px-5 3xl:text-xl 3xl:px-6 4xl:text-2xl 4xl:px-8 ${
                       pathname === menuItem.path
                         ? "text-primary"
                         : "text-muted-foreground hover:text-foreground"
                     }`}
                   >
-                    {menuItem.title}
+                    {nav(menuItem.path, menuItem.title)}
                     <span className="absolute bottom-0 left-1/2 h-0.5 w-0 -translate-x-1/2 bg-primary transition-all duration-300 group-hover:w-full" />
                   </Link>
                 ) : (
@@ -203,13 +228,13 @@ const Header = () => {
                     {menuItem.path ? (
                       <Link
                         href={menuItem.path}
-                        className={`flex items-center gap-1.5 px-4 py-2 font-medium uppercase tracking-wide transition-colors text-[16px] font-oswald 2xl:text-lg 2xl:px-5 3xl:text-xl 3xl:px-6 4xl:text-2xl 4xl:px-8 ${
+                        className={`flex items-center gap-1.5 px-4 py-2 font-medium uppercase tracking-wide xl:whitespace-nowrap transition-colors text-[16px] font-oswald 2xl:text-lg 2xl:px-5 3xl:text-xl 3xl:px-6 4xl:text-2xl 4xl:px-8 ${
                           pathname.startsWith(menuItem.path)
                             ? "text-primary"
                             : "text-muted-foreground hover:text-foreground"
                         }`}
                       >
-                        {menuItem.title}
+                        {nav(menuItem.path, menuItem.title)}
                         <ChevronDown
                           className={`h-4 w-4 text-red-500 transition-transform duration-300 ${
                             openIndex === index ? "rotate-180" : ""
@@ -219,9 +244,9 @@ const Header = () => {
                     ) : (
                     <button
                       type="button"
-                      className={`flex items-center gap-1.5 px-4 py-2 font-medium uppercase tracking-wide text-muted-foreground transition-colors hover:text-foreground text-[16px] font-oswald 2xl:text-lg 2xl:px-5 3xl:text-xl 3xl:px-6 4xl:text-2xl 4xl:px-8`}
+                      className={`flex items-center gap-1.5 px-4 py-2 font-medium uppercase tracking-wide xl:whitespace-nowrap text-muted-foreground transition-colors hover:text-foreground text-[16px] font-oswald 2xl:text-lg 2xl:px-5 3xl:text-xl 3xl:px-6 4xl:text-2xl 4xl:px-8`}
                     >
-                      {menuItem.title}
+                      {nav(menuItem.path, menuItem.title)}
                       <ChevronDown
                         className={`h-4 w-4 text-red-500 transition-transform duration-300 ${
                           openIndex === index ? "rotate-180" : ""
@@ -258,7 +283,7 @@ const Header = () => {
                                           {submenuItem.icon && (
                                             <submenuItem.icon className="h-4 w-4 text-muted-foreground" />
                                           )}
-                                          {submenuItem.title}
+                                          {nav(submenuItem.path, submenuItem.title)}
                                         </span>
                                         <ChevronDown className="h-4 w-4 -rotate-90 text-red-500" />
                                       </Link>
@@ -271,7 +296,7 @@ const Header = () => {
                                         {submenuItem.icon && (
                                           <submenuItem.icon className="h-4 w-4 text-muted-foreground" />
                                         )}
-                                        {submenuItem.title}
+                                        {nav(submenuItem.path, submenuItem.title)}
                                       </span>
                                       <ChevronDown className="h-4 w-4 -rotate-90 text-red-500" />
                                     </button>
@@ -297,7 +322,7 @@ const Header = () => {
                                                 {subSubItem.icon && (
                                                   <subSubItem.icon className="h-4 w-4 text-muted-foreground" />
                                                 )}
-                                                {subSubItem.title}
+                                                {nav(subSubItem.path, subSubItem.title)}
                                               </Link>
                                             ))}
                                           </div>
@@ -313,7 +338,7 @@ const Header = () => {
                                     {submenuItem.icon && (
                                       <submenuItem.icon className="h-4 w-4 text-muted-foreground" />
                                     )}
-                                    {submenuItem.title}
+                                    {nav(submenuItem.path, submenuItem.title)}
                                   </Link>
                                 )}
                               </div>
@@ -330,15 +355,50 @@ const Header = () => {
 
           {/* Right Side Actions */}
           <div className="flex items-center gap-2">
-            {/* Search Button - Hidden on small mobile */}
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              className="hidden h-9 w-9 items-center justify-center rounded-lg border border-border/50 bg-transparent text-muted-foreground transition-colors hover:bg-accent/20 hover:text-foreground sm:flex sm:h-10 sm:w-10 sm:rounded-xl 2xl:h-12 2xl:w-12 3xl:h-14 3xl:w-14 4xl:h-16 4xl:w-16"
-              aria-label="Search"
-            >
-              <Search className="h-4 w-4" />
-            </motion.button>
+            {/* Search - button opens an input popover; submitting goes to /search */}
+            <div ref={searchRef} className="relative hidden sm:block">
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                type="button"
+                onClick={() => setSearchOpen((v) => !v)}
+                aria-label={t("search")}
+                aria-expanded={searchOpen}
+                className="flex h-9 w-9 items-center justify-center rounded-lg border border-border/50 bg-transparent text-muted-foreground transition-colors hover:bg-accent/20 hover:text-foreground sm:h-10 sm:w-10 sm:rounded-xl 2xl:h-12 2xl:w-12 3xl:h-14 3xl:w-14 4xl:h-16 4xl:w-16"
+              >
+                <Search className="h-4 w-4" />
+              </motion.button>
+              <AnimatePresence>
+                {searchOpen && (
+                  <motion.form
+                    initial={{ opacity: 0, y: 6, scale: 0.98 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: 6, scale: 0.98 }}
+                    transition={{ duration: 0.15 }}
+                    onSubmit={submitSearch}
+                    role="search"
+                    className="absolute right-0 top-full z-50 mt-2 flex w-72 overflow-hidden rounded-xl border border-border/50 bg-popover/95 shadow-xl backdrop-blur-xl"
+                  >
+                    <input
+                      type="search"
+                      autoFocus
+                      value={searchValue}
+                      onChange={(e) => setSearchValue(e.target.value)}
+                      placeholder={t("searchPlaceholder")}
+                      aria-label={t("search")}
+                      className="h-10 w-full min-w-0 bg-transparent px-3 text-sm text-foreground outline-none"
+                    />
+                    <button
+                      type="submit"
+                      aria-label={t("search")}
+                      className="flex h-10 w-11 shrink-0 items-center justify-center bg-emerald-600 text-white hover:bg-emerald-700"
+                    >
+                      <Search className="h-4 w-4" />
+                    </button>
+                  </motion.form>
+                )}
+              </AnimatePresence>
+            </div>
 
             {/* Theme Toggle - Always visible */}
             {mounted && (
@@ -347,7 +407,7 @@ const Header = () => {
                 whileTap={{ scale: 0.95 }}
                 onClick={toggleTheme}
                 className="flex h-9 w-9 items-center justify-center rounded-lg border border-border/50 bg-transparent text-muted-foreground transition-colors hover:bg-accent/20 hover:text-foreground sm:h-10 sm:w-10 sm:rounded-xl 2xl:h-12 2xl:w-12 3xl:h-14 3xl:w-14 4xl:h-16 4xl:w-16"
-                aria-label={`Switch to ${currentTheme === "dark" ? "light" : "dark"} mode`}
+                aria-label={currentTheme === "dark" ? t("switchToLight") : t("switchToDark")}
               >
                 <AnimatePresence mode="wait">
                   {currentTheme === "dark" ? (
@@ -384,7 +444,7 @@ const Header = () => {
                 whileTap={{ scale: 0.98 }}
                 onClick={() => setLanguageMenuOpen((v) => !v)}
                 className="flex h-9 items-center gap-1 rounded-lg px-2.5 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground sm:h-10 sm:px-3"
-                aria-label="Language"
+                aria-label={t("language")}
               >
                 <Languages className="h-3.5 w-3.5" />
                 <span>{language}</span>
@@ -431,7 +491,7 @@ const Header = () => {
                   whileTap={{ scale: 0.96 }}
                   onClick={() => setProfileMenuOpen((v) => !v)}
                   className="flex h-9 w-9 items-center justify-center rounded-full overflow-hidden ring-2 ring-border hover:ring-emerald-500/60 transition-all"
-                  aria-label="Profile menu"
+                  aria-label={t("profileMenu")}
                 >
                   {authUser.profile?.avatarUrl ? (
                     // eslint-disable-next-line @next/next/no-img-element
@@ -463,21 +523,21 @@ const Header = () => {
                               className="flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm text-popover-foreground hover:bg-accent transition-colors"
                             >
                               <User className="h-4 w-4 text-muted-foreground" />
-                              My Profile
+                              {t("myProfile")}
                             </Link>
                             <Link
                               href="/admin"
                               className="flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm text-popover-foreground hover:bg-accent transition-colors"
                             >
                               <LayoutGrid className="h-4 w-4 text-muted-foreground" />
-                              Admin Dashboard
+                              {t("adminDashboard")}
                             </Link>
                             <Link
                               href="/admin/profile"
                               className="flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm text-popover-foreground hover:bg-accent transition-colors"
                             >
                               <Settings className="h-4 w-4 text-muted-foreground" />
-                              Settings
+                              {t("settings")}
                             </Link>
                           </>
                         ) : (
@@ -487,14 +547,14 @@ const Header = () => {
                               className="flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm text-popover-foreground hover:bg-accent transition-colors"
                             >
                               <LayoutGrid className="h-4 w-4 text-muted-foreground" />
-                              My Dashboard
+                              {t("myDashboard")}
                             </Link>
                             <Link
                               href="/dashboard/profile"
                               className="flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm text-popover-foreground hover:bg-accent transition-colors"
                             >
                               <User className="h-4 w-4 text-muted-foreground" />
-                              My Profile
+                              {t("myProfile")}
                             </Link>
                           </>
                         )}
@@ -505,7 +565,7 @@ const Header = () => {
                           className="w-full flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
                         >
                           <LogOut className="h-4 w-4" />
-                          Sign out
+                          {t("logout")}
                         </button>
                       </div>
                     </motion.div>
@@ -515,9 +575,9 @@ const Header = () => {
             ) : (
               <Link
                 href="/login"
-                className="hidden h-8 items-center rounded-full border-2 border-emerald-500/70 px-3 text-xs font-semibold text-emerald-600 transition-all duration-300 hover:bg-emerald-500/15 hover:border-emerald-500 dark:text-emerald-400 dark:hover:bg-emerald-500/20 sm:inline-flex sm:h-9 sm:px-4 sm:text-sm"
+                className="hidden h-8 items-center whitespace-nowrap rounded-full border-2 border-emerald-500/70 px-3 text-xs font-semibold text-emerald-600 transition-all duration-300 hover:bg-emerald-500/15 hover:border-emerald-500 dark:text-emerald-400 dark:hover:bg-emerald-500/20 sm:inline-flex sm:h-9 sm:px-4 sm:text-sm"
               >
-                Login
+                {t("login")}
               </Link>
             )}
 
@@ -527,7 +587,7 @@ const Header = () => {
               href="/donate"
               className="donate-animated relative flex items-center justify-center rounded-full 
                          px-2.5 py-1.5 md:px-4 lg:px-4 xl:px-5 2xl:px-3.5 h-8 md:h-9
-                         shadow-lg text-xs md:text-sm
+                         shadow-lg text-xs md:text-sm whitespace-nowrap
                          font-semibold tracking-wide 
                          transition-all duration-300 hover:scale-105 
                          group overflow-hidden text-white
@@ -543,7 +603,7 @@ const Header = () => {
 
               {/* Text */}
               <span className="relative z-10 donate-heart font-oswald">
-                DONATE
+                {t("donate").toUpperCase()}
               </span>
 
               {/* Separator Line */}
@@ -573,7 +633,7 @@ const Header = () => {
               whileTap={{ scale: 0.95 }}
               onClick={() => setNavbarOpen(!navbarOpen)}
               className="relative z-50 flex h-9 w-9 items-center justify-center rounded-lg border border-border/50 bg-background/50 text-foreground sm:h-10 sm:w-10 sm:rounded-xl lg:hidden"
-              aria-label="Toggle menu"
+              aria-label={t("toggleMenu")}
             >
               <AnimatePresence mode="wait">
                 {navbarOpen ? (
@@ -634,13 +694,13 @@ const Header = () => {
             >
               {/* Mobile Menu Header */}
               <div className="flex h-12 shrink-0 items-center justify-between border-b border-border/50 px-4 sm:h-14">
-                <span className="text-lg font-semibold">Menu</span>
+                <span className="text-lg font-semibold">{t("menu")}</span>
                 <motion.button
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   onClick={() => setNavbarOpen(false)}
                   className="flex h-9 w-9 items-center justify-center rounded-lg border border-border/50 bg-background/50 text-foreground sm:h-10 sm:w-10"
-                  aria-label="Close menu"
+                  aria-label={t("closeMenu")}
                 >
                   <X className="h-5 w-5" />
                 </motion.button>
@@ -648,6 +708,20 @@ const Header = () => {
 
               {/* Scrollable Menu Content */}
               <div className="flex-1 overflow-y-auto overscroll-contain p-4" style={{ WebkitOverflowScrolling: 'touch' }}>
+                {/* Mobile search */}
+                <form role="search" onSubmit={submitSearch} className="mb-4 flex overflow-hidden rounded-xl border border-border/60">
+                  <input
+                    type="search"
+                    value={searchValue}
+                    onChange={(e) => setSearchValue(e.target.value)}
+                    placeholder={t("searchPlaceholder")}
+                    aria-label={t("search")}
+                    className="h-10 w-full min-w-0 bg-transparent px-3 text-sm text-foreground outline-none"
+                  />
+                  <button type="submit" aria-label={t("search")} className="flex h-10 w-11 shrink-0 items-center justify-center bg-emerald-600 text-white">
+                    <Search className="h-4 w-4" />
+                  </button>
+                </form>
                 <div className="flex flex-col gap-1">
                   {menuData.map((menuItem, index) => (
                     <div key={menuItem.id}>
@@ -660,7 +734,7 @@ const Header = () => {
                               : "text-muted-foreground hover:bg-accent hover:text-foreground"
                           }`}
                         >
-                          {menuItem.title}
+                          {nav(menuItem.path, menuItem.title)}
                         </Link>
                       ) : (
                         <div>
@@ -674,11 +748,11 @@ const Header = () => {
                                     : "text-muted-foreground hover:text-foreground"
                                 }`}
                               >
-                                {menuItem.title}
+                                {nav(menuItem.path, menuItem.title)}
                               </Link>
                             ) : (
                               <span className="flex-1 px-4 py-3 text-sm font-medium uppercase text-muted-foreground">
-                                {menuItem.title}
+                                {nav(menuItem.path, menuItem.title)}
                               </span>
                             )}
                             <button
@@ -717,7 +791,7 @@ const Header = () => {
                                               {submenuItem.icon && (
                                                 <submenuItem.icon className="h-4 w-4" />
                                               )}
-                                              {submenuItem.title}
+                                              {nav(submenuItem.path, submenuItem.title)}
                                             </span>
                                             <ChevronDown
                                               className={`h-3 w-3 text-red-500 transition-transform ${
@@ -742,7 +816,7 @@ const Header = () => {
                                                     {subSubItem.icon && (
                                                       <subSubItem.icon className="h-3 w-3" />
                                                     )}
-                                                    {subSubItem.title}
+                                                    {nav(subSubItem.path, subSubItem.title)}
                                                   </Link>
                                                 ))}
                                               </motion.div>
@@ -757,7 +831,7 @@ const Header = () => {
                                           {submenuItem.icon && (
                                             <submenuItem.icon className="h-4 w-4" />
                                           )}
-                                          {submenuItem.title}
+                                          {nav(submenuItem.path, submenuItem.title)}
                                         </Link>
                                       )}
                                     </div>
@@ -791,14 +865,14 @@ const Header = () => {
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-semibold text-foreground truncate">{authUser.fullName}</p>
                       <Link href={isAdminUser ? "/admin/profile" : "/dashboard/profile"} onClick={() => setNavbarOpen(false)} className="text-xs text-emerald-600 hover:underline">
-                        {isAdminUser ? "View profile" : "My Profile"}
+                        {isAdminUser ? t("viewProfile") : t("myProfile")}
                       </Link>
                     </div>
                     <button
                       type="button"
                       onClick={() => { setNavbarOpen(false); handleLogout(); }}
                       className="text-muted-foreground hover:text-red-600 transition-colors"
-                      aria-label="Sign out"
+                      aria-label={t("logout")}
                     >
                       <LogOut className="h-4 w-4" />
                     </button>
@@ -822,7 +896,7 @@ const Header = () => {
                       onClick={() => setNavbarOpen(false)}
                       className="flex flex-1 items-center justify-center rounded-full border-2 border-emerald-500/70 py-2 text-sm font-semibold text-emerald-600 transition-colors hover:bg-emerald-500/15 dark:text-emerald-400"
                     >
-                      Login
+                      {t("login")}
                     </Link>
                   </div>
                 )}
@@ -832,7 +906,7 @@ const Header = () => {
                   className="flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 text-sm font-semibold text-white shadow-lg transition-colors hover:bg-emerald-700"
                 >
                   <Heart className="h-4 w-4" />
-                  <span>Donate Now</span>
+                  <span>{t("donate")}</span>
                 </Link>
               </div>
             </motion.nav>

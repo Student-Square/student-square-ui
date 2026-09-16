@@ -4,6 +4,7 @@ import { motion, useInView, useMotionValue, useSpring } from "motion/react"
 import { useEffect, useRef } from "react"
 import { Users, Trees, Hospital, School } from "lucide-react"
 import { useGetPageSectionsQuery } from "@/redux/features/content/contentApi"
+import { useLanguage } from "@/components/i18n/LanguageProvider"
 
 type ImpactStat = { value: string; label: string; detail?: string }
 type ImpactStats = { heading?: string; subheading?: string; items?: ImpactStat[] }
@@ -44,9 +45,9 @@ function parseValue(value: string): { number: number; suffix: string } {
 }
 
 /** Thousands separators so 5000 reads as the source's "5,000+". */
-function format(value: number, suffix: string): string {
+function format(value: number, suffix: string, locale = "en-US"): string {
   const rounded = value % 1 === 0 ? value : Number(value.toFixed(1))
-  return `${rounded.toLocaleString("en-US")}${suffix}`
+  return `${rounded.toLocaleString(locale)}${suffix}`
 }
 
 /** The design highlights the figure onward ("A Strong Community of | 5000+ Students"). */
@@ -57,7 +58,7 @@ function splitHeading(heading: string): [string, string] {
   return [words.slice(0, i).join(" "), words.slice(i).join(" ")]
 }
 
-function AnimatedCounter({ value, suffix = "" }: { value: number; suffix?: string }) {
+function AnimatedCounter({ value, suffix = "", locale = "en-US" }: { value: number; suffix?: string; locale?: string }) {
   const ref = useRef<HTMLSpanElement>(null)
   const motionValue = useMotionValue(0)
   const springValue = useSpring(motionValue, {
@@ -68,49 +69,53 @@ function AnimatedCounter({ value, suffix = "" }: { value: number; suffix?: strin
 
   useEffect(() => {
     if (ref.current && !ref.current.textContent) {
-      ref.current.textContent = format(value, suffix)
+      ref.current.textContent = format(value, suffix, locale)
     }
-  }, [value, suffix])
+  }, [value, suffix, locale])
 
   useEffect(() => {
     if (isInView) {
       motionValue.set(value)
     } else if (ref.current) {
-      ref.current.textContent = format(value, suffix)
+      ref.current.textContent = format(value, suffix, locale)
     }
-  }, [motionValue, isInView, value, suffix])
+  }, [motionValue, isInView, value, suffix, locale])
 
   useEffect(() => {
     const unsubscribe = springValue.on("change", (latest) => {
       if (ref.current) {
-        ref.current.textContent = format(latest, suffix)
+        ref.current.textContent = format(latest, suffix, locale)
       }
     })
     
     return () => unsubscribe()
-  }, [springValue, suffix])
+  }, [springValue, suffix, locale])
 
   return <span ref={ref} className="inline-block" />
 }
 
 const Stats = () => {
   const { data: sections } = useGetPageSectionsQuery("home")
+  const { lang, t, tr } = useLanguage()
   const impact = (sections?.find((s) => s.sectionKey === "impact-stats")?.content ??
     {}) as ImpactStats
+  const locale = lang === "BN" ? "bn-BD" : "en-US"
 
   const stats = (impact.items ?? []).map((item, i) => ({
     ...STYLES[i % STYLES.length],
     ...parseValue(item.value),
-    label: item.label,
-    detail: item.detail,
+    label: tr(item.label),
+    detail: item.detail ? tr(item.detail) : undefined,
   }))
 
   if (stats.length === 0) return null
 
-  const [headingLead, headingAccent] = splitHeading(impact.heading ?? "")
+  const [headingLead, headingAccent] =
+    lang === "BN" ? [t("home.statsHeadingLead"), t("home.statsHeadingAccent")] : splitHeading(impact.heading ?? "")
+  const subheading = lang === "BN" ? t("home.statsSubheading") : impact.subheading
 
   return (
-    <section className="relative overflow-hidden py-10 sm:py-12 md:py-16">
+    <section className="relative overflow-hidden py-6 sm:py-8 md:py-10">
       <div className="container relative mx-auto px-4 max-w-7xl 2xl:max-w-[1600px] 3xl:max-w-[1800px] 4xl:max-w-[2000px]">
         {/* Header */}
         <motion.div
@@ -146,9 +151,9 @@ const Stats = () => {
               </>
             )}
           </h2>
-          {impact.subheading && (
+          {subheading && (
             <p className="mx-auto max-w-2xl px-4 text-sm font-light leading-relaxed text-muted-foreground sm:text-sm md:text-base">
-              {impact.subheading}
+              {subheading}
             </p>
           )}
         </motion.div>
@@ -178,7 +183,7 @@ const Stats = () => {
                 </motion.div>
 
                 <div className={`mb-1 bg-gradient-to-br bg-clip-text text-xl font-bold text-transparent sm:mb-2 sm:text-2xl ${stat.accent}`}>
-                  <AnimatedCounter value={stat.number} suffix={stat.suffix} />
+                  <AnimatedCounter value={stat.number} suffix={stat.suffix} locale={locale} />
                 </div>
 
                 <p className="text-xs leading-relaxed text-muted-foreground sm:text-sm">
@@ -228,7 +233,7 @@ const Stats = () => {
                 </motion.div>
 
                 <div className={`mb-2 bg-gradient-to-br bg-clip-text text-3xl font-bold text-transparent transition-all duration-300 sm:mb-3 sm:text-3xl md:text-4xl lg:text-4xl xl:text-5xl ${stat.accent}`}>
-                  <AnimatedCounter value={stat.number} suffix={stat.suffix} />
+                  <AnimatedCounter value={stat.number} suffix={stat.suffix} locale={locale} />
                 </div>
 
                 <p className="text-sm leading-relaxed text-muted-foreground transition-colors duration-300 group-hover:text-foreground sm:text-sm md:text-base lg:text-base">

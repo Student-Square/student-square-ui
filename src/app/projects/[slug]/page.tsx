@@ -10,6 +10,7 @@ import {
   useGetCampaignsQuery,
 } from "@/redux/features/campaigns/campaignsApi";
 import { ChevronRight, ArrowRight } from "lucide-react";
+import { useLanguage } from "@/components/i18n/LanguageProvider";
 
 /** Blank-line separated paragraphs, matching how the seed stores descriptions. */
 function toParagraphs(text: string): string[] {
@@ -21,6 +22,7 @@ function toParagraphs(text: string): string[] {
 
 export default function ProjectDetailPage() {
   const { slug } = useParams<{ slug: string }>();
+  const { t, pick } = useLanguage();
   const {
     data: project,
     isLoading,
@@ -52,16 +54,16 @@ export default function ProjectDetailPage() {
         <section className="bg-background py-24">
           <div className="mx-auto max-w-3xl px-6 text-center space-y-4">
             <h1 className="text-2xl font-bold text-foreground">
-              Project not found
+              {t("projects.notFound")}
             </h1>
             <p className="text-sm text-muted-foreground">
-              This project may have been renamed or is no longer running.
+              {t("projects.notFoundBody")}
             </p>
             <Link
               href="/"
               className="inline-flex items-center gap-1.5 text-sm font-medium text-emerald-600 hover:underline"
             >
-              Back to Home
+              {t("projects.backHome")}
               <ArrowRight className="h-3.5 w-3.5" />
             </Link>
           </div>
@@ -74,7 +76,8 @@ export default function ProjectDetailPage() {
   const related = (allProjects ?? [])
     .filter((p) => p.slug !== project.slug)
     .slice(0, 3);
-  const paragraphs = toParagraphs(project.description);
+  const title = pick(project.title, project.titleBn);
+  const paragraphs = toParagraphs(pick(project.description, project.descriptionBn));
 
   return (
     <main className="min-h-screen">
@@ -85,7 +88,7 @@ export default function ProjectDetailPage() {
         {project.coverImage && (
           <img
             src={project.coverImage.url}
-            alt={project.coverImage.alt ?? project.title}
+            alt={project.coverImage.alt ?? title}
             className="absolute inset-0 h-full w-full object-cover"
           />
         )}
@@ -97,7 +100,7 @@ export default function ProjectDetailPage() {
             transition={{ duration: 0.6 }}
             className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white leading-snug"
           >
-            {project.title}
+            {title}
           </motion.h1>
         </div>
       </section>
@@ -108,11 +111,11 @@ export default function ProjectDetailPage() {
 
           {/* Breadcrumb */}
           <div className="flex items-center gap-2 text-xs text-muted-foreground flex-wrap">
-            <Link href="/" className="hover:text-emerald-600 transition-colors">Home</Link>
+            <Link href="/" className="hover:text-emerald-600 transition-colors">{t("common.home")}</Link>
             <ChevronRight className="h-3 w-3" />
-            <Link href="/projects" className="hover:text-emerald-600 transition-colors">Our Projects</Link>
+            <Link href="/projects" className="hover:text-emerald-600 transition-colors">{t("projects.title")}</Link>
             <ChevronRight className="h-3 w-3" />
-            <span className="text-foreground">{project.title}</span>
+            <span className="text-foreground">{title}</span>
           </div>
 
           {/* Body */}
@@ -124,7 +127,7 @@ export default function ProjectDetailPage() {
             className="space-y-4"
           >
             <p className="text-base text-foreground font-medium leading-relaxed">
-              {project.summary}
+              {pick(project.summary, project.summaryBn)}
             </p>
             {paragraphs.map((para, i) => (
               <p key={i} className="text-sm text-foreground leading-relaxed">{para}</p>
@@ -139,7 +142,7 @@ export default function ProjectDetailPage() {
               transition={{ duration: 0.5, delay: 0.1 }}
               viewport={{ once: true }}
             >
-              <h2 className="text-base font-bold text-foreground mb-4">Other Projects</h2>
+              <h2 className="text-base font-bold text-foreground mb-4">{t("projects.other")}</h2>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 {related.map((r) => (
                   <Link
@@ -151,14 +154,14 @@ export default function ProjectDetailPage() {
                       {r.coverImage && (
                         <img
                           src={r.coverImage.url}
-                          alt={r.coverImage.alt ?? r.title}
+                          alt={r.coverImage.alt ?? pick(r.title, r.titleBn)}
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                         />
                       )}
                     </div>
                     <div className="p-3 flex items-end justify-between gap-2">
                       <p className="text-xs font-semibold text-foreground leading-snug group-hover:text-emerald-600 transition-colors line-clamp-2">
-                        {r.title}
+                        {pick(r.title, r.titleBn)}
                       </p>
                       <ArrowRight className="h-3.5 w-3.5 flex-shrink-0 text-muted-foreground group-hover:text-emerald-600" />
                     </div>

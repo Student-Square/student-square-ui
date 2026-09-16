@@ -3,10 +3,13 @@
 import { useParams, redirect } from "next/navigation";
 import Link from "next/link";
 import Header from "@/components/common/Header/Header";
+import { HERO_TOP_SCRIM } from "@/components/common/Header/navbarHeight";
 import Footer from "@/components/common/Footer/Footer";
 import { motion } from "motion/react";
 import { getServiceBySlug, services } from "@/data/services";
+import { siteConfig } from "@/config/site";
 import { useImpactStats } from "@/components/common/ImpactStats";
+import { useLanguage } from "@/components/i18n/LanguageProvider";
 import {
   ChevronRight,
   ArrowRight,
@@ -22,21 +25,23 @@ import {
 
 export default function ServicePage() {
   const { slug } = useParams<{ slug: string }>();
+  const { lang, t, pick } = useLanguage();
   const impactStats = useImpactStats();
   const service = getServiceBySlug(slug);
   if (!service) redirect("/what-we-do");
 
   const others = services.filter((s) => s.slug !== slug).slice(0, 3);
+  const shareUrl = `${siteConfig.url}/what-we-do/${service.slug}`;
+  const title = pick(service.title, service.titleBn);
+  const body = lang === "BN" && service.bodyBn.length > 0 ? service.bodyBn : service.body;
 
   return (
     <main className="min-h-screen bg-background">
       <Header />
 
-      {/* Navbar spacer */}
-      <div className="mt-12 sm:mt-14 lg:mt-16" />
-
       <article className="relative">
-        {/* Full-bleed cover image — sits directly under the navbar */}
+        {/* Full-bleed cover image. Runs to the top of the page with the
+            transparent navbar floating over it. */}
         <motion.section
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -46,9 +51,10 @@ export default function ServicePage() {
           <div className="relative h-[30vh] sm:h-[40vh] md:h-[50vh] lg:h-[60vh] xl:h-[70vh] min-h-[200px] max-h-[700px] overflow-hidden bg-muted">
             <img
               src={service.heroImage}
-              alt={service.title}
+              alt={title}
               className="w-full h-full object-cover"
             />
+            <div className={HERO_TOP_SCRIM} />
             {/* Soft fade at the bottom into the page background */}
             <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-b from-transparent to-background pointer-events-none" />
           </div>
@@ -65,18 +71,18 @@ export default function ServicePage() {
               className="flex items-center gap-2 text-xs text-muted-foreground flex-wrap mb-5"
             >
               <Link href="/" className="hover:text-emerald-600 transition-colors">
-                Home
+                {t("common.home")}
               </Link>
               <ChevronRight className="h-3 w-3" />
               <Link
                 href="/what-we-do"
                 className="hover:text-emerald-600 transition-colors"
               >
-                What We Do
+                {t("wwd.badge")}
               </Link>
               <ChevronRight className="h-3 w-3" />
               <span className="text-foreground line-clamp-1">
-                {service.shortTitle}
+                {pick(service.shortTitle, service.shortTitleBn)}
               </span>
             </motion.div>
 
@@ -88,7 +94,7 @@ export default function ServicePage() {
                 transition={{ duration: 0.5 }}
                 className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-100/80 dark:bg-emerald-900/40 border border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300 text-[11px] font-bold uppercase tracking-wider"
               >
-                Programme
+                {t("wwd.programme")}
               </motion.span>
 
               <motion.h1
@@ -97,7 +103,7 @@ export default function ServicePage() {
                 transition={{ duration: 0.55, delay: 0.05 }}
                 className="mt-4 text-3xl sm:text-4xl lg:text-5xl font-bold text-foreground tracking-tight leading-tight"
               >
-                {service.title}
+                {title}
               </motion.h1>
 
               <motion.p
@@ -106,7 +112,7 @@ export default function ServicePage() {
                 transition={{ duration: 0.55, delay: 0.1 }}
                 className="mt-4 text-sm sm:text-base text-muted-foreground leading-relaxed"
               >
-                {service.description}
+                {pick(service.description, service.descriptionBn)}
               </motion.p>
             </div>
           </div>
@@ -149,7 +155,7 @@ export default function ServicePage() {
               viewport={{ once: true }}
               className="space-y-6"
             >
-              {service.body.map((para, i) => (
+              {body.map((para, i) => (
                 <p
                   key={i}
                   className={`text-base text-foreground leading-[1.85] ${
@@ -172,7 +178,7 @@ export default function ServicePage() {
               className="mt-10 p-6 rounded-2xl border border-emerald-200 dark:border-emerald-800/60 bg-emerald-50/60 dark:bg-emerald-900/20"
             >
               <p className="text-[11px] font-bold uppercase tracking-widest text-emerald-700 dark:text-emerald-300">
-                Our impact so far
+                {t("common.impactSoFar")}
               </p>
               <ul className="mt-3 space-y-2.5">
                 {impactStats.map((s) => (
@@ -203,38 +209,35 @@ export default function ServicePage() {
                 className="inline-flex items-center gap-2 text-sm font-semibold text-foreground hover:text-emerald-600 transition-colors"
               >
                 <ArrowLeft className="h-4 w-4" />
-                All programmes
+                {t("wwd.allProgrammes")}
               </Link>
 
               <div className="flex items-center gap-2">
                 <span className="text-xs font-semibold text-muted-foreground inline-flex items-center gap-1.5 mr-1">
                   <Share2 className="h-3.5 w-3.5" />
-                  Share
+                  {t("common.share")}
                 </span>
+                {/* These were bare buttons with no handler, so they did nothing.
+                    Real share URLs now, built from the canonical page address. */}
+                {[
+                  { label: t("common.shareFacebook"), Icon: Facebook, href: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}` },
+                  { label: t("common.shareX"), Icon: Twitter, href: `https://x.com/intent/post?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(title)}` },
+                  { label: t("common.shareLinkedIn"), Icon: Linkedin, href: `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareUrl)}` },
+                ].map(({ label, Icon, href }) => (
+                  <a
+                    key={label}
+                    href={href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label={label}
+                    className="w-8 h-8 rounded-full bg-card border border-border flex items-center justify-center text-muted-foreground hover:text-emerald-600 hover:border-emerald-500/60 transition-colors"
+                  >
+                    <Icon className="h-3.5 w-3.5" />
+                  </a>
+                ))}
                 <button
                   type="button"
-                  aria-label="Share on Facebook"
-                  className="w-8 h-8 rounded-full bg-card border border-border flex items-center justify-center text-muted-foreground hover:text-emerald-600 hover:border-emerald-500/60 transition-colors"
-                >
-                  <Facebook className="h-3.5 w-3.5" />
-                </button>
-                <button
-                  type="button"
-                  aria-label="Share on Twitter"
-                  className="w-8 h-8 rounded-full bg-card border border-border flex items-center justify-center text-muted-foreground hover:text-emerald-600 hover:border-emerald-500/60 transition-colors"
-                >
-                  <Twitter className="h-3.5 w-3.5" />
-                </button>
-                <button
-                  type="button"
-                  aria-label="Share on LinkedIn"
-                  className="w-8 h-8 rounded-full bg-card border border-border flex items-center justify-center text-muted-foreground hover:text-emerald-600 hover:border-emerald-500/60 transition-colors"
-                >
-                  <Linkedin className="h-3.5 w-3.5" />
-                </button>
-                <button
-                  type="button"
-                  aria-label="Copy link"
+                  aria-label={t("common.copyLink")}
                   onClick={() => {
                     if (typeof navigator !== "undefined" && navigator.clipboard) {
                       navigator.clipboard.writeText(window.location.href);
@@ -256,17 +259,17 @@ export default function ServicePage() {
               <div className="flex items-end justify-between mb-8 gap-4 flex-wrap">
                 <div>
                   <p className="text-xs font-bold uppercase tracking-widest text-emerald-600">
-                    Explore more
+                    {t("wwd.exploreMore")}
                   </p>
                   <h2 className="mt-1 text-xl sm:text-2xl font-bold text-foreground">
-                    Other programmes
+                    {t("wwd.otherProgrammes")}
                   </h2>
                 </div>
                 <Link
                   href="/what-we-do"
                   className="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-600 hover:gap-2.5 transition-all"
                 >
-                  View all
+                  {t("common.viewAll")}
                   <ArrowRight className="h-3.5 w-3.5" />
                 </Link>
               </div>
@@ -287,16 +290,16 @@ export default function ServicePage() {
                       <div className="aspect-[16/10] overflow-hidden bg-muted">
                         <img
                           src={s.image}
-                          alt={s.title}
+                          alt={pick(s.title, s.titleBn)}
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                         />
                       </div>
                       <div className="p-5 flex flex-col flex-1">
                         <h3 className="text-sm font-bold text-foreground leading-snug group-hover:text-emerald-600 transition-colors line-clamp-2 flex-1">
-                          {s.title}
+                          {pick(s.title, s.titleBn)}
                         </h3>
                         <span className="mt-4 inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-600 group-hover:gap-2.5 transition-all">
-                          Learn more
+                          {t("common.learnMore")}
                           <ArrowUpRight className="h-3.5 w-3.5" />
                         </span>
                       </div>

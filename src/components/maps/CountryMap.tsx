@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { useLanguage } from "@/components/i18n/LanguageProvider";
 import DynamicMap, { type RegionConfig } from "./DynamicMap";
 
 type ActiveRegion = {
@@ -70,12 +71,13 @@ type Props = {
 
 export default function CountryMap({ country, activeRegionOverride }: Props) {
   const router = useRouter();
+  const { t, tr } = useLanguage();
   const config = CONFIGS[country];
 
   if (!config) {
     return (
       <div className="w-full bg-muted flex items-center justify-center text-muted-foreground text-sm" style={{ minHeight: 380 }}>
-        Map not available for this country yet
+        {t("common.mapUnavailable")}
       </div>
     );
   }
@@ -131,7 +133,7 @@ export default function CountryMap({ country, activeRegionOverride }: Props) {
                 className="inline-block w-3 h-3 rounded-sm flex-shrink-0"
                 style={{ background: item.color }}
               />
-              {item.label}
+              {tr(item.label)}
             </button>
           ))}
         </div>

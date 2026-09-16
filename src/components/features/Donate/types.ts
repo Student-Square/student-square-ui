@@ -9,7 +9,6 @@ export interface ProjectCard {
   icon: string;
   title: string;
   description: string;
-  tags: string[];
 }
 
 export interface UtilizationItem {

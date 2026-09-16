@@ -3,6 +3,7 @@ import Header from "@/components/common/Header/Header";
 import Footer from "@/components/common/Footer/Footer";
 import PageHero from "@/components/common/PageHero";
 import Contact from "@/components/sections/Contact/Contact";
+import T from "@/components/i18n/T";
 
 export const metadata: Metadata = {
   title: "Find Us | Student Square",
@@ -18,7 +19,8 @@ export default function ContactPage() {
       <PageHero
         imageSrc="/images/student-square-16th-group-counselling-workshop-godagari-rajshahi.jpg"
         imageAlt="Student Square team at a group counselling workshop in Godagari, Rajshahi"
-        title="Find Us"
+        imageAltKey="common.findUsAlt"
+        title={<T k="common.findUs" />}
       />
 
       <Contact />

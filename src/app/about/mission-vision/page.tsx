@@ -7,6 +7,8 @@ import { motion } from "motion/react";
 import { useGetEditablePageQuery } from "@/redux/features/content/contentApi";
 import type { ApiEditablePage } from "@/types/content";
 import EditPageButton from "@/components/admin/EditPageButton";
+import { siteConfig } from "@/config/site";
+import { useLanguage } from "@/components/i18n/LanguageProvider";
 
 const PAGE_SLUG = "about-mission-vision" as const;
 
@@ -38,7 +40,7 @@ const FALLBACK: ApiEditablePage = {
     {
       id: "fallback-3",
       heading: "Legal Status",
-      body: "Registered under The Trust Act 1908 in Bangladesh.",
+      body: `${siteConfig.legal.registration}.`,
       order: 3,
     },
   ],
@@ -47,6 +49,9 @@ const FALLBACK: ApiEditablePage = {
 
 export default function MissionVisionPage() {
   const { data, isError } = useGetEditablePageQuery(PAGE_SLUG);
+  // The page API has no Bangla fields; the seeded headings and bodies are
+  // translated through the known-content table.
+  const { tr } = useLanguage();
 
   // Use API data when it's there; otherwise fall back to the canned content.
   // (isLoading also returns fallback for now — same shape, just static.)
@@ -83,11 +88,11 @@ export default function MissionVisionPage() {
               viewport={{ once: true }}
             >
               <h2 className="text-2xl font-bold text-foreground mb-3">
-                {section.heading}
+                {tr(section.heading)}
               </h2>
               {/* Body is plain text; preserve line breaks but escape HTML. */}
               <p className="text-base text-muted-foreground leading-relaxed whitespace-pre-line">
-                {section.body}
+                {tr(section.body)}
               </p>
             </motion.div>
           ))}

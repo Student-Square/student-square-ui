@@ -19,8 +19,9 @@ export type CreateDonationBody = {
   campaignId?: string;
   purpose?: string;
   method: "SSLCOMMERZ";
-  donorName: string;
-  donorEmail: string;
+  /** Optional when `isAnonymous` — server stores placeholders for the gateway. */
+  donorName?: string;
+  donorEmail?: string;
   donorPhone?: string;
   isAnonymous?: boolean;
   message?: string;

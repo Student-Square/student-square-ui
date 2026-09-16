@@ -4,18 +4,11 @@ import type { ApiBlogListItem } from "@/types/blogs"
 import Image from "next/image"
 import Link from "next/link"
 import { motion } from "motion/react"
-
-const formatDate = (iso: string | null) => {
-  if (!iso) return ""
-  return new Date(iso).toLocaleDateString("en-GB", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-  })
-}
+import { useLanguage } from "@/components/i18n/LanguageProvider"
 
 export default function SingleBlogCard({ blog, index }: { blog: ApiBlogListItem; index: number }) {
-  const badge = blog.tags[0]?.tag.name ?? blog.category.name
+  const { pick, date } = useLanguage()
+  const badge = blog.tags[0]?.tag.name ?? pick(blog.category.name, blog.category.nameBn)
   const author = blog.displayAuthorName
 
   return (
@@ -57,12 +50,12 @@ export default function SingleBlogCard({ blog, index }: { blog: ApiBlogListItem;
           <div className="flex flex-col flex-grow p-3 sm:p-6 md:p-7">
             {/* Title */}
             <h3 className="text-sm sm:text-xl md:text-2xl font-bold text-foreground mb-2 sm:mb-4 line-clamp-3 group-hover:text-emerald-600 transition-colors duration-300">
-              {blog.title}
+              {pick(blog.title, blog.titleBn)}
             </h3>
 
             {/* Description */}
             <p className="text-[10px] sm:text-base text-muted-foreground mb-3 sm:mb-6 flex-grow line-clamp-3 leading-relaxed">
-              {blog.excerpt}
+              {pick(blog.excerpt, blog.excerptBn)}
             </p>
 
             {/* Divider */}
@@ -100,7 +93,7 @@ export default function SingleBlogCard({ blog, index }: { blog: ApiBlogListItem;
               {/* Date */}
               <div className="text-right flex-shrink-0">
                 <p className="text-[10px] sm:text-sm font-medium text-muted-foreground whitespace-nowrap">
-                  {formatDate(blog.publishedAt)}
+                  {date(blog.publishedAt)}
                 </p>
               </div>
             </div>

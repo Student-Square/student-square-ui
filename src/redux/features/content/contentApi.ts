@@ -17,6 +17,9 @@ import type {
   ApiBoardGroups,
   ApiBoardAssignment,
   ApiPublicUser,
+  ApiPerson,
+  AdminCreatePersonInput,
+  AdminUpdatePersonInput,
   AdminCreateAssignmentInput,
   AdminUpdateAssignmentInput,
   AdminReorderAssignmentsInput,
@@ -332,6 +335,32 @@ const contentApiSlice = baseApi.injectEndpoints({
       providesTags: (_r, _e, slug) => [{ type: "Board", id: slug }],
     }),
 
+    // ───── Admin people (curated team directory) ─────
+    adminListPeople: build.query<ApiPerson[], { search?: string; category?: BoardCategory } | void>({
+      query: (params) => ({ url: "/admin/content/people", params: params ?? {} }),
+      providesTags: [{ type: "AdminBoard", id: "PEOPLE" }]
+    }),
+    adminGetPerson: build.query<ApiPerson, string>({
+      query: (id) => `/admin/content/people/${encodeURIComponent(id)}`,
+      providesTags: [{ type: "AdminBoard", id: "PEOPLE" }]
+    }),
+    adminCreatePerson: build.mutation<ApiPerson, AdminCreatePersonInput>({
+      query: (body) => ({ url: "/admin/content/people", method: "POST", body }),
+      invalidatesTags: [{ type: "AdminBoard", id: "PEOPLE" }, { type: "AdminBoard", id: "LIST" }, "Board"]
+    }),
+    adminUpdatePerson: build.mutation<ApiPerson, { id: string; data: AdminUpdatePersonInput }>({
+      query: ({ id, data }) => ({
+        url: `/admin/content/people/${encodeURIComponent(id)}`,
+        method: "PATCH",
+        body: data
+      }),
+      invalidatesTags: [{ type: "AdminBoard", id: "PEOPLE" }, { type: "AdminBoard", id: "LIST" }, "Board"]
+    }),
+    adminDeletePerson: build.mutation<void, string>({
+      query: (id) => ({ url: `/admin/content/people/${encodeURIComponent(id)}`, method: "DELETE" }),
+      invalidatesTags: [{ type: "AdminBoard", id: "PEOPLE" }, { type: "AdminBoard", id: "LIST" }, "Board"]
+    }),
+
     // ───── Admin board assignments ─────
     adminListAssignments: build.query<ApiBoardAssignment[], { category?: BoardCategory } | void>({
       query: (params) => ({ url: "/admin/content/board/assignments", params: params ?? {} }),
@@ -386,6 +415,12 @@ export const {
   useAdminGetEditablePageQuery,
   useAdminUpdateEditablePageMutation,
   useAdminUploadPageImageMutation,
+  // people (curated team directory)
+  useAdminListPeopleQuery,
+  useAdminGetPersonQuery,
+  useAdminCreatePersonMutation,
+  useAdminUpdatePersonMutation,
+  useAdminDeletePersonMutation,
   // board assignments
   useAdminListAssignmentsQuery,
   useAdminCreateAssignmentMutation,

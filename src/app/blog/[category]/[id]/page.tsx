@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { serverGet } from "@/lib/serverApi";
 import type { ApiBlogPost } from "@/types/blogs";
 import ArticleView from "./_components/ArticleView";
+import { serializeJsonLd } from "@/lib/jsonLd";
 
 type PageProps = {
   params: Promise<{ category: string; id: string }>;
@@ -69,7 +70,7 @@ export default async function BlogPostPage({ params }: PageProps) {
       {jsonLd && (
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+          dangerouslySetInnerHTML={{ __html: serializeJsonLd(jsonLd) }}
         />
       )}
       <ArticleView id={id} />

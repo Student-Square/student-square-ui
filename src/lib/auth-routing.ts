@@ -53,6 +53,34 @@ export function roleHome(role: UserRole): string {
   return "/dashboard";
 }
 
+/** ASCII control characters (0x00–0x1F, 0x7F), which browsers strip from URLs. */
+const hasControlChar = (value: string) =>
+  Array.from(value).some((ch) => {
+    const code = ch.charCodeAt(0);
+    return code < 0x20 || code === 0x7f;
+  });
+
+/**
+ * True only for a path on this site. `startsWith("/")` is not that test:
+ * `//evil.com` and `/\evil.com` both start with a slash and both navigate off
+ * the site, which made `?next=` an open redirect straight after login — the
+ * real login page, then a lookalike. Browsers also strip tabs and newlines
+ * from URLs (`/<tab>/evil.com` becomes `//evil.com`), so control characters
+ * are refused outright.
+ */
+export function isSafeLocalPath(path: string | null | undefined): path is string {
+  if (!path || !path.startsWith("/") || path.startsWith("//") || path.includes("\\")) {
+    return false;
+  }
+  if (hasControlChar(path)) return false;
+  try {
+    const base = "https://local.invalid";
+    return new URL(path, base).origin === base;
+  } catch {
+    return false;
+  }
+}
+
 /**
  * Returns true if `role` is permitted to land on `path`.
  * - /admin/* is gated to ADMIN_ROLES
@@ -64,7 +92,7 @@ export function roleHome(role: UserRole): string {
  * /admin/layout.tsx + /panel/layout.tsx).
  */
 export function canAccessPath(role: UserRole, path: string): boolean {
-  if (!path || !path.startsWith("/")) return false;
+  if (!isSafeLocalPath(path)) return false;
   if (path.startsWith("/admin")) return ADMIN_ROLES.has(role);
   if (path.startsWith("/panel")) return PANEL_ROLES.has(role);
   return true;

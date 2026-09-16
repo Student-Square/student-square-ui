@@ -21,7 +21,7 @@ type LoginInput = {
 };
 
 export type LoginResult =
-  | { accessToken: string; refreshToken: string }
+  | { accessToken: string }
   | { mfaRequired: true }
   | { mfaEnrolmentRequired: true; enrolmentToken: string };
 
@@ -40,7 +40,7 @@ type ResetPasswordInput = { email?: string; password: string; token?: string };
 
 function isSessionLogin(
   data: LoginResult | undefined
-): data is { accessToken: string; refreshToken: string } {
+): data is { accessToken: string } {
   return Boolean(data && "accessToken" in data && data.accessToken);
 }
 
@@ -149,8 +149,13 @@ const authApi = baseApi.injectEndpoints({
         try {
           const { data } = await queryFulfilled;
           dispatch(setUser(data as ApiMe));
-        } catch {
-          dispatch(logout());
+        } catch (err) {
+          // Only a 401 means "signed out" (baseApi has already tried a refresh
+          // by then). A network drop, a 5xx or the API restarting says nothing
+          // about the session — logging out on those signed people out at
+          // random. AuthBootstrap retries those instead.
+          const status = (err as { error?: { status?: unknown } })?.error?.status;
+          if (status === 401) dispatch(logout());
         }
       },
     }),

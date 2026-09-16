@@ -3,7 +3,7 @@ import { type NextRequest, NextResponse } from "next/server";
 export const dynamic = "force-dynamic";
 
 const BACKEND = process.env.INTERNAL_BACKEND_URL ?? "http://localhost:8080/api/v1";
-const FRONTEND_BASE = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
+const FRONTEND_BASE = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3200";
 
 async function handleCallback(
   request: NextRequest,

@@ -6,6 +6,7 @@ import Header from "@/components/common/Header/Header";
 import Footer from "@/components/common/Footer/Footer";
 import { motion } from "motion/react";
 import { useGetBlogByIdQuery, useGetBlogsQuery } from "@/redux/features/blogs/blogsApi";
+import { useLanguage } from "@/components/i18n/LanguageProvider";
 import type { ApiBlogPost, ApiBlogListItem } from "@/types/blogs";
 import {
   ChevronRight,
@@ -28,34 +29,26 @@ function estimateReadTime(text: string): number {
   return Math.max(1, Math.round(words / 220));
 }
 
-function formatDate(iso: string | null | undefined): string {
-  if (!iso) return "";
-  return new Date(iso).toLocaleDateString("en-GB", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-  });
-}
-
 function ShareButtons() {
+  const { t } = useLanguage();
   return (
     <div className="flex items-center gap-2">
       <span className="text-xs font-semibold text-muted-foreground inline-flex items-center gap-1.5 mr-1">
         <Share2 className="h-3.5 w-3.5" />
-        Share
+        {t("common.share")}
       </span>
-      <button type="button" aria-label="Share on Facebook" className="w-8 h-8 rounded-full bg-card border border-border flex items-center justify-center text-muted-foreground hover:text-emerald-600 hover:border-emerald-500/60 transition-colors">
+      <button type="button" aria-label={t("common.shareFacebook")} className="w-8 h-8 rounded-full bg-card border border-border flex items-center justify-center text-muted-foreground hover:text-emerald-600 hover:border-emerald-500/60 transition-colors">
         <Facebook className="h-3.5 w-3.5" />
       </button>
-      <button type="button" aria-label="Share on Twitter" className="w-8 h-8 rounded-full bg-card border border-border flex items-center justify-center text-muted-foreground hover:text-emerald-600 hover:border-emerald-500/60 transition-colors">
+      <button type="button" aria-label={t("common.shareTwitter")} className="w-8 h-8 rounded-full bg-card border border-border flex items-center justify-center text-muted-foreground hover:text-emerald-600 hover:border-emerald-500/60 transition-colors">
         <Twitter className="h-3.5 w-3.5" />
       </button>
-      <button type="button" aria-label="Share on LinkedIn" className="w-8 h-8 rounded-full bg-card border border-border flex items-center justify-center text-muted-foreground hover:text-emerald-600 hover:border-emerald-500/60 transition-colors">
+      <button type="button" aria-label={t("common.shareLinkedIn")} className="w-8 h-8 rounded-full bg-card border border-border flex items-center justify-center text-muted-foreground hover:text-emerald-600 hover:border-emerald-500/60 transition-colors">
         <Linkedin className="h-3.5 w-3.5" />
       </button>
       <button
         type="button"
-        aria-label="Copy link"
+        aria-label={t("common.copyLink")}
         onClick={() => {
           if (typeof navigator !== "undefined" && navigator.clipboard) {
             navigator.clipboard.writeText(window.location.href);
@@ -70,6 +63,7 @@ function ShareButtons() {
 }
 
 function SidebarCard({ post }: { post: ApiBlogListItem }) {
+  const { t, pick, date } = useLanguage();
   return (
     <Link
       href={`/blog/${post.category.slug}/${post.id}`}
@@ -79,7 +73,7 @@ function SidebarCard({ post }: { post: ApiBlogListItem }) {
         {post.coverImage ? (
           <img
             src={post.coverImage.url}
-            alt={post.coverImage.alt ?? post.title}
+            alt={post.coverImage.alt ?? pick(post.title, post.titleBn)}
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
           />
         ) : (
@@ -90,20 +84,20 @@ function SidebarCard({ post }: { post: ApiBlogListItem }) {
       </div>
       <div className="p-3.5 flex flex-col gap-2">
         <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
-          <span className="font-bold uppercase tracking-wider text-emerald-600">{post.category.name}</span>
+          <span className="font-bold uppercase tracking-wider text-emerald-600">{pick(post.category.name, post.category.nameBn)}</span>
           <span className="ml-auto flex items-center gap-1">
             <Calendar className="h-2.5 w-2.5" />
-            {formatDate(post.publishedAt)}
+            {date(post.publishedAt)}
           </span>
         </div>
         <h4 className="text-sm font-bold text-foreground leading-snug group-hover:text-emerald-600 transition-colors line-clamp-2">
-          {post.title}
+          {pick(post.title, post.titleBn)}
         </h4>
         <div className="flex items-center gap-1.5 mt-auto pt-2 border-t border-border">
           {post.displayAuthorImage ? (
             <img
               src={post.displayAuthorImage}
-              alt={post.displayAuthorName ?? "Author"}
+              alt={post.displayAuthorName ?? t("common.author")}
               className="w-5 h-5 rounded-full object-cover border border-border shrink-0"
             />
           ) : (
@@ -112,7 +106,7 @@ function SidebarCard({ post }: { post: ApiBlogListItem }) {
             </div>
           )}
           <span className="text-[11px] text-muted-foreground truncate">
-            {post.displayAuthorName ?? "Student Square"}
+            {post.displayAuthorName ?? t("common.studentSquare")}
           </span>
           <ArrowRight className="h-3 w-3 shrink-0 ml-auto text-muted-foreground group-hover:text-emerald-600 group-hover:translate-x-0.5 transition-all" />
         </div>
@@ -122,9 +116,15 @@ function SidebarCard({ post }: { post: ApiBlogListItem }) {
 }
 
 function PostView({ post }: { post: ApiBlogPost }) {
-  const isHtml = post.body.trimStart().startsWith("<");
-  const paragraphs = isHtml ? [] : post.body.split("\n\n").filter(Boolean);
-  const readTime = estimateReadTime(post.body);
+  const { t, pick, tr, num, date } = useLanguage();
+  const title = pick(post.title, post.titleBn);
+  const categoryName = pick(post.category.name, post.category.nameBn);
+  const authorName = post.displayAuthorName ?? post.author?.fullName ?? t("common.studentSquare");
+  const excerpt = pick(post.excerpt, post.excerptBn);
+  const body = pick(post.body, post.bodyBn);
+  const isHtml = body.trimStart().startsWith("<");
+  const paragraphs = isHtml ? [] : body.split("\n\n").filter(Boolean);
+  const readTime = estimateReadTime(body);
   const tags = post.tags.map((t) => t.tag);
 
   // Posts tagged "education-career" live under /blog/education-career/[sub-category]
@@ -165,23 +165,23 @@ function PostView({ post }: { post: ApiBlogPost }) {
                 transition={{ duration: 0.4 }}
                 className="flex items-center gap-2 text-xs text-muted-foreground flex-wrap mb-6"
               >
-                <Link href="/" className="hover:text-emerald-600 transition-colors">Home</Link>
+                <Link href="/" className="hover:text-emerald-600 transition-colors">{t("common.home")}</Link>
                 <ChevronRight className="h-3 w-3" />
-                <Link href="/blog" className="hover:text-emerald-600 transition-colors">Blog</Link>
+                <Link href="/blog" className="hover:text-emerald-600 transition-colors">{t("common.blog")}</Link>
                 <ChevronRight className="h-3 w-3" />
                 {isEdCareer && (
                   <>
                     <Link href="/blog/education-career" className="hover:text-emerald-600 transition-colors">
-                      Education &amp; Career
+                      {t("edu.badge")}
                     </Link>
                     <ChevronRight className="h-3 w-3" />
                   </>
                 )}
                 <Link href={categoryHref} className="hover:text-emerald-600 transition-colors">
-                  {post.category.name}
+                  {categoryName}
                 </Link>
                 <ChevronRight className="h-3 w-3" />
-                <span className="text-foreground line-clamp-1">{post.title}</span>
+                <span className="text-foreground line-clamp-1">{title}</span>
               </motion.div>
 
               {/* Tags */}
@@ -192,14 +192,14 @@ function PostView({ post }: { post: ApiBlogPost }) {
                 className="flex gap-1.5 flex-wrap mb-5"
               >
                 <span className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full bg-emerald-600 text-white">
-                  {post.category.name}
+                  {categoryName}
                 </span>
                 {tags.map((tag) => (
                   <span
                     key={tag.id}
                     className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 border border-emerald-200/70 dark:border-emerald-800/70"
                   >
-                    {tag.name}
+                    {tr(tag.name)}
                   </span>
                 ))}
               </motion.div>
@@ -211,7 +211,7 @@ function PostView({ post }: { post: ApiBlogPost }) {
                 transition={{ duration: 0.5, delay: 0.05 }}
                 className="text-3xl sm:text-4xl lg:text-[2.6rem] font-bold text-foreground leading-tight tracking-tight"
               >
-                {post.title}
+                {title}
               </motion.h1>
 
               {/* Excerpt */}
@@ -221,7 +221,7 @@ function PostView({ post }: { post: ApiBlogPost }) {
                 transition={{ duration: 0.5, delay: 0.1 }}
                 className="mt-4 text-base sm:text-lg text-muted-foreground leading-relaxed"
               >
-                {post.excerpt}
+                {excerpt}
               </motion.p>
 
               {/* Author + date */}
@@ -235,7 +235,7 @@ function PostView({ post }: { post: ApiBlogPost }) {
                   {post.displayAuthorImage ? (
                     <img
                       src={post.displayAuthorImage}
-                      alt={post.displayAuthorName ?? "Author"}
+                      alt={post.displayAuthorName ?? t("common.author")}
                       className="w-11 h-11 rounded-full object-cover border border-border"
                     />
                   ) : (
@@ -245,7 +245,7 @@ function PostView({ post }: { post: ApiBlogPost }) {
                   )}
                   <div>
                     <p className="text-sm font-semibold text-foreground">
-                      {post.displayAuthorName ?? post.author?.fullName ?? "Student Square"}
+                      {authorName}
                     </p>
                     <p className="text-xs text-muted-foreground">{post.displayAuthorTitle ?? ""}</p>
                   </div>
@@ -253,11 +253,11 @@ function PostView({ post }: { post: ApiBlogPost }) {
                 <div className="flex items-center gap-4 text-xs text-muted-foreground">
                   <span className="inline-flex items-center gap-1.5">
                     <Calendar className="h-3.5 w-3.5" />
-                    {formatDate(post.publishedAt)}
+                    {date(post.publishedAt)}
                   </span>
                   <span className="inline-flex items-center gap-1.5">
                     <Clock className="h-3.5 w-3.5" />
-                    {readTime} min read
+                    {t("article.minRead", { count: readTime })}
                   </span>
                 </div>
               </motion.div>
@@ -273,7 +273,7 @@ function PostView({ post }: { post: ApiBlogPost }) {
                   <div className="aspect-[16/9] rounded-2xl overflow-hidden bg-muted border border-border shadow-lg">
                     <img
                       src={post.coverImage.url}
-                      alt={post.coverImage.alt ?? post.title}
+                      alt={post.coverImage.alt ?? title}
                       className="w-full h-full object-cover"
                     />
                   </div>
@@ -294,7 +294,7 @@ function PostView({ post }: { post: ApiBlogPost }) {
                 {isHtml ? (
                   <div
                     className="rich-text"
-                    dangerouslySetInnerHTML={{ __html: post.body }}
+                    dangerouslySetInnerHTML={{ __html: body }}
                   />
                 ) : (
                   <div className="space-y-6">
@@ -327,7 +327,7 @@ function PostView({ post }: { post: ApiBlogPost }) {
                   className="inline-flex items-center gap-2 text-sm font-semibold text-foreground hover:text-emerald-600 transition-colors"
                 >
                   <ArrowLeft className="h-4 w-4" />
-                  Back to {post.category.name}
+                  {t("article.backTo", { category: categoryName })}
                 </Link>
                 <ShareButtons />
               </motion.div>
@@ -343,7 +343,7 @@ function PostView({ post }: { post: ApiBlogPost }) {
                 {post.displayAuthorImage ? (
                   <img
                     src={post.displayAuthorImage}
-                    alt={post.displayAuthorName ?? "Author"}
+                    alt={post.displayAuthorName ?? t("common.author")}
                     className="w-14 h-14 rounded-full object-cover border border-border shrink-0"
                   />
                 ) : (
@@ -352,17 +352,16 @@ function PostView({ post }: { post: ApiBlogPost }) {
                   </div>
                 )}
                 <div className="min-w-0">
-                  <p className="text-[10px] font-bold uppercase tracking-wider text-emerald-600">About the author</p>
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-emerald-600">{t("article.aboutAuthor")}</p>
                   <p className="mt-1 text-base font-bold text-foreground">
-                    {post.displayAuthorName ?? post.author?.fullName ?? "Student Square"}
+                    {authorName}
                   </p>
                   <p className="text-xs text-muted-foreground">{post.displayAuthorTitle ?? ""}</p>
                   {post.displayAuthorBio ? (
                     <p className="mt-3 text-sm text-muted-foreground leading-relaxed">{post.displayAuthorBio}</p>
                   ) : (
                     <p className="mt-3 text-sm text-muted-foreground leading-relaxed">
-                      {post.displayAuthorName ?? "This author"} contributes to Student Square&apos;s work in
-                      education, counselling, and community development across Bangladesh.
+                      {t("article.authorFallback", { name: post.displayAuthorName ?? t("article.thisAuthor") })}
                     </p>
                   )}
                 </div>
@@ -374,13 +373,13 @@ function PostView({ post }: { post: ApiBlogPost }) {
               <div className="sticky top-24 space-y-4">
                 <div className="flex items-center justify-between">
                   <p className="text-xs font-bold uppercase tracking-widest text-emerald-600">
-                    More from {post.category.name}
+                    {t("article.moreFrom", { category: categoryName })}
                   </p>
                   <Link
                     href={categoryHref}
                     className="text-[11px] font-semibold text-muted-foreground hover:text-emerald-600 transition-colors inline-flex items-center gap-1"
                   >
-                    View all
+                    {t("common.viewAll")}
                     <ArrowRight className="h-3 w-3" />
                   </Link>
                 </div>
@@ -388,7 +387,7 @@ function PostView({ post }: { post: ApiBlogPost }) {
                 {relatedPosts.length === 0 ? (
                   <div className="rounded-xl border border-dashed border-border bg-card/40 p-6 text-center">
                     <GraduationCap className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
-                    <p className="text-xs text-muted-foreground">No other articles in this category yet.</p>
+                    <p className="text-xs text-muted-foreground">{t("article.noOthers")}</p>
                   </div>
                 ) : (
                   <div className="space-y-3">
@@ -417,13 +416,14 @@ function PostView({ post }: { post: ApiBlogPost }) {
 }
 
 function LoadingView() {
+  const { t } = useLanguage();
   return (
     <main className="min-h-screen bg-background">
       <Header />
       <div className="mt-12 sm:mt-14 lg:mt-16" />
       <div className="flex items-center justify-center gap-2 py-40 text-sm text-muted-foreground">
         <Loader2 className="h-5 w-5 animate-spin text-emerald-600" />
-        Loading article…
+        {t("article.loading")}
       </div>
       <Footer />
     </main>

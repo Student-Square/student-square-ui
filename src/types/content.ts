@@ -161,10 +161,10 @@ export type BoardCategory = "BOARD" | "ADVISORY" | "LEADERSHIP" | "MANAGEMENT";
 
 export type ApiBoardAssignment = {
   id: string;
-  userId: string;
+  personId: string;
   fullName: string;
   fullNameBn: string | null;
-  slug: string | null;
+  slug: string;
   avatarUrl: string | null;
   email: string | null;
   bio: string | null;
@@ -184,11 +184,55 @@ export type ApiBoardGroups = {
 };
 
 export type AdminCreateAssignmentInput = {
-  userId: string;
+  personId: string;
   category: BoardCategory;
   roleLabel: string;
   roleLabelBn?: string;
 };
+
+// ───────── People (curated team directory) ─────────
+//
+// A person is created by an admin and is not a user account. `userId` is an
+// optional link for the ones who happen to have one.
+
+export type ApiPersonAssignment = {
+  id: string;
+  category: BoardCategory;
+  roleLabel: string;
+  roleLabelBn: string | null;
+  order: number;
+  isActive: boolean;
+};
+
+export type ApiPerson = {
+  id: string;
+  fullName: string;
+  fullNameBn: string | null;
+  slug: string;
+  email: string | null;
+  avatarUrl: string | null;
+  bio: string | null;
+  bioBn: string | null;
+  isActive: boolean;
+  userId: string | null;
+  createdAt: string;
+  updatedAt: string;
+  assignments: ApiPersonAssignment[];
+};
+
+export type AdminCreatePersonInput = {
+  fullName: string;
+  fullNameBn?: string | null;
+  email?: string | null;
+  avatarUrl?: string | null;
+  bio?: string | null;
+  bioBn?: string | null;
+  isActive?: boolean;
+  userId?: string | null;
+};
+
+/** `slug` is update-only: on create it is derived from the name. */
+export type AdminUpdatePersonInput = Partial<AdminCreatePersonInput> & { slug?: string };
 
 export type AdminUpdateAssignmentInput = {
   roleLabel?: string;

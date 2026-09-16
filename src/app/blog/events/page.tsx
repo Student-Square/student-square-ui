@@ -14,19 +14,22 @@ import {
   Loader2,
   MapPin,
 } from "lucide-react";
+import { useLanguage } from "@/components/i18n/LanguageProvider";
 
-function formatDateTime(iso: string) {
-  return new Date(iso).toLocaleString("en-GB", {
+// Past events show the date only — once an event is over its start time is
+// noise, and older records often have no confirmed time at all.
+function formatWhen(iso: string, past: boolean, locale: string) {
+  return new Date(iso).toLocaleString(locale, {
     weekday: "short",
     day: "numeric",
     month: "short",
     year: "numeric",
-    hour: "numeric",
-    minute: "2-digit",
+    ...(past ? {} : { hour: "numeric", minute: "2-digit" }),
   });
 }
 
 export default function EventsPage() {
+  const { t, pick, tr, num, locale } = useLanguage();
   const [when, setWhen] = useState<"upcoming" | "past">("upcoming");
   const { data, isLoading } = useGetEventsQuery({ when, limit: 30 });
   const events = data?.data ?? [];
@@ -47,10 +50,10 @@ export default function EventsPage() {
             <CalendarDays className="h-9 w-9 text-emerald-600" />
           </div>
           <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-foreground tracking-tight leading-tight">
-            Events
+            {t("events.title")}
           </h1>
           <p className="mt-6 text-base sm:text-lg text-muted-foreground leading-relaxed max-w-xl mx-auto">
-            Workshops, seminars and community programs run by Student Square across Bangladesh.
+            {t("events.intro")}
           </p>
         </div>
       </section>
@@ -68,7 +71,7 @@ export default function EventsPage() {
                     when === w ? "bg-emerald-600 text-white" : "text-muted-foreground hover:text-foreground"
                   }`}
                 >
-                  {w}
+                  {t(`events.${w}`)}
                 </button>
               ))}
             </div>
@@ -76,14 +79,43 @@ export default function EventsPage() {
 
           {isLoading ? (
             <div className="flex items-center justify-center gap-2 py-16 text-sm text-muted-foreground">
-              <Loader2 className="h-5 w-5 animate-spin text-emerald-600" /> Loading events…
+              <Loader2 className="h-5 w-5 animate-spin text-emerald-600" /> {t("events.loading")}
             </div>
           ) : events.length === 0 ? (
             <div className="rounded-2xl border border-dashed border-border bg-card/40 p-12 text-center max-w-md mx-auto">
               <Calendar className="h-8 w-8 mx-auto text-muted-foreground/40" />
-              <p className="mt-3 text-sm text-muted-foreground">
-                {when === "upcoming" ? "No upcoming events right now — check back soon." : "No past events on record yet."}
+              <p className="mt-3 text-sm font-semibold text-foreground">
+                {when === "upcoming" ? t("events.noUpcoming") : t("events.pastBeingAdded")}
               </p>
+              <p className="mt-1.5 text-sm text-muted-foreground leading-relaxed">
+                {when === "upcoming" ? t("events.noUpcomingBody") : t("events.pastBody")}
+              </p>
+              <div className="mt-5 flex items-center justify-center gap-2 flex-wrap">
+                {when === "upcoming" ? (
+                  <button
+                    type="button"
+                    onClick={() => setWhen("past")}
+                    className="px-4 py-1.5 rounded-full text-sm font-semibold bg-emerald-600 text-white hover:bg-emerald-700 transition-colors"
+                  >
+                    {t("events.seePast")}
+                  </button>
+                ) : (
+                  <>
+                    <Link
+                      href="/news"
+                      className="px-4 py-1.5 rounded-full text-sm font-semibold bg-emerald-600 text-white hover:bg-emerald-700 transition-colors"
+                    >
+                      {t("events.newsPress")}
+                    </Link>
+                    <Link
+                      href="/about/archive"
+                      className="px-4 py-1.5 rounded-full text-sm font-semibold border border-border text-foreground hover:border-emerald-500/40 hover:text-emerald-600 transition-colors"
+                    >
+                      {t("events.archive")}
+                    </Link>
+                  </>
+                )}
+              </div>
             </div>
           ) : (
             <div className="space-y-4">
@@ -100,28 +132,28 @@ export default function EventsPage() {
                   >
                     <div className="hidden sm:flex flex-col items-center justify-center w-16 h-16 shrink-0 rounded-xl bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300">
                       <span className="text-[10px] font-bold uppercase">
-                        {new Date(event.startsAt).toLocaleDateString("en-GB", { month: "short" })}
+                        {new Date(event.startsAt).toLocaleDateString(locale, { month: "short" })}
                       </span>
                       <span className="text-xl font-bold leading-none">
-                        {new Date(event.startsAt).getDate()}
+                        {num(new Date(event.startsAt).getDate())}
                       </span>
                     </div>
                     <div className="flex-1 min-w-0">
                       <h3 className="text-base font-bold text-foreground group-hover:text-emerald-600 transition-colors leading-snug">
-                        {event.title}
+                        {pick(event.title, event.titleBn)}
                       </h3>
                       <div className="mt-1.5 flex items-center gap-3 flex-wrap text-xs text-muted-foreground">
                         <span className="inline-flex items-center gap-1">
-                          <Calendar className="h-3 w-3" /> {formatDateTime(event.startsAt)}
+                          <Calendar className="h-3 w-3" /> {formatWhen(event.startsAt, when === "past", locale)}
                         </span>
                         {event.location && (
                           <span className="inline-flex items-center gap-1">
-                            <MapPin className="h-3 w-3" /> {event.location}
+                            <MapPin className="h-3 w-3" /> {tr(event.location)}
                           </span>
                         )}
                         {event.onlineUrl && (
                           <span className="inline-flex items-center gap-1">
-                            <Globe className="h-3 w-3" /> Online
+                            <Globe className="h-3 w-3" /> {t("common.online")}
                           </span>
                         )}
                       </div>

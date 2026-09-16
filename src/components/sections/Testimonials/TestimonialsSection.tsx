@@ -3,6 +3,7 @@
 import { useEffect, useRef } from "react"
 import { TestimonialsColumn } from "@/components/ui/testimonials-column"
 import { useGetStoriesQuery } from "@/redux/features/stories/storiesApi"
+import { useLanguage } from "@/components/i18n/LanguageProvider"
 
 /** Keep cards a similar height by cutting at the sentence nearest 220 chars. */
 function excerpt(text: string, limit = 220): string {
@@ -15,6 +16,7 @@ function excerpt(text: string, limit = 220): string {
 export function TestimonialsSection() {
   const sectionRef = useRef<HTMLElement>(null)
   const { data } = useGetStoriesQuery({ limit: 12 })
+  const { pick, t } = useLanguage()
 
   // Real students, in their own words: the summary is the opening of the story
   // each of them wrote, first person. The `quote` field is not used here — for
@@ -24,7 +26,7 @@ export function TestimonialsSection() {
   const testimonials = (data?.data ?? [])
     .filter((story) => story.summary)
     .map((story) => ({
-      text: excerpt(story.summary as string),
+      text: excerpt(pick(story.summary, story.summaryBn)),
       name: story.name,
       role: [story.department, story.university].filter(Boolean).join(", "),
       image: story.coverImage?.url,
@@ -67,7 +69,7 @@ export function TestimonialsSection() {
   if (!hasTestimonials) return null
 
   return (
-    <section id="testimonials" ref={sectionRef} className="relative py-10 sm:py-12 md:py-16 px-4 sm:px-6 lg:px-8 overflow-hidden">
+    <section id="testimonials" ref={sectionRef} className="relative py-6 sm:py-8 md:py-10 px-4 sm:px-6 lg:px-8 overflow-hidden">
       {/* Background Pattern */}
       <div className="absolute inset-0 opacity-5 dark:opacity-10">
         <div
@@ -87,17 +89,17 @@ export function TestimonialsSection() {
         <div className="text-center mb-8 md:mb-10">
           <div className="fade-in-element opacity-0 translate-y-8 transition-all duration-1000 ease-out inline-flex items-center gap-2 text-muted-foreground text-sm font-medium tracking-wider uppercase mb-6">
             <div className="w-8 h-px bg-primary/50" />
-            Success Stories
+            {t("home.successStories")}
             <div className="w-8 h-px bg-primary/50" />
           </div>
           <h2 className="fade-in-element opacity-0 translate-y-8 transition-all duration-1000 ease-out font-heading text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-light text-foreground mb-6 tracking-tight text-balance">
-            The students we{" "}
+            {t("home.testimonialsLead")}{" "}
             <span className="font-medium italic bg-gradient-to-r from-green-600 to-green-500 bg-clip-text text-transparent dark:from-green-400 dark:to-green-500">
-              empower
+              {t("home.testimonialsAccent")}
             </span>
           </h2>
           <p className="fade-in-element opacity-0 translate-y-8 transition-all duration-1000 ease-out text-base sm:text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-            Students across Bangladesh on what changed for them through our counselling, advocacy, and wellbeing programmes
+            {t("home.testimonialsDescription")}
           </p>
         </div>
 

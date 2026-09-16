@@ -2,6 +2,7 @@
 
 import { useMemo } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { useLanguage } from "@/components/i18n/LanguageProvider";
 
 /**
  * The one page-number control. The windowing rule (first, last, a page either
@@ -37,6 +38,7 @@ export default function Pagination({
   onPageChange: (page: number) => void;
   className?: string;
 }) {
+  const { t, num } = useLanguage();
   const pages = useMemo(() => windowed(page, totalPages), [page, totalPages]);
 
   if (totalPages <= 1) return null;
@@ -46,7 +48,7 @@ export default function Pagination({
 
   return (
     <nav
-      aria-label="Pagination"
+      aria-label={t("common.pagination")}
       className={`flex items-center justify-center gap-1.5 flex-wrap ${className}`}
     >
       <button
@@ -56,7 +58,7 @@ export default function Pagination({
         className={arrowCls}
       >
         <ChevronLeft className="h-3.5 w-3.5" />
-        <span className="hidden sm:inline">Prev</span>
+        <span className="hidden sm:inline">{t("common.prev")}</span>
       </button>
 
       {pages.map((p, idx) =>
@@ -76,7 +78,7 @@ export default function Pagination({
                 : "bg-card border-border text-foreground hover:border-emerald-500/60 hover:text-emerald-600"
             }`}
           >
-            {p}
+            {num(p, false)}
           </button>
         )
       )}
@@ -87,7 +89,7 @@ export default function Pagination({
         disabled={page === totalPages}
         className={arrowCls}
       >
-        <span className="hidden sm:inline">Next</span>
+        <span className="hidden sm:inline">{t("common.next")}</span>
         <ChevronRight className="h-3.5 w-3.5" />
       </button>
     </nav>

@@ -55,6 +55,8 @@ const fmtDate = (iso: string) =>
 
 // Methods an admin may confirm by hand (money received off-platform).
 const OFFLINE_METHODS = new Set(["BANK_TRANSFER", "MOBILE_BANKING", "MANUAL"]);
+/** Currencies an admin can record an "Other" gift in; project gifts use the project's. */
+const MANUAL_CURRENCIES = ["BDT", "USD", "EUR", "GBP", "SAR", "AED", "MYR", "CAD", "AUD"];
 
 const statusStyle: Record<DonationStatus, string> = {
   PAID: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300",
@@ -613,6 +615,7 @@ function ManualEntryModal({ onClose }: { onClose: () => void }) {
   const [pledgeReference, setPledgeReference] = useState("");
   const [donatedAt, setDonatedAt] = useState("");
   const [sendReceiptEmail, setSendReceiptEmail] = useState(true);
+  const [currency, setCurrency] = useState("BDT");
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -626,6 +629,8 @@ function ManualEntryModal({ onClose }: { onClose: () => void }) {
       kind,
       campaignId: kind === "PROJECT" ? campaignId : undefined,
       purpose: kind === "OTHER" ? purpose.trim() : undefined,
+      // Project gifts are always in the project's currency (server-enforced).
+      currency: kind === "OTHER" ? currency : undefined,
       method,
       donorName: donorName.trim(),
       donorEmail: donorEmail.trim(),
@@ -669,7 +674,26 @@ function ManualEntryModal({ onClose }: { onClose: () => void }) {
         )}
 
         <div className="grid grid-cols-2 gap-3">
-          <input type="number" min="1" value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="Amount (BDT)" className={inputCls} />
+          <div className="flex gap-2">
+            <input
+              type="number"
+              min="1"
+              value={amount}
+              onChange={(e) => setAmount(e.target.value)}
+              placeholder={kind === "OTHER" ? `Amount (${currency})` : "Amount (project currency)"}
+              className={inputCls}
+            />
+            {kind === "OTHER" && (
+              <select
+                aria-label="Currency"
+                value={currency}
+                onChange={(e) => setCurrency(e.target.value)}
+                className="w-24 shrink-0 rounded-lg border border-border bg-background px-2 py-2 text-sm focus:border-emerald-500 focus:outline-none"
+              >
+                {MANUAL_CURRENCIES.map((c) => <option key={c} value={c}>{c}</option>)}
+              </select>
+            )}
+          </div>
           <select value={method} onChange={(e) => setMethod(e.target.value as ManualDonationBody["method"])} className={inputCls}>
             {["MANUAL", "BANK_TRANSFER", "MOBILE_BANKING", "SSLCOMMERZ"].map((m) => <option key={m} value={m}>{m}</option>)}
           </select>

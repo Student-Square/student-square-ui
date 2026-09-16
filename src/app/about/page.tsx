@@ -4,57 +4,55 @@ import Header from "@/components/common/Header/Header";
 import Footer from "@/components/common/Footer/Footer";
 import PageHero from "@/components/common/PageHero";
 import Container from "@/components/common/Container";
+import { useLanguage } from "@/components/i18n/LanguageProvider";
 import { motion } from "motion/react";
 import { fadeInWhileInView } from "@/lib/motion";
 import { ArrowRight } from "lucide-react";
 import Link from "next/link";
 
+// Vision & Mission is the featured banner above the grid, so it has no card
+// here — listing it twice read as a duplicate.
 const aboutCards = [
   {
-    id: 1,
-    title: "Our Vision and Mission",
-    description: "Learn about our vision to foster an inclusive society",
-    image: "/images/student-square-16th-group-counselling-workshop-godagari-rajshahi.jpg",
-    href: "/about/mission-vision",
-  },
-  {
     id: 2,
-    title: "Who We Are",
-    description: "Discover the team and values behind Student Square",
+    titleKey: "about.card.whoWeAre",
+    descriptionKey: "about.card.whoWeAreDesc",
     image: "/images/student-square-introduction-presention-by-Humayra-Nasrin.jpg",
     href: "/about/who-we-are",
   },
   {
     id: 3,
-    title: "Where We Work",
-    description: "Explore our global presence and impact",
+    titleKey: "about.card.whereWeWork",
+    descriptionKey: "about.card.whereWeWorkDesc",
     image: "/images/student-square-at-kustia-district.jpg",
     href: "/about/where-we-work",
   },
   {
     id: 4,
-    title: "Annual Reports & Financials",
-    description: "Access our annual reports and financial transparency",
+    titleKey: "about.card.reports",
+    descriptionKey: "about.card.reportsDesc",
     image: "/images/student-square-one-minute-investment-project.jpg",
     href: "/about/reports",
   },
   {
     id: 5,
-    title: "News & Press",
-    description: "Media coverage and news about Student Square",
+    titleKey: "about.card.news",
+    descriptionKey: "about.card.newsDesc",
     image: "/images/brain-battle-prize-ceremony.jpg",
     href: "/news",
   },
   {
     id: 6,
-    title: "Archive",
-    description: "Browse past initiatives and historical content",
+    titleKey: "about.card.archive",
+    descriptionKey: "about.card.archiveDesc",
     image: "/images/emergency-tran-bitoron-activities.jpg",
     href: "/about/archive",
   },
 ];
 
 export default function AboutPage() {
+  const { t } = useLanguage();
+
   return (
     <main className="min-h-screen">
       <Header />
@@ -62,8 +60,8 @@ export default function AboutPage() {
       {/* Hero — starts below the fixed navbar */}
       <PageHero
         imageSrc="/images/student-square-school-session.jpg"
-        imageAlt="About Us"
-        title="About Us"
+        imageAlt={t("about.title")}
+        title={t("about.title")}
         heightClassName="h-[30vh] sm:h-[40vh] lg:h-[50vh] min-h-[200px]"
       />
 
@@ -72,14 +70,8 @@ export default function AboutPage() {
         <Container className="text-center">
           <motion.div {...fadeInWhileInView}>
             <p className="text-base text-muted-foreground leading-relaxed max-w-2xl mx-auto">
-              Student Square is a non-profit organization devoted to building an inclusive society where every
-              individual's potential is nurtured and developed, free from discrimination.
+              {t("about.intro")}
             </p>
-            <Link href="/about/who-we-are">
-              <button className="mt-6 inline-flex items-center gap-2 rounded-full border border-border px-6 py-2 text-sm font-semibold uppercase tracking-wide text-foreground hover:bg-accent transition-colors">
-                Our People
-              </button>
-            </Link>
           </motion.div>
         </Container>
       </section>
@@ -93,14 +85,14 @@ export default function AboutPage() {
                 <div className="relative h-56 sm:h-64 overflow-hidden">
                   <img
                     src="/images/student-square-16th-group-counselling-workshop-godagari-rajshahi.jpg"
-                    alt="Our Vision and Mission"
+                    alt={t("about.visionMission")}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
                   <div className="absolute bottom-0 left-0 p-6">
-                    <h2 className="text-2xl font-bold text-white mb-1">Our Vision and Mission</h2>
+                    <h2 className="text-2xl font-bold text-white mb-1">{t("about.visionMission")}</h2>
                     <div className="inline-flex items-center gap-2 text-emerald-400 text-sm font-semibold">
-                      Explore <ArrowRight className="h-3.5 w-3.5" />
+                      {t("about.explore")} <ArrowRight className="h-3.5 w-3.5" />
                     </div>
                   </div>
                 </div>
@@ -127,17 +119,17 @@ export default function AboutPage() {
                     <div className="aspect-video overflow-hidden">
                       <img
                         src={card.image}
-                        alt={card.title}
+                        alt={t(card.titleKey)}
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                       />
                     </div>
                     <div className="p-4">
                       <h3 className="font-semibold text-foreground mb-1 group-hover:text-emerald-600 transition-colors text-sm">
-                        {card.title}
+                        {t(card.titleKey)}
                       </h3>
-                      <p className="text-xs text-muted-foreground mb-3">{card.description}</p>
+                      <p className="text-xs text-muted-foreground mb-3">{t(card.descriptionKey)}</p>
                       <div className="inline-flex items-center gap-1 text-emerald-600 text-xs font-semibold">
-                        Learn More <ArrowRight className="h-3 w-3" />
+                        {t("common.learnMoreTitle")} <ArrowRight className="h-3 w-3" />
                       </div>
                     </div>
                   </div>

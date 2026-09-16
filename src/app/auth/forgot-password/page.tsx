@@ -12,13 +12,15 @@ import {
   authSubheadingClass,
 } from "@/components/auth/auth-ui";
 import { AlertCircle, CheckCircle2, Loader2 } from "lucide-react";
+import T from "@/components/i18n/T";
+import { useLanguage } from "@/components/i18n/LanguageProvider";
 
 export default function ForgotPasswordPage() {
   return (
     <Suspense
       fallback={
         <AuthShell variant="split">
-          <p className="text-center text-sm text-muted-foreground">Loading…</p>
+          <p className="text-center text-sm text-muted-foreground"><T k="common.loading" /></p>
         </AuthShell>
       }
     >
@@ -30,6 +32,7 @@ export default function ForgotPasswordPage() {
 type Stage = "form" | "sent";
 
 function ForgotPasswordForm() {
+  const { t, rich } = useLanguage();
   const [forgotPassword, { isLoading }] = useForgotPasswordMutation();
   const [stage, setStage] = useState<Stage>("form");
   const [email, setEmail] = useState("");
@@ -41,7 +44,7 @@ function ForgotPasswordForm() {
     setFormError(null);
     const trimmed = email.trim();
     if (!trimmed) {
-      setFormError("Please enter your email address.");
+      setFormError(t("forgot.errEmail"));
       return;
     }
 
@@ -68,44 +71,44 @@ function ForgotPasswordForm() {
             <CheckCircle2 className="h-10 w-10 text-emerald-600 dark:text-emerald-400" />
           </div>
           <h1 className="text-2xl font-bold tracking-tight text-foreground">
-            Check your inbox
+            {t("forgot.checkInbox")}
           </h1>
           <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
-            If an account exists for{" "}
-            <span className="font-semibold text-foreground">{sentEmail}</span>,
-            we&apos;ve sent a password reset link. It expires in 15 minutes.
+            {rich("forgot.sentBody", {
+              email: <span className="font-semibold text-foreground">{sentEmail}</span>,
+            })}
           </p>
           <div className="mt-6 rounded-xl border border-border bg-muted/50 px-4 py-3.5 text-left space-y-2">
-            <p className="text-xs font-semibold text-foreground">What to do next:</p>
+            <p className="text-xs font-semibold text-foreground">{t("forgot.nextTitle")}</p>
             <ol className="list-decimal list-inside space-y-1.5 text-xs text-muted-foreground">
-              <li>Open the email from Student Square.</li>
+              <li>{t("forgot.step1")}</li>
               <li>
-                Click the{" "}
-                <span className="font-medium text-foreground">
-                  &quot;Reset Password&quot;
-                </span>{" "}
-                button.
+                {rich("forgot.step2", {
+                  button: <span className="font-medium text-foreground">&quot;Reset Password&quot;</span>,
+                })}
               </li>
-              <li>Choose a new password and sign in.</li>
+              <li>{t("forgot.step3")}</li>
             </ol>
           </div>
           <p className="mt-5 text-xs text-muted-foreground">
-            Didn&apos;t get it? Check spam, or{" "}
-            <button
-              type="button"
-              onClick={() => {
-                setStage("form");
-                setFormError(null);
-              }}
-              className={`${authLinkClass} text-xs`}
-            >
-              try again
-            </button>
-            .
+            {rich("forgot.didntGet", {
+              retry: (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setStage("form");
+                    setFormError(null);
+                  }}
+                  className={`${authLinkClass} text-xs`}
+                >
+                  {t("forgot.tryAgain")}
+                </button>
+              ),
+            })}
           </p>
           <p className="mt-6">
             <Link href="/auth/login" className={authLinkClass}>
-              Back to login
+              {t("auth.backToLogin")}
             </Link>
           </p>
         </div>
@@ -117,22 +120,22 @@ function ForgotPasswordForm() {
     <AuthShell variant="split">
       <div>
         <h1 className={authHeadingClass}>
-          Forgot password?
+          {t("forgot.title")}
         </h1>
         <p className={authSubheadingClass}>
-          Enter your email and we&apos;ll send a reset link.
+          {t("forgot.subtitle")}
         </p>
 
         <form onSubmit={handleSubmit} className="mt-8 space-y-4">
           <label className="block">
-            <span className="sr-only">Email address</span>
+            <span className="sr-only">{t("forgot.emailLabel")}</span>
             <input
               type="email"
               autoComplete="email"
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="Email Address"
+              placeholder={t("forgot.emailPlaceholder")}
               className={authInputClass}
             />
           </label>
@@ -148,16 +151,16 @@ function ForgotPasswordForm() {
             {isLoading ? (
               <span className="inline-flex items-center justify-center gap-2">
                 <Loader2 className="h-4 w-4 animate-spin" />
-                Sending…
+                {t("forgot.sending")}
               </span>
             ) : (
-              "Send reset link"
+              t("forgot.send")
             )}
           </button>
 
           <p className="pt-1 text-center">
             <Link href="/auth/login" className={`text-sm ${authLinkClass}`}>
-              Back to login
+              {t("auth.backToLogin")}
             </Link>
           </p>
         </form>

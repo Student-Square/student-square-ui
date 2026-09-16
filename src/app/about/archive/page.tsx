@@ -5,17 +5,21 @@ import Footer from "@/components/common/Footer/Footer";
 import PageHero from "@/components/common/PageHero";
 import { motion } from "motion/react";
 import { Archive } from "lucide-react";
+import { useLanguage } from "@/components/i18n/LanguageProvider";
 
+// Titles and descriptions live in the dictionary as archive.itemN.*.
 const archivedContent = [
-  { title: "2023 Community Building Initiative", description: "Our community engagement programs that ran throughout 2023", year: "2023" },
-  { title: "Educational Accessibility Drive 2022", description: "Campaign to increase access to education for underprivileged students", year: "2022" },
-  { title: "Mental Health Awareness Program 2021", description: "Comprehensive mental health support and awareness initiative", year: "2021" },
-  { title: "Digital Skills Training Series", description: "Programs designed to bridge the digital divide in communities", year: "2022" },
-  { title: "Women Empowerment Initiative", description: "Focused programs on gender equality and women's rights", year: "2023" },
-  { title: "Youth Leadership Conference 2020", description: "Inaugural conference bringing together young leaders from across regions", year: "2020" },
+  { n: 1, year: 2023 },
+  { n: 2, year: 2022 },
+  { n: 3, year: 2021 },
+  { n: 4, year: 2022 },
+  { n: 5, year: 2023 },
+  { n: 6, year: 2020 },
 ];
 
 export default function ArchivePage() {
+  const { t, num } = useLanguage();
+
   return (
     <main className="min-h-screen">
       <Header />
@@ -23,8 +27,8 @@ export default function ArchivePage() {
       {/* Hero */}
       <PageHero
         imageSrc="/images/emergency-tran-bitoron-activities.jpg"
-        imageAlt="Archive"
-        title="Archive"
+        imageAlt={t("about.card.archive")}
+        title={t("about.card.archive")}
       />
 
       {/* Content */}
@@ -38,8 +42,7 @@ export default function ArchivePage() {
             viewport={{ once: true }}
           >
             <p className="text-base text-muted-foreground leading-relaxed">
-              Explore our past initiatives, programs, and milestones that have shaped Student Square's journey from a
-              small initiative to a growing international organization.
+              {t("archive.intro")}
             </p>
           </motion.div>
 
@@ -55,11 +58,11 @@ export default function ArchivePage() {
               >
                 <Archive className="h-5 w-5 text-emerald-600 flex-shrink-0 mt-0.5" />
                 <div>
-                  <div className="text-xs text-emerald-600 font-semibold mb-1">{item.year}</div>
+                  <div className="text-xs text-emerald-600 font-semibold mb-1">{num(item.year, false)}</div>
                   <h3 className="font-semibold text-foreground mb-1 group-hover:text-emerald-600 transition-colors">
-                    {item.title}
+                    {t(`archive.item${item.n}.title`)}
                   </h3>
-                  <p className="text-sm text-muted-foreground">{item.description}</p>
+                  <p className="text-sm text-muted-foreground">{t(`archive.item${item.n}.desc`)}</p>
                 </div>
               </motion.div>
             ))}
@@ -72,11 +75,9 @@ export default function ArchivePage() {
             viewport={{ once: true }}
             className="rounded-xl border border-border p-6"
           >
-            <h2 className="text-xl font-bold text-foreground mb-3">Our Journey</h2>
+            <h2 className="text-xl font-bold text-foreground mb-3">{t("archive.journey")}</h2>
             <p className="text-sm text-muted-foreground leading-relaxed">
-              Since our founding, Student Square has grown from a small initiative to an organization with presence
-              across multiple countries. Each program, campaign, and community partnership has contributed to our
-              understanding of how best to serve and empower individuals.
+              {t("archive.journeyBody")}
             </p>
           </motion.div>
 

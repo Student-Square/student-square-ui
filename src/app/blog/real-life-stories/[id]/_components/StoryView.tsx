@@ -27,18 +27,20 @@ import {
 } from "lucide-react";
 import { useGetStoriesQuery } from "@/redux/features/stories/storiesApi";
 import StoryCard from "@/components/sections/Stories/StoryCard";
+import { useLanguage } from "@/components/i18n/LanguageProvider";
 
 function ShareButtons() {
+  const { t } = useLanguage();
   return (
     <div className="flex items-center gap-2">
       <span className="text-xs font-semibold text-muted-foreground inline-flex items-center gap-1.5 mr-1">
         <Share2 className="h-3.5 w-3.5" />
-        Share
+        {t("common.share")}
       </span>
       {[
-        { label: "Share on Facebook", Icon: Facebook },
-        { label: "Share on Twitter", Icon: Twitter },
-        { label: "Share on LinkedIn", Icon: Linkedin },
+        { label: t("common.shareFacebook"), Icon: Facebook },
+        { label: t("common.shareTwitter"), Icon: Twitter },
+        { label: t("common.shareLinkedIn"), Icon: Linkedin },
       ].map(({ label, Icon }) => (
         <button
           key={label}
@@ -51,7 +53,7 @@ function ShareButtons() {
       ))}
       <button
         type="button"
-        aria-label="Copy link"
+        aria-label={t("common.copyLink")}
         onClick={() => {
           if (typeof navigator !== "undefined" && navigator.clipboard) {
             navigator.clipboard.writeText(window.location.href);
@@ -69,6 +71,7 @@ function ShareButtons() {
 // Legacy static story view (numeric IDs)
 // ──────────────────────────────────────────────
 function StaticStoryView({ id }: { id: number }) {
+  const { t, digits } = useLanguage();
   const story = storiesData.find((s) => s.id === id);
   if (!story) redirect("/blog/real-life-stories");
 
@@ -93,12 +96,12 @@ function StaticStoryView({ id }: { id: number }) {
               transition={{ duration: 0.4 }}
               className="flex items-center gap-2 text-xs text-muted-foreground flex-wrap mb-5"
             >
-              <Link href="/" className="hover:text-emerald-600 transition-colors">Home</Link>
+              <Link href="/" className="hover:text-emerald-600 transition-colors">{t("common.home")}</Link>
               <ChevronRight className="h-3 w-3" />
-              <Link href="/blog" className="hover:text-emerald-600 transition-colors">Blog</Link>
+              <Link href="/blog" className="hover:text-emerald-600 transition-colors">{t("common.blog")}</Link>
               <ChevronRight className="h-3 w-3" />
               <Link href="/blog/real-life-stories" className="hover:text-emerald-600 transition-colors">
-                Real Life Stories
+                {t("blog.storiesBadge")}
               </Link>
               <ChevronRight className="h-3 w-3" />
               <span className="text-foreground line-clamp-1">{story.name}</span>
@@ -111,13 +114,13 @@ function StaticStoryView({ id }: { id: number }) {
               className="flex items-center justify-between gap-3 flex-wrap mb-6 sm:mb-8"
             >
               <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-100/80 dark:bg-emerald-900/40 border border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300 text-[11px] font-bold uppercase tracking-wider">
-                Real Life Story · #{String(story.id).padStart(3, "0")}
+                {t("stories.badge")} · #{digits(String(story.id).padStart(3, "0"))}
               </span>
               <a
                 href="#full-story"
                 className="hidden sm:inline-flex items-center gap-2 text-xs font-semibold text-muted-foreground hover:text-emerald-600 hover:gap-3 transition-all"
               >
-                Read the full story <ArrowRight className="h-3.5 w-3.5" />
+                {t("stories.readFull")} <ArrowRight className="h-3.5 w-3.5" />
               </a>
             </motion.div>
 
@@ -168,7 +171,7 @@ function StaticStoryView({ id }: { id: number }) {
                     </span>
                   </motion.div>
                   <a href="#full-story" className="sm:hidden mt-6 inline-flex items-center gap-2 text-sm font-semibold text-emerald-600">
-                    Read the full story <ArrowRight className="h-4 w-4" />
+                    {t("stories.readFull")} <ArrowRight className="h-4 w-4" />
                   </a>
                 </div>
 
@@ -193,8 +196,8 @@ function StaticStoryView({ id }: { id: number }) {
         <section id="full-story" className="py-10 sm:py-12 lg:py-16 scroll-mt-20">
           <div className="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8">
             <div className="flex items-baseline justify-between gap-3 flex-wrap mb-5">
-              <p className="text-[11px] font-bold uppercase tracking-widest text-emerald-600">The full story</p>
-              <p className="text-[11px] text-muted-foreground">Joined Student Square in {story.joinedYear}</p>
+              <p className="text-[11px] font-bold uppercase tracking-widest text-emerald-600">{t("stories.fullStory")}</p>
+              <p className="text-[11px] text-muted-foreground">{t("stories.joined", { year: digits(story.joinedYear) })}</p>
             </div>
 
             <motion.div
@@ -228,7 +231,7 @@ function StaticStoryView({ id }: { id: number }) {
               >
                 <p className="text-[11px] font-bold uppercase tracking-widest text-emerald-700 dark:text-emerald-300 mb-4 flex items-center gap-2">
                   <Award className="h-3.5 w-3.5" />
-                  Highlights from {story.name.split(" ")[0]}&apos;s journey
+                  {t("stories.highlights", { name: story.name.split(" ")[0] })}
                 </p>
                 <ul className="space-y-3">
                   {story.highlights.map((h, i) => (
@@ -249,7 +252,7 @@ function StaticStoryView({ id }: { id: number }) {
               className="mt-10 pt-6 border-t border-border flex items-center justify-between gap-4 flex-wrap"
             >
               <Link href="/blog/real-life-stories" className="inline-flex items-center gap-2 text-sm font-semibold text-foreground hover:text-emerald-600 transition-colors">
-                <ArrowLeft className="h-4 w-4" /> All stories
+                <ArrowLeft className="h-4 w-4" /> {t("stories.allStories")}
               </Link>
               <ShareButtons />
             </motion.div>
@@ -261,11 +264,11 @@ function StaticStoryView({ id }: { id: number }) {
             <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-12">
               <div className="flex items-end justify-between mb-8 gap-4 flex-wrap">
                 <div>
-                  <p className="text-xs font-bold uppercase tracking-widest text-emerald-600">Keep reading</p>
-                  <h2 className="mt-1 text-xl sm:text-2xl font-bold text-foreground">More stories</h2>
+                  <p className="text-xs font-bold uppercase tracking-widest text-emerald-600">{t("stories.keepReading")}</p>
+                  <h2 className="mt-1 text-xl sm:text-2xl font-bold text-foreground">{t("stories.moreLower")}</h2>
                 </div>
                 <Link href="/blog/real-life-stories" className="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-600 hover:gap-2.5 transition-all">
-                  View all <ArrowRight className="h-3.5 w-3.5" />
+                  {t("common.viewAll")} <ArrowRight className="h-3.5 w-3.5" />
                 </Link>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
@@ -293,7 +296,7 @@ function StaticStoryView({ id }: { id: number }) {
                         <p className="text-[11px] text-muted-foreground mb-2">{r.university}</p>
                         <p className="text-xs italic text-foreground leading-relaxed line-clamp-2 flex-1">&ldquo;{r.quote}&rdquo;</p>
                         <span className="mt-4 inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-600 group-hover:gap-2.5 transition-all">
-                          Read more <ArrowUpRight className="h-3.5 w-3.5" />
+                          {t("readMore")} <ArrowUpRight className="h-3.5 w-3.5" />
                         </span>
                       </div>
                     </Link>
@@ -313,8 +316,11 @@ function StaticStoryView({ id }: { id: number }) {
 // API story view (slug-based)
 // ──────────────────────────────────────────────
 function ApiStoryView({ story }: { story: ApiStory }) {
-  const isHtml = /<[a-z][\s\S]*>/i.test(story.body);
-  const paragraphs = isHtml ? [] : story.body.split("\n\n").filter(Boolean);
+  const { t, pick, num } = useLanguage();
+  const quote = pick(story.quote, story.quoteBn);
+  const body = pick(story.body, story.bodyBn);
+  const isHtml = /<[a-z][\s\S]*>/i.test(body);
+  const paragraphs = isHtml ? [] : body.split("\n\n").filter(Boolean);
 
   const { data: otherStoriesData } = useGetStoriesQuery({ limit: 4 });
   const otherStories = (otherStoriesData?.data ?? []).filter((s) => s.slug !== story.slug).slice(0, 2);
@@ -339,11 +345,11 @@ function ApiStoryView({ story }: { story: ApiStory }) {
               transition={{ duration: 0.4 }}
               className="flex items-center gap-2 text-xs text-muted-foreground flex-wrap mb-5"
             >
-              <Link href="/" className="hover:text-emerald-600 transition-colors">Home</Link>
+              <Link href="/" className="hover:text-emerald-600 transition-colors">{t("common.home")}</Link>
               <ChevronRight className="h-3 w-3" />
-              <Link href="/blog" className="hover:text-emerald-600 transition-colors">Blog</Link>
+              <Link href="/blog" className="hover:text-emerald-600 transition-colors">{t("common.blog")}</Link>
               <ChevronRight className="h-3 w-3" />
-              <Link href="/blog/real-life-stories" className="hover:text-emerald-600 transition-colors">Real Life Stories</Link>
+              <Link href="/blog/real-life-stories" className="hover:text-emerald-600 transition-colors">{t("blog.storiesBadge")}</Link>
               <ChevronRight className="h-3 w-3" />
               <span className="text-foreground line-clamp-1">{story.name}</span>
             </motion.div>
@@ -355,10 +361,10 @@ function ApiStoryView({ story }: { story: ApiStory }) {
               className="flex items-center justify-between gap-3 flex-wrap mb-6 sm:mb-8"
             >
               <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-100/80 dark:bg-emerald-900/40 border border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300 text-[11px] font-bold uppercase tracking-wider">
-                Real Life Story
+                {t("stories.badge")}
               </span>
               <a href="#full-story" className="hidden sm:inline-flex items-center gap-2 text-xs font-semibold text-muted-foreground hover:text-emerald-600 hover:gap-3 transition-all">
-                Read the full story <ArrowRight className="h-3.5 w-3.5" />
+                {t("stories.readFull")} <ArrowRight className="h-3.5 w-3.5" />
               </a>
             </motion.div>
 
@@ -373,14 +379,14 @@ function ApiStoryView({ story }: { story: ApiStory }) {
 
               <div className="relative grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 p-6 sm:p-8 lg:p-12">
                 <div className="lg:col-span-8 order-2 lg:order-1 flex flex-col justify-center">
-                  {story.quote && (
+                  {quote && (
                     <motion.blockquote
                       initial={{ opacity: 0, y: 16 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ duration: 0.6, delay: 0.15 }}
                       className="text-xl sm:text-2xl lg:text-3xl text-foreground font-semibold italic leading-snug tracking-tight pl-2 sm:pl-4"
                     >
-                      &ldquo;{story.quote}&rdquo;
+                      &ldquo;{quote}&rdquo;
                     </motion.blockquote>
                   )}
                   <div className="mt-6 sm:mt-8 h-px bg-gradient-to-r from-emerald-500/40 via-border to-transparent" />
@@ -415,7 +421,7 @@ function ApiStoryView({ story }: { story: ApiStory }) {
                     )}
                   </motion.div>
                   <a href="#full-story" className="sm:hidden mt-6 inline-flex items-center gap-2 text-sm font-semibold text-emerald-600">
-                    Read the full story <ArrowRight className="h-4 w-4" />
+                    {t("stories.readFull")} <ArrowRight className="h-4 w-4" />
                   </a>
                 </div>
 
@@ -451,9 +457,9 @@ function ApiStoryView({ story }: { story: ApiStory }) {
               {/* Left: body */}
               <div>
                 <div className="flex items-baseline justify-between gap-3 flex-wrap mb-5">
-                  <p className="text-[11px] font-bold uppercase tracking-widest text-emerald-600">The full story</p>
+                  <p className="text-[11px] font-bold uppercase tracking-widest text-emerald-600">{t("stories.fullStory")}</p>
                   {story.joinedYear && (
-                    <p className="text-[11px] text-muted-foreground">Joined Student Square in {story.joinedYear}</p>
+                    <p className="text-[11px] text-muted-foreground">{t("stories.joined", { year: num(story.joinedYear, false) })}</p>
                   )}
                 </div>
 
@@ -466,7 +472,7 @@ function ApiStoryView({ story }: { story: ApiStory }) {
                   {isHtml ? (
                     <div
                       className="prose prose-sm sm:prose dark:prose-invert max-w-none [&>p:first-child]:first-letter:text-5xl [&>p:first-child]:first-letter:font-bold [&>p:first-child]:first-letter:float-left [&>p:first-child]:first-letter:mr-2 [&>p:first-child]:first-letter:mt-1 [&>p:first-child]:first-letter:text-emerald-600 [&>p:first-child]:first-letter:leading-none"
-                      dangerouslySetInnerHTML={{ __html: story.body }}
+                      dangerouslySetInnerHTML={{ __html: body }}
                     />
                   ) : (
                     <div className="space-y-5">
@@ -489,7 +495,7 @@ function ApiStoryView({ story }: { story: ApiStory }) {
                   >
                     <p className="text-[11px] font-bold uppercase tracking-widest text-emerald-700 dark:text-emerald-300 mb-4 flex items-center gap-2">
                       <Award className="h-3.5 w-3.5" />
-                      Highlights from {story.name.split(" ")[0]}&apos;s journey
+                      {t("stories.highlights", { name: story.name.split(" ")[0] })}
                     </p>
                     <ul className="space-y-3">
                       {story.highlights.map((h, i) => (
@@ -511,7 +517,7 @@ function ApiStoryView({ story }: { story: ApiStory }) {
                     viewport={{ once: true }}
                     className="mt-10"
                   >
-                    <p className="text-[11px] font-bold uppercase tracking-widest text-emerald-600 mb-4">Gallery</p>
+                    <p className="text-[11px] font-bold uppercase tracking-widest text-emerald-600 mb-4">{t("stories.gallery")}</p>
                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                       {story.images.map((img) => (
                         <figure key={img.id} className="space-y-1">
@@ -537,7 +543,7 @@ function ApiStoryView({ story }: { story: ApiStory }) {
                   className="mt-10 pt-6 border-t border-border flex items-center justify-between gap-4 flex-wrap"
                 >
                   <Link href="/blog/real-life-stories" className="inline-flex items-center gap-2 text-sm font-semibold text-foreground hover:text-emerald-600 transition-colors">
-                    <ArrowLeft className="h-4 w-4" /> All stories
+                    <ArrowLeft className="h-4 w-4" /> {t("stories.allStories")}
                   </Link>
                   <ShareButtons />
                 </motion.div>
@@ -546,7 +552,7 @@ function ApiStoryView({ story }: { story: ApiStory }) {
               {/* Right: other stories sidebar */}
               {otherStories.length > 0 && (
                 <aside className="lg:sticky lg:top-24 space-y-4">
-                  <p className="text-[11px] font-bold uppercase tracking-widest text-emerald-600 mb-3">More Stories</p>
+                  <p className="text-[11px] font-bold uppercase tracking-widest text-emerald-600 mb-3">{t("stories.more")}</p>
                   {otherStories.map((s) => (
                     <StoryCard key={s.id} story={s} />
                   ))}
@@ -565,13 +571,14 @@ function ApiStoryView({ story }: { story: ApiStory }) {
 // Loading skeleton
 // ──────────────────────────────────────────────
 function LoadingView() {
+  const { t } = useLanguage();
   return (
     <main className="min-h-screen bg-background">
       <Header />
       <div className="mt-12 sm:mt-14 lg:mt-16" />
       <div className="flex items-center justify-center gap-2 py-40 text-sm text-muted-foreground">
         <Loader2 className="h-5 w-5 animate-spin text-emerald-600" />
-        Loading story…
+        {t("stories.loadingOne")}
       </div>
       <Footer />
     </main>

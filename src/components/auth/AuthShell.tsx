@@ -1,4 +1,8 @@
+"use client";
+
 import Link from "next/link";
+import { Languages } from "lucide-react";
+import { useLanguage } from "@/components/i18n/LanguageProvider";
 import AuthBrand from "./AuthBrand";
 import AuthCrossBg from "./AuthCrossBg";
 import { authCardClass, authLegalClass } from "./auth-ui";
@@ -12,20 +16,33 @@ type AuthShellProps = {
 };
 
 export function AuthLegalFooter() {
+  const { lang, setLang, t } = useLanguage();
   return (
     <p className="mt-8 text-center text-xs text-gray-500 dark:text-muted-foreground">
       <Link href="/terms" className={authLegalClass}>
-        Terms of use
+        {t("footer.terms")}
       </Link>
       <span className="mx-2 text-gray-300">·</span>
       <Link href="/privacy" className={authLegalClass}>
-        Privacy Policy
+        {t("footer.privacy")}
       </Link>
+      <span className="mx-2 text-gray-300">·</span>
+      {/* Auth pages have no site header, so the language switch lives here. */}
+      <button
+        type="button"
+        onClick={() => setLang(lang === "EN" ? "BN" : "EN")}
+        aria-label={t("language")}
+        className={`${authLegalClass} inline-flex items-center gap-1`}
+      >
+        <Languages className="h-3 w-3" />
+        {lang === "EN" ? "বাংলা" : "English"}
+      </button>
     </p>
   );
 }
 
 function AuthBrandPanel() {
+  const { t, num } = useLanguage();
   return (
     <aside className="relative hidden min-h-full flex-col overflow-hidden bg-gradient-to-br from-[#174f35] via-[#246c46] to-[#3d8b57] px-10 py-10 text-white lg:flex">
       <div className="absolute -right-20 -top-20 h-72 w-72 rounded-full border-[48px] border-white/[0.06]" />
@@ -40,21 +57,20 @@ function AuthBrandPanel() {
         </div>
         <div className="mt-9 text-center">
           <p className="mb-4 text-sm font-semibold uppercase tracking-[0.25em] text-emerald-100/80">
-            Student Square Portal
+            {t("auth.portal")}
           </p>
           <h2 className="text-4xl font-semibold leading-tight tracking-tight xl:text-5xl">
-            Your next chapter starts here.
+            {t("auth.heroTitle")}
           </h2>
           <p className="mx-auto mt-5 max-w-sm text-base leading-7 text-emerald-50/75">
-            Access guidance, resources and opportunities designed to help every
-            student move forward with confidence.
+            {t("auth.heroBody")}
           </p>
         </div>
       </div>
 
       <div className="relative flex items-center justify-between text-[11px] text-emerald-100/65">
-        <span>© {new Date().getFullYear()} Student Square</span>
-        <span>Learn · Grow · Lead</span>
+        <span>© {num(new Date().getFullYear(), false)} {t("common.studentSquare")}</span>
+        <span>{t("auth.tagline")}</span>
       </div>
     </aside>
   );

@@ -4,6 +4,7 @@ import { Minus, Plus } from "lucide-react";
 import { utilizationItems } from "../constants";
 import { container, eyebrow, heading, sub } from "../ui";
 import { useDonateContent } from "../useDonateContent";
+import { useLanguage } from "@/components/i18n/LanguageProvider";
 
 interface DonateUtilizationSectionProps {
   openAccordionIndex: number | null;
@@ -15,6 +16,7 @@ export default function DonateUtilizationSection({
   onToggleAccordion,
 }: DonateUtilizationSectionProps) {
   const { transparency } = useDonateContent();
+  const { t, tr } = useLanguage();
   const items =
     transparency?.items?.map((item) => ({
       icon: item.icon,
@@ -25,11 +27,15 @@ export default function DonateUtilizationSection({
   return (
     <section id="utilization" className="border-t border-border bg-muted/30 py-14 sm:py-20">
       <div className={container}>
-        <span className={eyebrow}>{transparency?.eyebrow ?? "Full Transparency"}</span>
-        <h2 className={heading}>{transparency?.heading ?? "How Your Donations Are Utilized"}</h2>
+        <span className={eyebrow}>
+          {transparency?.eyebrow ? tr(transparency.eyebrow) : t("donate.transparencyFallback")}
+        </span>
+        <h2 className={heading}>{tr(transparency?.heading ?? "How Your Donations Are Utilized")}</h2>
         <p className={sub}>
-          {transparency?.intro ??
-            "We are dedicated to using your contributions to foster positive change across various essential areas:"}
+          {tr(
+            transparency?.intro ??
+              "We are dedicated to using your contributions to foster positive change across various essential areas:"
+          )}
         </p>
 
         <div className="mt-10 grid grid-cols-1 items-start gap-4 lg:grid-cols-2">
@@ -50,7 +56,7 @@ export default function DonateUtilizationSection({
                 >
                   <span className="flex items-center gap-3 text-sm font-semibold text-foreground">
                     <span className="text-base">{item.icon}</span>
-                    {item.label}
+                    {tr(item.label)}
                   </span>
                   {isOpen ? (
                     <Minus className="h-4 w-4 shrink-0 text-emerald-600" />
@@ -60,7 +66,7 @@ export default function DonateUtilizationSection({
                 </button>
                 {isOpen && (
                   <p className="border-t border-border px-5 py-4 text-sm leading-relaxed text-muted-foreground">
-                    {item.content}
+                    {tr(item.content)}
                   </p>
                 )}
               </div>

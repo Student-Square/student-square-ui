@@ -19,8 +19,12 @@ export function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // Check for the access token cookie set by the backend.
-  const hasSession = request.cookies.has("accessToken");
+  // Either cookie means a session may exist. The access cookie expires after
+  // 15 minutes while the refresh cookie lasts days; checking only the access
+  // cookie sent people to the login page mid-session. The client refreshes on
+  // the first 401 (baseApi), and the server stays the real authority.
+  const hasSession =
+    request.cookies.has("accessToken") || request.cookies.has("refreshToken");
 
   if (!hasSession) {
     const loginUrl = new URL("/auth/login", request.url);

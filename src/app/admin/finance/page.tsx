@@ -1,37 +1,31 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { toast } from "sonner";
-import {
-  Download,
-  FileText,
-  Loader2,
-  Pencil,
-  Search,
-  Trash2,
-  X,
-} from "lucide-react";
+import { Download, FileText, Loader2, Search } from "lucide-react";
 import {
   downloadFinanceExport,
-  useAdminDeleteFinanceEntryMutation,
+  useAdminCreateInvoiceMutation,
   useAdminListFinanceQuery,
-  useAdminUpdateFinanceEntryMutation,
 } from "@/redux/features/finance/financeApi";
 import { formatMoney } from "@/lib/money";
-import type { FinanceCurrency, FinanceEntry, FinanceEntryInput } from "@/types/finance";
+import type { FinanceEntry } from "@/types/finance";
 
-const fieldClass =
-  "w-full px-3 py-2 text-sm rounded-lg bg-background border border-border focus:border-emerald-500 focus:outline-none";
+const isExpense = (row: FinanceEntry) => {
+  const n = Number(row.moneyOut);
+  return Number.isFinite(n) && n > 0;
+};
 
-const CURRENCIES: FinanceCurrency[] = ["BDT", "USD", "GBP"];
-
+/**
+ * All FWB — site-wide read + invoice grouping.
+ * Personal create/edit lives on My FWB (/panel/finance).
+ */
 export default function AdminFinancePage() {
   const [q, setQ] = useState("");
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
   const [page, setPage] = useState(1);
-  const [editing, setEditing] = useState<FinanceEntry | null>(null);
-  const [form, setForm] = useState<Partial<FinanceEntryInput>>({});
+  const [selected, setSelected] = useState<Set<string>>(new Set());
 
   const params = {
     ...(q.trim() ? { q: q.trim() } : {}),
@@ -42,12 +36,26 @@ export default function AdminFinancePage() {
   };
 
   const { data, isLoading } = useAdminListFinanceQuery(params);
-  const [updateEntry, { isLoading: updating }] =
-    useAdminUpdateFinanceEntryMutation();
-  const [deleteEntry] = useAdminDeleteFinanceEntryMutation();
+  const [createInvoice, { isLoading: invoicing }] =
+    useAdminCreateInvoiceMutation();
 
   const rows = data?.data ?? [];
   const totalPages = data?.totalPages ?? 1;
+
+  const selectable = useMemo(
+    () => rows.filter((r) => isExpense(r) && !r.invoiceId),
+    [rows]
+  );
+
+  const selectedRows = rows.filter((r) => selected.has(r.id));
+  const selectedUserId =
+    selectedRows.length > 0 ? selectedRows[0].user.id : null;
+  const sameUser =
+    selectedRows.length === 0 ||
+    selectedRows.every((r) => r.user.id === selectedUserId);
+  const sameCurrency =
+    selectedRows.length === 0 ||
+    selectedRows.every((r) => r.currency === selectedRows[0].currency);
 
   const exportQuery = new URLSearchParams();
   if (params.q) exportQuery.set("q", params.q);
@@ -56,37 +64,45 @@ export default function AdminFinancePage() {
   const qs = exportQuery.toString();
   const suffix = qs ? `?${qs}` : "";
 
-  const openEdit = (row: FinanceEntry) => {
-    setEditing(row);
-    setForm({
-      entryDate: row.entryDate.slice(0, 10),
-      itemName: row.itemName,
-      quantity: row.quantity,
-      unitCost: row.unitCost,
-      currency: row.currency as FinanceCurrency,
-      moneyIn: row.moneyIn,
-      moneyOut: row.moneyOut,
+  const toggleRow = (row: FinanceEntry) => {
+    if (!isExpense(row) || row.invoiceId) return;
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(row.id)) next.delete(row.id);
+      else next.add(row.id);
+      return next;
     });
   };
 
-  const saveEdit = async () => {
-    if (!editing) return;
-    try {
-      await updateEntry({ id: editing.id, data: form }).unwrap();
-      toast.success("Updated");
-      setEditing(null);
-    } catch {
-      /* toasted */
+  const onCreateInvoice = async () => {
+    if (!selectedUserId || selected.size === 0) {
+      toast.error("Select expense lines for one member.");
+      return;
     }
-  };
-
-  const onDelete = async (id: string) => {
-    if (!confirm("Delete this entry?")) return;
+    if (!sameUser) {
+      toast.error("All selected lines must belong to the same member.");
+      return;
+    }
+    if (!sameCurrency) {
+      toast.error("Selected lines must use the same currency.");
+      return;
+    }
     try {
-      await deleteEntry(id).unwrap();
-      toast.success("Deleted");
-    } catch {
-      /* toasted */
+      const invoice = await createInvoice({
+        userId: selectedUserId,
+        entryIds: Array.from(selected),
+      }).unwrap();
+      setSelected(new Set());
+      toast.success(`Invoice ${invoice.number} created`);
+      await downloadFinanceExport(
+        `/admin/finance/invoices/${invoice.id}/pdf`,
+        `${invoice.number}.pdf`
+      );
+    } catch (e) {
+      toast.error(
+        (e as { data?: { message?: string } })?.data?.message ??
+          "Could not create invoice"
+      );
     }
   };
 
@@ -95,10 +111,12 @@ export default function AdminFinancePage() {
       <div className="flex flex-wrap items-end justify-between gap-3 mb-6">
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">
-            Financial Work Book
+            All FWB
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            All members&apos; ledgers — editable by admin.
+            Every member&apos;s ledger. Select one member&apos;s expense lines
+            to build a single invoice PDF. Your own book is under{" "}
+            <span className="font-medium text-foreground">My FWB</span>.
           </p>
         </div>
         <button
@@ -114,6 +132,38 @@ export default function AdminFinancePage() {
           <Download className="h-4 w-4" /> Excel (CSV)
         </button>
       </div>
+
+      {selected.size > 0 && (
+        <div className="mb-4 flex flex-wrap items-center gap-3 rounded-xl border border-emerald-500/30 bg-emerald-500/5 px-4 py-3">
+          <p className="text-sm font-medium">
+            {selected.size} line{selected.size === 1 ? "" : "s"} selected
+            {selectedRows[0] ? ` · ${selectedRows[0].user.fullName}` : ""}
+          </p>
+          <button
+            type="button"
+            disabled={invoicing || !sameUser || !sameCurrency}
+            onClick={() => void onCreateInvoice()}
+            className="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-3 py-2 text-sm font-semibold text-white disabled:opacity-60"
+          >
+            {invoicing ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <FileText className="h-4 w-4" />
+            )}
+            Create one invoice
+          </button>
+          <button
+            type="button"
+            onClick={() => setSelected(new Set())}
+            className="text-sm text-muted-foreground hover:text-foreground"
+          >
+            Clear
+          </button>
+          {!sameUser && (
+            <p className="text-xs text-red-600">Pick lines from one member only.</p>
+          )}
+        </div>
+      )}
 
       <div className="flex flex-wrap gap-2 mb-4">
         <div className="relative">
@@ -153,16 +203,16 @@ export default function AdminFinancePage() {
           <table className="w-full text-sm">
             <thead className="bg-muted/50 text-left text-xs uppercase tracking-wider text-muted-foreground">
               <tr>
-                <th className="px-3 py-2.5 font-bold">Name</th>
-                <th className="px-3 py-2.5 font-bold">Member ID</th>
+                <th className="px-3 py-2.5 font-bold w-10" />
+                <th className="px-3 py-2.5 font-bold">Member</th>
                 <th className="px-3 py-2.5 font-bold">Sl.</th>
                 <th className="px-3 py-2.5 font-bold">Date</th>
                 <th className="px-3 py-2.5 font-bold">Description</th>
-                <th className="px-3 py-2.5 font-bold">Cur</th>
+                <th className="px-3 py-2.5 font-bold">Currency</th>
                 <th className="px-3 py-2.5 font-bold text-right">In</th>
                 <th className="px-3 py-2.5 font-bold text-right">Out</th>
                 <th className="px-3 py-2.5 font-bold text-right">Balance</th>
-                <th className="px-3 py-2.5 font-bold w-28" />
+                <th className="px-3 py-2.5 font-bold">Invoice</th>
               </tr>
             </thead>
             <tbody>
@@ -177,73 +227,82 @@ export default function AdminFinancePage() {
               {!isLoading && rows.length === 0 && (
                 <tr>
                   <td colSpan={10} className="px-3 py-8 text-center text-muted-foreground">
-                    No finance entries found.
+                    No ledger entries.
                   </td>
                 </tr>
               )}
-              {rows.map((row) => (
-                <tr key={row.id} className="border-t border-border align-top">
-                  <td className="px-3 py-3 font-medium">{row.user.fullName}</td>
-                  <td className="px-3 py-3 text-xs font-mono">
-                    {row.user.memberId ?? "—"}
-                  </td>
-                  <td className="px-3 py-3 text-xs">{row.slNo}</td>
-                  <td className="px-3 py-3 text-xs whitespace-nowrap">
-                    {row.entryDate.slice(0, 10)}
-                  </td>
-                  <td className="px-3 py-3">
-                    <p className="font-medium">{row.itemName}</p>
-                    <p className="text-[11px] text-muted-foreground">
-                      Qty {row.quantity} × {row.unitCost}
-                    </p>
-                  </td>
-                  <td className="px-3 py-3 text-xs">{row.currency}</td>
-                  <td className="px-3 py-3 text-right text-emerald-700">
-                    {formatMoney(row.moneyIn)}
-                  </td>
-                  <td className="px-3 py-3 text-right text-red-600">
-                    {formatMoney(row.moneyOut)}
-                  </td>
-                  <td className="px-3 py-3 text-right font-semibold">
-                    {formatMoney(row.balance)}
-                  </td>
-                  <td className="px-3 py-3">
-                    <div className="flex gap-1 justify-end">
-                      <button
-                        type="button"
-                        title="Invoice PDF"
-                        onClick={() =>
-                          downloadFinanceExport(
-                            `/admin/finance/${row.id}/invoice.pdf`,
-                            `finance-invoice-${row.slNo}.pdf`
-                          ).catch(() => toast.error("Invoice failed"))
-                        }
-                        className="p-1.5 rounded-md hover:bg-muted"
-                      >
-                        <FileText className="h-3.5 w-3.5" />
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => openEdit(row)}
-                        className="p-1.5 rounded-md hover:bg-muted"
-                      >
-                        <Pencil className="h-3.5 w-3.5" />
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => onDelete(row.id)}
-                        className="p-1.5 rounded-md hover:bg-muted text-red-600"
-                      >
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
+              {rows.map((row) => {
+                const canSelect = isExpense(row) && !row.invoiceId;
+                return (
+                  <tr key={row.id} className="border-t border-border align-top">
+                    <td className="px-3 py-3">
+                      <input
+                        type="checkbox"
+                        checked={selected.has(row.id)}
+                        disabled={!canSelect}
+                        onChange={() => toggleRow(row)}
+                        aria-label={`Select ${row.itemName}`}
+                      />
+                    </td>
+                    <td className="px-3 py-3">
+                      <p className="font-medium text-xs">{row.user.fullName}</p>
+                      <p className="text-[11px] text-muted-foreground">
+                        {row.user.memberId ?? "—"}
+                      </p>
+                    </td>
+                    <td className="px-3 py-3 font-mono text-xs">{row.slNo}</td>
+                    <td className="px-3 py-3 text-xs whitespace-nowrap">
+                      {row.entryDate.slice(0, 10)}
+                    </td>
+                    <td className="px-3 py-3">
+                      <p className="font-medium">{row.itemName}</p>
+                      <p className="text-[11px] text-muted-foreground">
+                        Qty {row.quantity} × {row.unitCost}
+                      </p>
+                    </td>
+                    <td className="px-3 py-3 text-xs">{row.currency}</td>
+                    <td className="px-3 py-3 text-right text-emerald-700">
+                      {formatMoney(row.moneyIn)}
+                    </td>
+                    <td className="px-3 py-3 text-right text-red-600">
+                      {formatMoney(row.moneyOut)}
+                    </td>
+                    <td className="px-3 py-3 text-right font-semibold">
+                      {formatMoney(row.balance)}
+                    </td>
+                    <td className="px-3 py-3 text-xs">
+                      {row.invoiceId ? (
+                        <button
+                          type="button"
+                          className="text-emerald-700 hover:underline"
+                          onClick={() =>
+                            downloadFinanceExport(
+                              `/admin/finance/invoices/${row.invoiceId}/pdf`,
+                              `invoice-${row.slNo}.pdf`
+                            ).catch(() => toast.error("Invoice failed"))
+                          }
+                        >
+                          PDF
+                        </button>
+                      ) : canSelect ? (
+                        "—"
+                      ) : (
+                        "n/a"
+                      )}
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
       </div>
+
+      {selectable.length > 0 && selected.size === 0 && (
+        <p className="mt-2 text-xs text-muted-foreground">
+          Tip: tick uninvoiced expense lines for one person, then create one invoice.
+        </p>
+      )}
 
       {totalPages > 1 && (
         <div className="flex items-center justify-end gap-2 mt-4">
@@ -266,108 +325,6 @@ export default function AdminFinancePage() {
           >
             Next
           </button>
-        </div>
-      )}
-
-      {editing && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-          <div className="w-full max-w-md rounded-2xl border border-border bg-card p-5 space-y-3">
-            <div className="flex items-center justify-between">
-              <h2 className="text-lg font-bold">Edit entry</h2>
-              <button type="button" onClick={() => setEditing(null)}>
-                <X className="h-4 w-4" />
-              </button>
-            </div>
-            <p className="text-xs text-muted-foreground">
-              {editing.user.fullName} · {editing.user.memberId ?? "—"} · Sl.{" "}
-              {editing.slNo}
-            </p>
-            <input
-              type="date"
-              className={fieldClass}
-              value={form.entryDate ?? ""}
-              onChange={(e) => setForm((f) => ({ ...f, entryDate: e.target.value }))}
-            />
-            <input
-              className={fieldClass}
-              value={form.itemName ?? ""}
-              onChange={(e) => setForm((f) => ({ ...f, itemName: e.target.value }))}
-              placeholder="Item name"
-            />
-            <div className="grid grid-cols-2 gap-2">
-              <input
-                type="number"
-                className={fieldClass}
-                value={form.quantity ?? 0}
-                onChange={(e) =>
-                  setForm((f) => ({ ...f, quantity: e.target.value }))
-                }
-                placeholder="Qty"
-              />
-              <input
-                type="number"
-                className={fieldClass}
-                value={form.unitCost ?? 0}
-                onChange={(e) =>
-                  setForm((f) => ({ ...f, unitCost: e.target.value }))
-                }
-                placeholder="Unit cost"
-              />
-            </div>
-            <select
-              className={fieldClass}
-              value={form.currency ?? "BDT"}
-              onChange={(e) =>
-                setForm((f) => ({
-                  ...f,
-                  currency: e.target.value as FinanceCurrency,
-                }))
-              }
-            >
-              {CURRENCIES.map((c) => (
-                <option key={c} value={c}>
-                  {c}
-                </option>
-              ))}
-            </select>
-            <div className="grid grid-cols-2 gap-2">
-              <input
-                type="number"
-                className={fieldClass}
-                value={form.moneyIn ?? "0"}
-                onChange={(e) =>
-                  setForm((f) => ({ ...f, moneyIn: e.target.value }))
-                }
-                placeholder="Money in"
-              />
-              <input
-                type="number"
-                className={fieldClass}
-                value={form.moneyOut ?? "0"}
-                onChange={(e) =>
-                  setForm((f) => ({ ...f, moneyOut: e.target.value }))
-                }
-                placeholder="Money out"
-              />
-            </div>
-            <div className="flex justify-end gap-2">
-              <button
-                type="button"
-                onClick={() => setEditing(null)}
-                className="px-3 py-2 rounded-lg border text-sm"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                disabled={updating}
-                onClick={saveEdit}
-                className="px-3 py-2 rounded-lg bg-emerald-600 text-white text-sm font-semibold disabled:opacity-60"
-              >
-                Save
-              </button>
-            </div>
-          </div>
         </div>
       )}
     </div>

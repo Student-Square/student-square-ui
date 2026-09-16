@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useEffect, useMemo, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
 import {
   AlertCircle,
@@ -18,7 +18,6 @@ import {
   DISABILITY_LABELS,
   DISABILITY_STATUSES,
   FIELDS_OF_STUDY,
-  FOUNDATION_WELCOME_TEXT,
   GENDERS,
   HOME_DISTRICTS,
   INCOME_BANDS,
@@ -31,7 +30,6 @@ import {
   OCCUPATION_STATUSES,
   PARENT_EDUCATION_LABELS,
   PARENT_EDUCATION_LEVELS,
-  SENSITIVE_CONSENT_SUMMARY,
   STUDY_LEVELS,
   SUBJECT_FEELINGS,
   isMinorAgeBand,
@@ -41,6 +39,9 @@ import {
 } from "@/lib/registration";
 import AuthShell from "@/components/auth/AuthShell";
 import { authButtonClass, authInputClass, authLinkClass, authHeadingClass, authSubheadingClass } from "@/components/auth/auth-ui";
+import T from "@/components/i18n/T";
+import { useLanguage } from "@/components/i18n/LanguageProvider";
+import { REGISTRATION_OPTION_BN } from "@/lib/translations/auth";
 
 type Stage = "wizard" | "sent";
 type Step = 1 | 2 | 3 | 4 | 5 | 6;
@@ -48,10 +49,9 @@ type Step = 1 | 2 | 3 | 4 | 5 | 6;
 const DRAFT_KEY = "ssf-register-draft-v1";
 
 type Draft = {
-  // Step 1 — three separate decisions (FR-01-002/003)
+  // Step 1 — Terms + Privacy (sensitive-data disclosure lives on /terms)
   termsConsent: boolean;
   privacyConsent: boolean;
-  sensitiveDataConsent: boolean;
   marketingConsent: boolean;
   researchConsent: boolean;
   fullName: string;
@@ -92,7 +92,6 @@ type Draft = {
 const emptyDraft = (): Draft => ({
   termsConsent: false,
   privacyConsent: false,
-  sensitiveDataConsent: false,
   marketingConsent: false,
   researchConsent: false,
   fullName: "",
@@ -162,7 +161,7 @@ export default function RegisterPage() {
     <Suspense
       fallback={
         <AuthShell variant="register" wide>
-          <p className="text-center text-sm text-muted-foreground">Loading…</p>
+          <p className="text-center text-sm text-muted-foreground"><T k="common.loading" /></p>
         </AuthShell>
       }
     >
@@ -172,6 +171,9 @@ export default function RegisterPage() {
 }
 
 function RegisterWizard() {
+  const { lang, t, rich } = useLanguage();
+  // Which half of the { en, bn } label maps in lib/registration to show.
+  const labelLang = lang === "BN" ? "bn" : "en";
   const [register, { isLoading }] = useRegisterMutation();
   const [stage, setStage] = useState<Stage>("wizard");
   const [step, setStep] = useState<Step>(1);
@@ -210,108 +212,92 @@ function RegisterWizard() {
     });
   };
 
-  const stepTitle = useMemo(
-    () =>
-      (
-        {
-          1: "Welcome & consent",
-          2: "Contact & identity",
-          3: "Education",
-          4: "Occupation status",
-          5: "Background & accessibility",
-          6: "Account & submit",
-        } as const
-      )[step],
-    [step]
-  );
+  const stepTitle = t(`reg.step.${step}`);
 
   function validateStep(): string | null {
     if (step === 1) {
-      // FR-01-002/003: three separate consents. A combined checkbox would not
-      // be valid consent for the sensitive categories.
-      if (!draft.termsConsent) return "Please accept the Terms of Use.";
-      if (!draft.privacyConsent) return "Please accept the Privacy Notice.";
-      if (!draft.sensitiveDataConsent)
-        return "Please consent to collection of disability, health and psychological information.";
+      // Terms of Use now include the sensitive-information disclosure.
+      if (!draft.termsConsent) return t("reg.err.terms");
+      if (!draft.privacyConsent) return t("reg.err.privacy");
     }
     if (step === 2) {
-      if (!draft.fullName.trim()) return "Full name is required.";
+      if (!draft.fullName.trim()) return t("reg.err.fullName");
       if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(draft.email.trim()))
-        return "Enter a valid email.";
+        return t("reg.err.email");
       if (!/^\d{10,15}$/.test(draft.phone.trim()))
-        return "Phone must be digits only (10–15).";
-      if (!draft.address.trim()) return "Address is required.";
-      if (!draft.ageBand) return "Select your age band.";
-      if (!draft.gender) return "Select gender.";
-      if (!draft.homeDistrict) return "Select home district.";
+        return t("reg.err.phone");
+      if (!draft.address.trim()) return t("reg.err.address");
+      if (!draft.ageBand) return t("reg.err.ageBand");
+      if (!draft.gender) return t("reg.err.gender");
+      if (!draft.homeDistrict) return t("reg.err.district");
 
       // FR-01-013: a minor supplies guardian details here, BEFORE step 5 asks
       // any sensitive question.
       if (isMinorAgeBand(draft.ageBand)) {
         if (!draft.guardianName.trim())
-          return "Guardian name is required for your age group.";
+          return t("reg.err.guardianNameAge");
         if (!/^01[3-9]\d{8}$/.test(draft.guardianPhone.replace(/[\s-]/g, "")))
-          return "Enter a valid guardian mobile number.";
+          return t("reg.err.guardianPhone");
         if (!draft.guardianConsent)
-          return "Guardian consent is required for your age group.";
+          return t("reg.err.guardianConsentAge");
       }
     }
     if (step === 3) {
-      if (!draft.studyLevel) return "Select current level of study.";
-      if (!draft.institutionType) return "Select institution type.";
+      if (!draft.studyLevel) return t("reg.err.studyLevel");
+      if (!draft.institutionType) return t("reg.err.institutionType");
       if (
         draft.institutionType === "Other" &&
         !draft.institutionTypeOther.trim()
       )
-        return "Please specify institution type.";
-      if (!draft.institutionName.trim()) return "Institution name is required.";
-      if (!draft.fieldOfStudy) return "Select field of study.";
-      if (!draft.subjectDepartment.trim()) return "Subject/department is required.";
-      if (!draft.subjectFeeling) return "Select how you feel about your subject.";
+        return t("reg.err.institutionOther");
+      if (!draft.institutionName.trim()) return t("reg.err.institutionName");
+      if (!draft.fieldOfStudy) return t("reg.err.field");
+      if (!draft.subjectDepartment.trim()) return t("reg.err.subject");
+      if (!draft.subjectFeeling) return t("reg.err.feeling");
       if (!draft.facedSubjectConfusion)
-        return "Please answer whether you faced confusion choosing your subject.";
+        return t("reg.err.confusion");
     }
     if (step === 4) {
       if (!draft.occupationStatus)
-        return "Select your current occupation status.";
+        return t("reg.err.occupation");
       // Each branch requires only its own follow-up (FR-01-006).
       const needed = OCCUPATION_BRANCH_FIELD[
         draft.occupationStatus as OccupationStatus
       ];
       if (needed && !String(draft[needed] ?? "").trim()) {
-        return "Please complete the follow-up question for your occupation.";
+        return t("reg.err.followUp");
       }
     }
     // FR-01-007: the status itself is required; the note never is.
     if (step === 5 && !draft.disabilityStatus)
-      return "Please select an option.";
+      return t("reg.err.option");
     if (step === 6) {
-      if (password.length < 8) return "Password must be at least 8 characters.";
-      if (password !== confirmPassword) return "Passwords do not match.";
+      if (password.length < 8) return t("reset.errLength");
+      if (password !== confirmPassword) return t("reset.errMatch");
     }
     return null;
   }
 
   function validateIdentityFields() {
     const errors: Record<string, string> = {};
-    if (!draft.fullName.trim()) errors.fullName = "Full name is required.";
+    if (!draft.fullName.trim()) errors.fullName = t("reg.err.fullName");
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(draft.email.trim()))
-      errors.email = "Enter a valid email address.";
+      errors.email = t("reg.fe.email");
     if (!/^\d{10,15}$/.test(draft.phone.trim()))
-      errors.phone = "Use 10–15 digits only.";
-    if (!draft.address.trim()) errors.address = "Address is required.";
-    if (!draft.ageBand) errors.ageBand = "Select your age.";
+      errors.phone = t("reg.fe.phone");
+    if (!draft.address.trim()) errors.address = t("reg.err.address");
+    if (!draft.ageBand) errors.ageBand = t("reg.fe.age");
     if (!draft.homeDistrict)
-      errors.homeDistrict = "Select your home district.";
-    if (!draft.gender) errors.gender = "Select a gender option.";
+      errors.homeDistrict = t("reg.fe.district");
+    if (!draft.gender) errors.gender = t("reg.fe.gender");
 
     if (isMinorAgeBand(draft.ageBand)) {
       if (!draft.guardianName.trim())
-        errors.guardianName = "Guardian name is required.";
+        errors.guardianName = t("reg.fe.guardianName");
       if (!/^01[3-9]\d{8}$/.test(draft.guardianPhone.replace(/[\s-]/g, "")))
-        errors.guardianPhone = "Enter a valid guardian mobile number.";
+        errors.guardianPhone = t("reg.err.guardianPhone");
       if (!draft.guardianConsent)
-        errors.guardianConsent = "Guardian consent is required.";
+        errors.guardianConsent = t("reg.fe.guardianConsent");
     }
 
     return errors;
@@ -354,6 +340,7 @@ function RegisterWizard() {
     const body: FoundationRegisterInput = stripForeignBranchFields({
       termsConsent: true,
       privacyConsent: true,
+      // Covered by accepting Terms of Use (sensitive section lives on /terms).
       sensitiveDataConsent: true,
       marketingConsent: draft.marketingConsent,
       researchConsent: draft.researchConsent,
@@ -422,7 +409,7 @@ function RegisterWizard() {
     } catch (e) {
       const msg =
         (e as { data?: { message?: string } })?.data?.message ??
-        "Registration failed. Please try again.";
+        t("reg.err.failed");
       setFormError(msg);
     }
   }
@@ -435,26 +422,21 @@ function RegisterWizard() {
             <CheckCircle2 className="h-10 w-10 text-emerald-600 dark:text-emerald-400" />
           </div>
           <h1 className="text-2xl font-bold tracking-tight text-foreground">
-            Thanks for registering!
+            {t("reg.thanks")}
           </h1>
           <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
-            You&apos;ll receive a verification email with your unique Member
-            ID shortly
-            {sentMemberId ? (
-              <>
-                {" "}
-                — your ID is{" "}
-                <span className="font-semibold text-foreground">
-                  {sentMemberId}
-                </span>
-              </>
-            ) : null}
-            . We sent it to{" "}
-            <span className="font-semibold text-foreground">{sentEmail}</span>.
+            {rich("reg.sentBody", {
+              memberId: sentMemberId
+                ? rich("reg.yourId", {
+                    id: <span className="font-semibold text-foreground">{sentMemberId}</span>,
+                  })
+                : "",
+              email: <span className="font-semibold text-foreground">{sentEmail}</span>,
+            })}
           </p>
           <p className="mt-6">
             <Link href="/auth/login" className={authLinkClass}>
-              Login here
+              {t("reg.loginHere")}
             </Link>
           </p>
         </div>
@@ -466,16 +448,16 @@ function RegisterWizard() {
     <AuthShell variant="register" wide>
       <div className="text-center">
         <h1 className={authHeadingClass}>
-          Welcome aboard!
+          {t("reg.welcome")}
         </h1>
         <p className={authSubheadingClass}>
-          You are one step away from your success
+          {t("reg.subtitle")}
         </p>
       </div>
 
       <div className="mt-6 flex items-center justify-between gap-3">
         <p className="text-[11px] font-bold uppercase tracking-wider text-emerald-600">
-          Step {step} of 6
+          {t("reg.stepOf", { step, total: 6 })}
         </p>
         <div className="flex gap-1">
           {[1, 2, 3, 4, 5, 6].map((n) => (
@@ -500,11 +482,10 @@ function RegisterWizard() {
             {step === 1 && (
               <>
                 <p className="text-sm text-muted-foreground leading-relaxed">
-                  {FOUNDATION_WELCOME_TEXT}
+                  {t("reg.welcomeText")}
                 </p>
 
-                {/* FR-01-002/003 — three separate consents. The sensitive-data
-                    consent is deliberately NOT bundled with the Terms. */}
+                {/* Terms cover the sensitive-information disclosure on /terms. */}
                 <label className="flex items-start gap-3 rounded-lg border border-border bg-muted/30 p-3 cursor-pointer">
                   <input
                     type="checkbox"
@@ -513,11 +494,13 @@ function RegisterWizard() {
                     onChange={(e) => patch({ termsConsent: e.target.checked })}
                   />
                   <span className="text-sm text-foreground leading-relaxed">
-                    I agree to the{" "}
-                    <Link href="/terms" className="underline font-medium" target="_blank">
-                      Terms of Use
-                    </Link>
-                    .
+                    {rich("reg.agreeTerms", {
+                      terms: (
+                        <Link href="/terms" className="underline font-medium" target="_blank">
+                          {t("legal.terms")}
+                        </Link>
+                      ),
+                    })}
                   </span>
                 </label>
 
@@ -529,63 +512,19 @@ function RegisterWizard() {
                     onChange={(e) => patch({ privacyConsent: e.target.checked })}
                   />
                   <span className="text-sm text-foreground leading-relaxed">
-                    I have read the{" "}
-                    <Link href="/privacy" className="underline font-medium" target="_blank">
-                      Privacy Notice
-                    </Link>{" "}
-                    and understand what data is collected and how to have it deleted.
+                    {rich("reg.readPrivacy", {
+                      privacy: (
+                        <Link href="/privacy" className="underline font-medium" target="_blank">
+                          {t("legal.privacy")}
+                        </Link>
+                      ),
+                    })}
                   </span>
                 </label>
 
-                <div className="rounded-lg border-2 border-amber-300 dark:border-amber-700 bg-amber-50/60 dark:bg-amber-950/30 p-4 space-y-3">
-                  <p className="text-sm font-bold text-foreground">
-                    Sensitive information — please read before agreeing
-                  </p>
-
-                  <div className="space-y-2 text-sm text-foreground leading-relaxed">
-                    <p className="font-medium">We will ask you about:</p>
-                    <ul className="list-disc pl-5 space-y-0.5">
-                      {SENSITIVE_CONSENT_SUMMARY.categories.map((c) => (
-                        <li key={c}>{c}</li>
-                      ))}
-                    </ul>
-                    <p>
-                      <span className="font-medium">Why: </span>
-                      {SENSITIVE_CONSENT_SUMMARY.purpose}
-                    </p>
-                    <p>
-                      <span className="font-medium">Who can see it: </span>
-                      {SENSITIVE_CONSENT_SUMMARY.access}
-                    </p>
-                    <p>
-                      <span className="font-medium">How long we keep it: </span>
-                      {SENSITIVE_CONSENT_SUMMARY.retention}
-                    </p>
-                    <p>
-                      <span className="font-medium">Changing your mind: </span>
-                      {SENSITIVE_CONSENT_SUMMARY.withdrawal}
-                    </p>
-                  </div>
-
-                  <label className="flex items-start gap-3 cursor-pointer pt-1">
-                    <input
-                      type="checkbox"
-                      className="mt-1 h-4 w-4 accent-amber-600"
-                      checked={draft.sensitiveDataConsent}
-                      onChange={(e) =>
-                        patch({ sensitiveDataConsent: e.target.checked })
-                      }
-                    />
-                    <span className="text-sm font-medium text-foreground leading-relaxed">
-                      I consent to Student Square Foundation collecting and storing
-                      this sensitive information for the purpose described above.
-                    </span>
-                  </label>
-                </div>
-
                 {/* Optional — never a condition of registering. */}
                 <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground pt-2">
-                  Optional
+                  {t("reg.optional")}
                 </p>
                 <label className="flex items-start gap-3 rounded-lg border border-border p-3 cursor-pointer">
                   <input
@@ -595,8 +534,7 @@ function RegisterWizard() {
                     onChange={(e) => patch({ marketingConsent: e.target.checked })}
                   />
                   <span className="text-sm text-muted-foreground leading-relaxed">
-                    Send me newsletters and updates about Foundation programmes.
-                    I can unsubscribe at any time.
+                    {t("reg.marketing")}
                   </span>
                 </label>
                 <label className="flex items-start gap-3 rounded-lg border border-border p-3 cursor-pointer">
@@ -607,9 +545,7 @@ function RegisterWizard() {
                     onChange={(e) => patch({ researchConsent: e.target.checked })}
                   />
                   <span className="text-sm text-muted-foreground leading-relaxed">
-                    My answers may be used in anonymised, aggregated form for
-                    research on student career outcomes. Nothing identifying me
-                    will be published.
+                    {t("reg.research")}
                   </span>
                 </label>
               </>
@@ -618,7 +554,7 @@ function RegisterWizard() {
             {step === 2 && (
               <>
                 <Field
-                  label="Full name"
+                  label={t("reg.fullName")}
                   className="md:col-span-2"
                   error={fieldErrors.fullName}
                 >
@@ -629,7 +565,7 @@ function RegisterWizard() {
                     autoComplete="name"
                   />
                 </Field>
-                <Field label="Email" error={fieldErrors.email}>
+                <Field label={t("reg.email")} error={fieldErrors.email}>
                   <input
                     type="email"
                     className={fieldClass}
@@ -639,7 +575,7 @@ function RegisterWizard() {
                   />
                 </Field>
                 <Field
-                  label="Phone number (WhatsApp)"
+                  label={t("reg.phone")}
                   error={fieldErrors.phone}
                 >
                   <input
@@ -649,11 +585,11 @@ function RegisterWizard() {
                     onChange={(e) =>
                       patch({ phone: e.target.value.replace(/\D/g, "") })
                     }
-                    placeholder="Digits only"
+                    placeholder={t("reg.digitsOnly")}
                   />
                 </Field>
                 <Field
-                  label="Address"
+                  label={t("reg.address")}
                   className="md:col-span-2"
                   error={fieldErrors.address}
                 >
@@ -664,7 +600,7 @@ function RegisterWizard() {
                     onChange={(e) => patch({ address: e.target.value })}
                   />
                 </Field>
-                <Field label="Age" error={fieldErrors.ageBand}>
+                <Field label={t("reg.age")} error={fieldErrors.ageBand}>
                   <Select
                     value={draft.ageBand}
                     onChange={(v) => patch({ ageBand: v })}
@@ -672,7 +608,7 @@ function RegisterWizard() {
                   />
                 </Field>
                 <Field
-                  label="Home district"
+                  label={t("reg.district")}
                   error={fieldErrors.homeDistrict}
                 >
                   <Select
@@ -682,7 +618,7 @@ function RegisterWizard() {
                   />
                 </Field>
                 <Field
-                  label="Gender"
+                  label={t("reg.gender")}
                   className="md:col-span-2"
                   error={fieldErrors.gender}
                 >
@@ -701,28 +637,26 @@ function RegisterWizard() {
                 {isMinorAgeBand(draft.ageBand) && (
                   <div className="rounded-lg border-2 border-sky-300 dark:border-sky-800 bg-sky-50/60 dark:bg-sky-950/30 p-4 space-y-4 md:col-span-2">
                     <p className="text-sm font-bold text-foreground">
-                      Parent or guardian details
+                      {t("reg.guardianTitle")}
                     </p>
                     <p className="text-sm text-muted-foreground leading-relaxed">
-                      Because of your age group, we need a parent or guardian to
-                      know about and agree to your registration before we ask
-                      any questions about health or accessibility.
+                      {t("reg.guardianBody")}
                     </p>
 
                     <Field
-                      label="Guardian full name"
+                      label={t("reg.guardianName")}
                       error={fieldErrors.guardianName}
                     >
                       <input
                         className={fieldClass}
                         value={draft.guardianName}
                         onChange={(e) => patch({ guardianName: e.target.value })}
-                        placeholder="Parent or legal guardian"
+                        placeholder={t("reg.guardianNamePlaceholder")}
                       />
                     </Field>
 
                     <Field
-                      label="Guardian mobile number"
+                      label={t("reg.guardianPhone")}
                       error={fieldErrors.guardianPhone}
                     >
                       <input
@@ -744,10 +678,7 @@ function RegisterWizard() {
                         }
                       />
                       <span className="text-sm text-foreground leading-relaxed">
-                        I confirm that my parent or guardian has been informed
-                        and consents to my registration, and understands that
-                        information about health, disability and wellbeing will
-                        be collected.
+                        {t("reg.guardianConsent")}
                       </span>
                     </label>
                     {fieldErrors.guardianConsent && (
@@ -762,21 +693,21 @@ function RegisterWizard() {
 
             {step === 3 && (
               <>
-                <Field label="Current level of study">
+                <Field label={t("reg.studyLevel")}>
                   <Select
                     value={draft.studyLevel}
                     onChange={(v) => patch({ studyLevel: v })}
                     options={STUDY_LEVELS}
                   />
                 </Field>
-                <Field label="Institution name">
+                <Field label={t("reg.institutionName")}>
                   <input
                     className={fieldClass}
                     value={draft.institutionName}
                     onChange={(e) => patch({ institutionName: e.target.value })}
                   />
                 </Field>
-                <Field label="Institution type">
+                <Field label={t("reg.institutionType")}>
                   <ChoiceList
                     name="institutionType"
                     value={draft.institutionType}
@@ -784,7 +715,7 @@ function RegisterWizard() {
                     options={INSTITUTION_TYPES}
                   />
                 </Field>
-                <Field label="Field of study">
+                <Field label={t("reg.field")}>
                   <ChoiceList
                     name="fieldOfStudy"
                     value={draft.fieldOfStudy}
@@ -794,7 +725,7 @@ function RegisterWizard() {
                 </Field>
                 {draft.institutionType === "Other" && (
                   <Field
-                    label="Specify institution type"
+                    label={t("reg.institutionOther")}
                     className="md:col-span-2"
                   >
                     <input
@@ -808,7 +739,7 @@ function RegisterWizard() {
                 )}
                 <div className="grid gap-4 md:col-span-2 md:grid-cols-2">
                   <div className="space-y-4">
-                    <Field label="Subject / department">
+                    <Field label={t("reg.subject")}>
                       <input
                         className={fieldClass}
                         value={draft.subjectDepartment}
@@ -817,7 +748,7 @@ function RegisterWizard() {
                         }
                       />
                     </Field>
-                    <Field label="Did you face confusion choosing your subject?">
+                    <Field label={t("reg.confusion")}>
                       <ChoiceList
                         name="facedSubjectConfusion"
                         value={draft.facedSubjectConfusion}
@@ -827,13 +758,13 @@ function RegisterWizard() {
                           })
                         }
                         options={[
-                          { value: "yes", label: "Yes" },
-                          { value: "no", label: "No" },
+                          { value: "yes", label: t("reg.yes") },
+                          { value: "no", label: t("reg.no") },
                         ]}
                       />
                     </Field>
                   </div>
-                  <Field label="How do you feel about your subject?">
+                  <Field label={t("reg.feeling")}>
                     <ChoiceList
                       name="subjectFeeling"
                       value={draft.subjectFeeling}
@@ -842,7 +773,7 @@ function RegisterWizard() {
                     />
                   </Field>
                 </div>
-                <Field label="Why? (optional)" className="md:col-span-2">
+                <Field label={t("reg.why")} className="md:col-span-2">
                   <textarea
                     className={fieldClass}
                     rows={2}
@@ -860,7 +791,7 @@ function RegisterWizard() {
                 The follow-up appears only after a choice is made. */}
             {step === 4 && (
               <>
-                <Field label="Current occupation status?">
+                <Field label={t("reg.occupation")}>
                   <ChoiceList
                     name="occupationStatus"
                     value={draft.occupationStatus}
@@ -875,43 +806,43 @@ function RegisterWizard() {
                       })
                     }
                     options={OCCUPATION_STATUSES}
-                    labels={(v) => OCCUPATION_LABELS[v as OccupationStatus].en}
+                    labels={(v) => OCCUPATION_LABELS[v as OccupationStatus][labelLang]}
                   />
                 </Field>
 
                 {draft.occupationStatus === "SELF_EMPLOYED" && (
-                  <Field label="What kind of business?">
+                  <Field label={t("reg.business")}>
                     <input
                       className={fieldClass}
                       value={draft.businessType}
                       onChange={(e) => patch({ businessType: e.target.value })}
-                      placeholder="e.g. Online clothing store"
+                      placeholder={t("reg.businessPlaceholder")}
                     />
                   </Field>
                 )}
 
                 {draft.occupationStatus === "WAGE_EMPLOYED" && (
-                  <Field label="Which sector do you work in?">
+                  <Field label={t("reg.sector")}>
                     <input
                       className={fieldClass}
                       value={draft.employmentSector}
                       onChange={(e) => patch({ employmentSector: e.target.value })}
-                      placeholder="e.g. Garments, IT, Education"
+                      placeholder={t("reg.sectorPlaceholder")}
                     />
                   </Field>
                 )}
 
                 {draft.occupationStatus === "JOBSEEKER" && (
-                  <Field label="How long have you been looking for work?">
+                  <Field label={t("reg.jobseeking")}>
                     <select
                       className={fieldClass}
                       value={draft.jobseekerDuration}
                       onChange={(e) => patch({ jobseekerDuration: e.target.value })}
                     >
-                      <option value="">Select…</option>
+                      <option value="">{t("reg.select")}</option>
                       {JOBSEEKER_DURATIONS.map((d) => (
                         <option key={d} value={d}>
-                          {JOBSEEKER_DURATION_LABELS[d].en}
+                          {JOBSEEKER_DURATION_LABELS[d][labelLang]}
                         </option>
                       ))}
                     </select>
@@ -925,7 +856,7 @@ function RegisterWizard() {
                 {/* FR-01-007: three equally weighted options, and no forced
                     follow-up after "Yes". */}
                 <Field
-                  label="Do you have any disability or condition that makes certain tasks difficult?"
+                  label={t("reg.disability")}
                   className="md:col-span-2"
                 >
                   <ChoiceList
@@ -934,7 +865,7 @@ function RegisterWizard() {
                     onChange={(v) => patch({ disabilityStatus: v })}
                     options={DISABILITY_STATUSES}
                     labels={(v) =>
-                      DISABILITY_LABELS[v as keyof typeof DISABILITY_LABELS].en
+                      DISABILITY_LABELS[v as keyof typeof DISABILITY_LABELS][labelLang]
                     }
                     columns={3}
                   />
@@ -942,7 +873,7 @@ function RegisterWizard() {
 
                 {draft.disabilityStatus === "YES" && (
                   <Field
-                    label="Anything you would like us to know? (optional)"
+                    label={t("reg.disabilityNote")}
                     className="md:col-span-2"
                   >
                     <textarea
@@ -950,21 +881,21 @@ function RegisterWizard() {
                       rows={3}
                       value={draft.disabilityNote}
                       onChange={(e) => patch({ disabilityNote: e.target.value })}
-                      placeholder="You can leave this blank."
+                      placeholder={t("reg.disabilityPlaceholder")}
                     />
                     <p className="mt-1.5 text-xs text-muted-foreground">
-                      This is optional. You can continue without answering.
+                      {t("reg.optionalNote")}
                     </p>
                   </Field>
                 )}
 
                 <div className="grid gap-4 rounded-xl border border-border bg-muted/20 p-4 md:col-span-2 md:grid-cols-2">
                   <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground md:col-span-2">
-                    Background (all optional)
+                    {t("reg.background")}
                   </p>
 
                   <Field
-                    label="Do you have relatives working in institutions or industries?"
+                    label={t("reg.relatives")}
                     className={
                       draft.hasInstitutionalRelatives === "yes"
                         ? ""
@@ -982,23 +913,23 @@ function RegisterWizard() {
                         })
                       }
                       options={["yes", "no"] as const}
-                      labels={(v) => (v === "yes" ? "Yes" : "No")}
+                      labels={(v) => (v === "yes" ? t("reg.yes") : t("reg.no"))}
                       columns={2}
                     />
                   </Field>
 
                   {draft.hasInstitutionalRelatives === "yes" && (
-                    <Field label="Which industry?">
+                    <Field label={t("reg.industry")}>
                       <input
                         className={fieldClass}
                         value={draft.relativeIndustry}
                         onChange={(e) => patch({ relativeIndustry: e.target.value })}
-                        placeholder="e.g. Healthcare, Banking"
+                        placeholder={t("reg.industryPlaceholder")}
                       />
                     </Field>
                   )}
 
-                  <Field label="Family monthly income">
+                  <Field label={t("reg.income")}>
                     <select
                       className={fieldClass}
                       value={draft.familyMonthlyIncomeBand}
@@ -1006,19 +937,19 @@ function RegisterWizard() {
                         patch({ familyMonthlyIncomeBand: e.target.value })
                       }
                     >
-                      <option value="">Prefer not to answer</option>
+                      <option value="">{t("reg.preferNot")}</option>
                       {INCOME_BANDS.map((b) => (
                         <option key={b} value={b}>
-                          {INCOME_BAND_LABELS[b].en}
+                          {INCOME_BAND_LABELS[b][labelLang]}
                         </option>
                       ))}
                     </select>
                     <p className="mt-1.5 text-xs text-muted-foreground">
-                      A range only — we never ask for an exact figure.
+                      {t("reg.incomeNote")}
                     </p>
                   </Field>
 
-                  <Field label="Highest level of education in your family">
+                  <Field label={t("reg.parentEdu")}>
                     <select
                       className={fieldClass}
                       value={draft.parentEducationLevel}
@@ -1026,10 +957,10 @@ function RegisterWizard() {
                         patch({ parentEducationLevel: e.target.value })
                       }
                     >
-                      <option value="">Prefer not to answer</option>
+                      <option value="">{t("reg.preferNot")}</option>
                       {PARENT_EDUCATION_LEVELS.map((l) => (
                         <option key={l} value={l}>
-                          {PARENT_EDUCATION_LABELS[l].en}
+                          {PARENT_EDUCATION_LABELS[l][labelLang]}
                         </option>
                       ))}
                     </select>
@@ -1041,11 +972,9 @@ function RegisterWizard() {
             {step === 6 && (
               <>
                 <p className="text-sm text-muted-foreground md:col-span-2">
-                  Create your login password. Profile picture can be added after
-                  email verification from your dashboard (min 200×200px, max
-                  2–5MB, square 1:1 recommended).
+                  {t("reg.passwordIntro")}
                 </p>
-                <Field label="Password">
+                <Field label={t("auth.password")}>
                   <div className="relative">
                     <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <input
@@ -1055,12 +984,12 @@ function RegisterWizard() {
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       className={`${fieldClass} pl-9 pr-10`}
-                      placeholder="At least 8 characters"
+                      placeholder={t("reg.passwordPlaceholder")}
                     />
                     <button
                       type="button"
                       aria-label={
-                        showPassword ? "Hide password" : "Show password"
+                        showPassword ? t("auth.hidePassword") : t("auth.showPassword")
                       }
                       onClick={() => setShowPassword((v) => !v)}
                       className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 text-muted-foreground"
@@ -1073,7 +1002,7 @@ function RegisterWizard() {
                     </button>
                   </div>
                 </Field>
-                <Field label="Confirm password">
+                <Field label={t("reset.confirmLabel")}>
                   <div className="relative">
                     <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <input
@@ -1086,7 +1015,7 @@ function RegisterWizard() {
                     <button
                       type="button"
                       aria-label={
-                        showConfirm ? "Hide password" : "Show password"
+                        showConfirm ? t("auth.hidePassword") : t("auth.showPassword")
                       }
                       onClick={() => setShowConfirm((v) => !v)}
                       className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 text-muted-foreground"
@@ -1117,7 +1046,7 @@ function RegisterWizard() {
                   className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg border border-border text-sm font-semibold text-foreground hover:bg-muted transition-colors"
                 >
                   <ArrowLeft className="h-4 w-4" />
-                  Back
+                  {t("auth.back")}
                 </button>
               ) : (
                 <div />
@@ -1129,7 +1058,7 @@ function RegisterWizard() {
                   onClick={goNext}
                   className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-emerald-600 text-white text-sm font-semibold hover:bg-emerald-700 transition-colors"
                 >
-                  Continue
+                  {t("reg.continue")}
                   <ArrowRight className="h-4 w-4" />
                 </button>
               ) : (
@@ -1142,10 +1071,10 @@ function RegisterWizard() {
                   {isLoading ? (
                     <span className="inline-flex items-center justify-center gap-2">
                       <Loader2 className="h-4 w-4 animate-spin" />
-                      Submitting…
+                      {t("reg.submitting")}
                     </span>
                   ) : (
-                    "Sign Up"
+                    t("reg.signUp")
                   )}
                 </button>
               )}
@@ -1153,13 +1082,25 @@ function RegisterWizard() {
           </div>
 
       <p className="mt-8 text-center text-sm text-muted-foreground">
-        Already have an account?{" "}
-        <Link href="/auth/login" className={authLinkClass}>
-          Login here
-        </Link>
+        {rich("reg.haveAccount", {
+          link: (
+            <Link href="/auth/login" className={authLinkClass}>
+              {t("reg.loginHere")}
+            </Link>
+          ),
+        })}
       </p>
     </AuthShell>
   );
+}
+
+/**
+ * Display name for an option stored as its English text. The submitted value
+ * is unchanged; Bangla digits cover the age bands ("14-16").
+ */
+function useOptionLabel() {
+  const { lang, digits } = useLanguage();
+  return (value: string) => (lang === "BN" ? (REGISTRATION_OPTION_BN[value] ?? digits(value)) : value);
 }
 
 function Field({
@@ -1195,16 +1136,18 @@ function Select({
   onChange: (v: string) => void;
   options: readonly string[];
 }) {
+  const optionLabel = useOptionLabel();
+  const { t } = useLanguage();
   return (
     <select
       className={fieldClass}
       value={value}
       onChange={(e) => onChange(e.target.value)}
     >
-      <option value="">Select…</option>
+      <option value="">{t("reg.select")}</option>
       {options.map((o) => (
         <option key={o} value={o}>
-          {o}
+          {optionLabel(o)}
         </option>
       ))}
     </select>
@@ -1231,9 +1174,10 @@ function ChoiceList({
   labels?: (value: string) => string;
   columns?: 2 | 3;
 }) {
+  const optionLabel = useOptionLabel();
   const normalised = options.map((o) =>
     typeof o === "string"
-      ? { value: o, label: labels ? labels(o) : o }
+      ? { value: o, label: labels ? labels(o) : optionLabel(o) }
       : o
   );
   return (

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useUnsubscribeMutation } from "@/redux/features/comms/commsApi";
 import { CheckCircle2, Loader2, XCircle } from "lucide-react";
+import { useLanguage } from "@/components/i18n/LanguageProvider";
 
 /**
  * FR-18-008 — one click.
@@ -29,6 +30,7 @@ export default function UnsubscribePage() {
 }
 
 function UnsubscribeInner() {
+  const { t } = useLanguage();
   const params = useSearchParams();
   const email = params.get("e");
   const token = params.get("t");
@@ -59,7 +61,7 @@ function UnsubscribeInner() {
           <>
             <Loader2 className="h-8 w-8 mx-auto animate-spin text-muted-foreground" />
             <p className="mt-4 text-sm text-muted-foreground">
-              Updating your preferences…
+              {t("unsub.working")}
             </p>
           </>
         )}
@@ -67,21 +69,18 @@ function UnsubscribeInner() {
         {state === "done" && (
           <>
             <CheckCircle2 className="h-10 w-10 mx-auto text-emerald-600" />
-            <h1 className="mt-4 text-lg font-bold">You have been unsubscribed</h1>
+            <h1 className="mt-4 text-lg font-bold">{t("unsub.doneTitle")}</h1>
             <p className="mt-2 text-sm text-muted-foreground">
-              {email} will no longer receive newsletters or announcements from
-              Student Square.
+              {t("unsub.doneBody", { email: email ?? "" })}
             </p>
             <p className="mt-3 text-xs text-muted-foreground">
-              You will still get essential messages about your account — receipts,
-              security alerts and anything about your counselling or mentoring.
-              Those are part of your account record and cannot be switched off.
+              {t("unsub.essential")}
             </p>
             <Link
               href="/"
               className="mt-6 inline-block rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white"
             >
-              Back to Student Square
+              {t("auth.backHome")}
             </Link>
           </>
         )}
@@ -89,17 +88,15 @@ function UnsubscribeInner() {
         {state === "failed" && (
           <>
             <XCircle className="h-10 w-10 mx-auto text-rose-600" />
-            <h1 className="mt-4 text-lg font-bold">This link did not work</h1>
+            <h1 className="mt-4 text-lg font-bold">{t("unsub.failedTitle")}</h1>
             <p className="mt-2 text-sm text-muted-foreground">
-              It may have been altered in transit. You can change what you
-              receive from your notification settings, or contact us and we will
-              do it for you.
+              {t("unsub.failedBody")}
             </p>
             <Link
               href="/dashboard/settings"
               className="mt-6 inline-block rounded-lg border border-border px-4 py-2 text-sm font-semibold"
             >
-              Notification settings
+              {t("unsub.settings")}
             </Link>
           </>
         )}

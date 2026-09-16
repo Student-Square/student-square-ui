@@ -4,11 +4,13 @@ import dynamic from "next/dynamic";
 import { useParams, redirect } from "next/navigation";
 import Link from "next/link";
 import Header from "@/components/common/Header/Header";
+import { NAVBAR_OFFSET } from "@/components/common/Header/navbarHeight";
 import Footer from "@/components/common/Footer/Footer";
 import { motion } from "motion/react";
 import { getCityBySlug } from "@/data/locations";
 import ImpactStats from "@/components/common/ImpactStats";
 import { ChevronRight } from "lucide-react";
+import { useLanguage } from "@/components/i18n/LanguageProvider";
 
 const CountryMap = dynamic(
   () => import("@/components/maps/CountryMap"),
@@ -24,10 +26,14 @@ const CountryMap = dynamic(
 
 export default function CityPage() {
   const { country: countrySlug, city: citySlug } = useParams<{ country: string; city: string }>();
+  const { t, pick } = useLanguage();
   const result = getCityBySlug(countrySlug, citySlug);
   if (!result) redirect(`/about/where-we-work/${countrySlug}`);
 
   const { country, city } = result;
+  const countryName = pick(country.name, country.nameBn);
+  const cityName = pick(city.name, city.nameBn);
+  const description = pick(city.description, city.descriptionBn);
   const half = Math.ceil(country.cities.length / 2);
   const col1 = country.cities.slice(0, half);
   const col2 = country.cities.slice(half);
@@ -37,10 +43,10 @@ export default function CityPage() {
       <Header />
 
       {/* Hero */}
-      <section className="relative mt-12 sm:mt-14 lg:mt-16 h-[36vh] min-h-[220px] w-full overflow-hidden">
+      <section className={`relative ${NAVBAR_OFFSET} h-[36vh] min-h-[220px] w-full overflow-hidden`}>
         <img
           src={city.image}
-          alt={city.name}
+          alt={cityName}
           className="absolute inset-0 h-full w-full object-cover"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-black/10" />
@@ -51,7 +57,7 @@ export default function CityPage() {
             transition={{ duration: 0.6 }}
             className="text-3xl sm:text-4xl font-bold text-white"
           >
-            {city.name}
+            {cityName}
           </motion.h1>
         </div>
       </section>
@@ -63,17 +69,17 @@ export default function CityPage() {
           {/* Breadcrumb */}
           <div className="flex items-center gap-2 text-xs text-muted-foreground flex-wrap">
             <Link href="/about/where-we-work" className="hover:text-emerald-600 transition-colors">
-              Where We Work
+              {t("where.title")}
             </Link>
             <ChevronRight className="h-3 w-3" />
             <Link
               href={`/about/where-we-work/${country.slug}`}
               className="hover:text-emerald-600 transition-colors"
             >
-              {country.name}
+              {countryName}
             </Link>
             <ChevronRight className="h-3 w-3" />
-            <span className="text-foreground">{city.name}</span>
+            <span className="text-foreground">{cityName}</span>
           </div>
 
           {/* Description */}
@@ -83,7 +89,7 @@ export default function CityPage() {
             transition={{ duration: 0.5 }}
             viewport={{ once: true }}
           >
-            <p className="text-base text-foreground leading-relaxed">{city.description}</p>
+            <p className="text-base text-foreground leading-relaxed">{description}</p>
           </motion.div>
 
           {/* Stats */}
@@ -103,7 +109,7 @@ export default function CityPage() {
             transition={{ duration: 0.5, delay: 0.2 }}
             viewport={{ once: true }}
           >
-            <p className="text-base text-foreground leading-relaxed">{city.description}</p>
+            <p className="text-base text-foreground leading-relaxed">{description}</p>
           </motion.div>
 
           {/* Mini country map — highlights current city's district */}
@@ -124,7 +130,7 @@ export default function CityPage() {
             transition={{ duration: 0.5, delay: 0.3 }}
             viewport={{ once: true }}
           >
-            <h2 className="text-xl font-bold text-foreground mb-3">{country.name}</h2>
+            <h2 className="text-xl font-bold text-foreground mb-3">{countryName}</h2>
             <div className="grid grid-cols-2 gap-x-8 gap-y-0.5">
               <div className="space-y-0.5">
                 {col1.map((c) => (
@@ -137,7 +143,7 @@ export default function CityPage() {
                         : "text-foreground hover:text-emerald-600"
                     }`}
                   >
-                    {c.name}
+                    {pick(c.name, c.nameBn)}
                   </Link>
                 ))}
               </div>
@@ -152,7 +158,7 @@ export default function CityPage() {
                         : "text-foreground hover:text-emerald-600"
                     }`}
                   >
-                    {c.name}
+                    {pick(c.name, c.nameBn)}
                   </Link>
                 ))}
               </div>

@@ -1,16 +1,18 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import Link from "next/link";
 import { useSelector } from "react-redux";
 import { toast } from "sonner";
 import {
+  CalendarRange,
+  ChevronDown,
   Download,
   Loader2,
   Pencil,
   Plus,
   Search,
   Trash2,
+  Users,
   X,
 } from "lucide-react";
 import { selectCurrentUser } from "@/redux/features/auth/authSlice";
@@ -29,13 +31,41 @@ import type {
 } from "@/types/operations";
 
 const fieldClass =
-  "w-full px-3 py-2 text-sm rounded-lg bg-background border border-border focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20";
+  "w-full px-3 py-2.5 text-sm rounded-xl bg-background border border-border focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20";
 
 function toLocalInput(iso: string) {
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return "";
   const pad = (n: number) => String(n).padStart(2, "0");
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+function formatRange(startsAt: string, endsAt: string) {
+  const start = new Date(startsAt);
+  const end = new Date(endsAt);
+  if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) return "—";
+  const sameDay = start.toDateString() === end.toDateString();
+  const day = start.toLocaleDateString(undefined, {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
+  const t1 = start.toLocaleTimeString(undefined, {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+  const t2 = end.toLocaleTimeString(undefined, {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+  if (sameDay) return { day, time: `${t1} – ${t2}` };
+  return {
+    day: `${day} → ${end.toLocaleDateString(undefined, {
+      day: "numeric",
+      month: "short",
+    })}`,
+    time: `${t1} – ${t2}`,
+  };
 }
 
 function emptyForm(): OperationEntryInput & {
@@ -50,7 +80,7 @@ function emptyForm(): OperationEntryInput & {
     endsAt: toLocalInput(later.toISOString()),
     mentorIds: [],
     mentorsOther: "",
-    attendeeMode: "NAMES" as const,
+    attendeeMode: "NAMES",
     attendeeNames: [],
     attendeeCount: undefined,
     description: "",
@@ -69,24 +99,43 @@ export default function DashboardOperationsPage() {
     useLazySearchOperationMembersQuery();
 
   const [open, setOpen] = useState(false);
+  const [showDetails, setShowDetails] = useState(false);
   const [editing, setEditing] = useState<OperationEntry | null>(null);
   const [form, setForm] = useState(emptyForm);
   const [selectedMentors, setSelectedMentors] = useState<
     OperationMemberOption[]
   >([]);
   const [error, setError] = useState<string | null>(null);
+  const [listQuery, setListQuery] = useState("");
 
   const rows = data?.data ?? [];
+  const filteredRows = useMemo(() => {
+    const q = listQuery.trim().toLowerCase();
+    if (!q) return rows;
+    return rows.filter(
+      (r) =>
+        r.taskName.toLowerCase().includes(q) ||
+        r.description.toLowerCase().includes(q) ||
+        (r.mentorsLabel ?? "").toLowerCase().includes(q) ||
+        r.attendees.toLowerCase().includes(q)
+    );
+  }, [rows, listQuery]);
 
   const openCreate = () => {
     setEditing(null);
     setForm(emptyForm());
     setSelectedMentors([]);
+    setShowDetails(false);
     setError(null);
     setOpen(true);
   };
 
   const openEdit = (row: OperationEntry) => {
+    const hasDetails =
+      Boolean(row.description?.trim()) ||
+      Boolean(row.mentorsLabel?.trim()) ||
+      (row.attendees && row.attendees !== "—") ||
+      Boolean(row.mentorsOther);
     setEditing(row);
     setForm({
       taskName: row.taskName,
@@ -95,21 +144,15 @@ export default function DashboardOperationsPage() {
       mentorIds: row.mentorIds,
       mentorsOther: row.mentorsOther ?? "",
       attendeeMode: row.attendeeMode,
-      attendeeNames: row.attendeeNames,
+      attendeeNames:
+        row.attendeeMode === "NAMES" && row.attendeeNames.length
+          ? row.attendeeNames
+          : [],
       attendeeCount: row.attendeeCount ?? undefined,
-      description: row.description,
+      description: row.description ?? "",
       includeOthers: Boolean(row.mentorsOther),
       mentorQuery: "",
     });
-    setSelectedMentors(
-      row.mentorIds.map((id) => ({
-        id,
-        fullName: row.mentorsLabel?.includes(id) ? id : id,
-        memberId: null,
-        email: "",
-      }))
-    );
-    // Refresh mentor labels via search if needed — store minimal chips from label parse
     setSelectedMentors(
       (row.mentorsLabel || "")
         .split(",")
@@ -123,6 +166,7 @@ export default function DashboardOperationsPage() {
           email: "",
         }))
     );
+    setShowDetails(hasDetails);
     setError(null);
     setOpen(true);
   };
@@ -137,30 +181,26 @@ export default function DashboardOperationsPage() {
   const addMentor = (m: OperationMemberOption) => {
     if (selectedMentors.some((x) => x.id === m.id)) return;
     setSelectedMentors((prev) => [...prev, m]);
-    patch({ mentorIds: [...form.mentorIds, m.id], mentorQuery: "" });
+    patch({ mentorIds: [...(form.mentorIds ?? []), m.id], mentorQuery: "" });
   };
 
   const removeMentor = (id: string) => {
     setSelectedMentors((prev) => prev.filter((m) => m.id !== id));
-    patch({ mentorIds: form.mentorIds.filter((x) => x !== id) });
+    patch({ mentorIds: (form.mentorIds ?? []).filter((x) => x !== id) });
   };
 
   const submit = async () => {
     setError(null);
     if (!form.taskName.trim()) return setError("Task name is required.");
-    // FR-12-004 mirrored client-side so the message arrives before the request.
-    // The server enforces the same rule — see operation.attendees.ts.
+    if (new Date(form.endsAt) <= new Date(form.startsAt)) {
+      return setError("End time must be after start time.");
+    }
     if (form.attendeeMode === "NAMES") {
       const named = (form.attendeeNames ?? []).filter((n) => n.trim()).length;
-      if (!named) return setError("Add at least one attendee name.");
       if (named >= 5)
         return setError("From 5 attendees, switch to a headcount.");
-    } else if (!form.attendeeCount || form.attendeeCount < 5) {
+    } else if (form.attendeeCount != null && form.attendeeCount < 5) {
       return setError("A headcount is for 5 or more — otherwise list names.");
-    }
-    if (!form.description.trim()) return setError("Description is required.");
-    if (form.includeOthers && !form.mentorsOther?.trim() && !form.mentorIds.length) {
-      return setError("Add mentors or others.");
     }
 
     const body: OperationEntryInput = {
@@ -176,7 +216,7 @@ export default function DashboardOperationsPage() {
           : undefined,
       attendeeCount:
         form.attendeeMode === "COUNT" ? form.attendeeCount : undefined,
-      description: form.description.trim(),
+      description: form.description?.trim() || "",
     };
 
     try {
@@ -206,7 +246,7 @@ export default function DashboardOperationsPage() {
   };
 
   const filteredSearch = useMemo(
-    () => searchResults.filter((m) => !form.mentorIds.includes(m.id)),
+    () => searchResults.filter((m) => !form.mentorIds?.includes(m.id)),
     [searchResults, form.mentorIds]
   );
 
@@ -214,11 +254,16 @@ export default function DashboardOperationsPage() {
     <div>
       <div className="flex flex-wrap items-end justify-between gap-3 mb-6">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Daily Operation Book</h1>
+          <h1 className="text-2xl font-bold tracking-tight">
+            Daily Operation Book
+          </h1>
           <p className="mt-1 text-sm text-muted-foreground">
             {user?.fullName}
-            {user?.memberId ? ` · ${user.memberId}` : ""} — name and Member ID
-            fill automatically.
+            {user?.memberId ? ` · ${user.memberId}` : ""}
+          </p>
+          <p className="mt-1 text-xs text-muted-foreground max-w-xl">
+            Write the task — time is set automatically. Add details only if you
+            need them.
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -230,7 +275,7 @@ export default function DashboardOperationsPage() {
                 "daily-operation-book.csv"
               ).catch(() => toast.error("CSV download failed"))
             }
-            className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-border text-sm font-semibold hover:bg-muted"
+            className="inline-flex items-center gap-2 px-3 py-2 rounded-xl border border-border text-sm font-semibold hover:bg-muted"
           >
             <Download className="h-4 w-4" /> CSV
           </button>
@@ -242,314 +287,400 @@ export default function DashboardOperationsPage() {
                 "daily-operation-book.pdf"
               ).catch(() => toast.error("PDF download failed"))
             }
-            className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-border text-sm font-semibold hover:bg-muted"
+            className="inline-flex items-center gap-2 px-3 py-2 rounded-xl border border-border text-sm font-semibold hover:bg-muted"
           >
             <Download className="h-4 w-4" /> PDF
           </button>
           <button
             type="button"
             onClick={openCreate}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-emerald-600 text-white text-sm font-semibold hover:bg-emerald-700"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-600 text-white text-sm font-semibold hover:bg-emerald-700"
           >
             <Plus className="h-4 w-4" /> New entry
           </button>
         </div>
       </div>
 
-      <div className="rounded-xl border border-border overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead className="bg-muted/50 text-left text-xs uppercase tracking-wider text-muted-foreground">
-              <tr>
-                <th className="px-3 py-2.5 font-bold">Task</th>
-                <th className="px-3 py-2.5 font-bold">Description</th>
-                <th className="px-3 py-2.5 font-bold">From → To</th>
-                <th className="px-3 py-2.5 font-bold">Mentors</th>
-                <th className="px-3 py-2.5 font-bold">Attendees</th>
-                <th className="px-3 py-2.5 font-bold w-24" />
-              </tr>
-            </thead>
-            <tbody>
-              {isLoading && (
-                <tr>
-                  <td colSpan={6} className="px-3 py-8 text-center text-muted-foreground">
-                    <Loader2 className="h-4 w-4 animate-spin inline mr-2" />
-                    Loading…
-                  </td>
-                </tr>
-              )}
-              {!isLoading && rows.length === 0 && (
-                <tr>
-                  <td colSpan={6} className="px-3 py-8 text-center text-muted-foreground">
-                    No entries yet. Add your first task.
-                  </td>
-                </tr>
-              )}
-              {rows.map((row) => (
-                <tr key={row.id} className="border-t border-border align-top">
-                  <td className="px-3 py-3 font-medium">{row.taskName}</td>
-                  <td className="px-3 py-3 text-xs max-w-[16rem] truncate" title={row.description}>
-                    {row.description}
-                  </td>
-                  <td className="px-3 py-3 text-xs text-muted-foreground whitespace-nowrap">
-                    {new Date(row.startsAt).toLocaleString()}
-                    <br />→ {new Date(row.endsAt).toLocaleString()}
-                  </td>
-                  <td className="px-3 py-3 text-xs max-w-[12rem]">
-                    {row.mentorsLabel || "—"}
-                  </td>
-                  <td className="px-3 py-3 text-xs">{row.attendees}</td>
-                  <td className="px-3 py-3">
-                    <div className="flex gap-1">
-                      <button
-                        type="button"
-                        onClick={() => openEdit(row)}
-                        className="p-1.5 rounded-md hover:bg-muted"
-                        aria-label="Edit"
-                      >
-                        <Pencil className="h-3.5 w-3.5" />
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => onDelete(row.id)}
-                        className="p-1.5 rounded-md hover:bg-muted text-red-600"
-                        aria-label="Delete"
-                      >
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+      <div className="mb-4 relative max-w-md">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+        <input
+          className="w-full pl-9 pr-3 py-2.5 text-sm rounded-xl border border-border bg-background"
+          placeholder="Search tasks…"
+          value={listQuery}
+          onChange={(e) => setListQuery(e.target.value)}
+        />
       </div>
+
+      {isLoading ? (
+        <div className="flex items-center justify-center py-16 text-muted-foreground">
+          <Loader2 className="h-5 w-5 animate-spin mr-2" />
+          Loading…
+        </div>
+      ) : filteredRows.length === 0 ? (
+        <div className="rounded-2xl border border-dashed border-border bg-muted/20 px-6 py-14 text-center">
+          <CalendarRange className="mx-auto h-10 w-10 text-muted-foreground/50" />
+          <p className="mt-3 text-sm font-semibold">
+            {listQuery ? "No matching entries" : "No entries yet"}
+          </p>
+          <p className="mt-1 text-xs text-muted-foreground max-w-sm mx-auto">
+            {listQuery
+              ? "Try a different search."
+              : "Add a task name — that’s enough to start."}
+          </p>
+          {!listQuery && (
+            <button
+              type="button"
+              onClick={openCreate}
+              className="mt-4 inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2 text-sm font-semibold text-white"
+            >
+              <Plus className="h-4 w-4" /> Add first entry
+            </button>
+          )}
+        </div>
+      ) : (
+        <ul className="space-y-3">
+          {filteredRows.map((row) => {
+            const range = formatRange(row.startsAt, row.endsAt);
+            const hasMeta =
+              Boolean(row.description?.trim()) ||
+              Boolean(row.mentorsLabel?.trim()) ||
+              (row.attendees && row.attendees !== "—");
+            return (
+              <li
+                key={row.id}
+                className="rounded-2xl border border-border bg-card p-4 sm:p-5 hover:border-emerald-500/30 transition-colors"
+              >
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <h2 className="text-base font-bold tracking-tight">
+                        {row.taskName}
+                      </h2>
+                      <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                        <CalendarRange className="h-3 w-3" />
+                        {typeof range === "string" ? range : range.day}
+                      </span>
+                    </div>
+                    {typeof range !== "string" && (
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        {range.time}
+                      </p>
+                    )}
+                    {row.description?.trim() ? (
+                      <p className="mt-2 text-sm text-muted-foreground leading-relaxed">
+                        {row.description}
+                      </p>
+                    ) : null}
+                    {hasMeta && (
+                      <div className="mt-3 flex flex-wrap gap-2">
+                        {row.mentorsLabel ? (
+                          <span className="inline-flex max-w-full items-center gap-1.5 rounded-lg border border-border bg-muted/40 px-2.5 py-1 text-xs">
+                            <Users className="h-3 w-3 shrink-0 text-emerald-600" />
+                            <span className="truncate">
+                              <span className="font-semibold">Mentors:</span>{" "}
+                              {row.mentorsLabel}
+                            </span>
+                          </span>
+                        ) : null}
+                        {row.attendees && row.attendees !== "—" ? (
+                          <span className="inline-flex max-w-full items-center gap-1.5 rounded-lg border border-border bg-muted/40 px-2.5 py-1 text-xs">
+                            <Users className="h-3 w-3 shrink-0 text-sky-600" />
+                            <span className="truncate">
+                              <span className="font-semibold">Attendees:</span>{" "}
+                              {row.attendees}
+                            </span>
+                          </span>
+                        ) : null}
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex gap-1 shrink-0">
+                    <button
+                      type="button"
+                      onClick={() => openEdit(row)}
+                      className="inline-flex items-center gap-1.5 rounded-xl border border-border px-3 py-1.5 text-xs font-semibold hover:bg-muted"
+                    >
+                      <Pencil className="h-3.5 w-3.5" /> Edit
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => onDelete(row.id)}
+                      className="inline-flex items-center gap-1.5 rounded-xl border border-border px-3 py-1.5 text-xs font-semibold text-red-600 hover:bg-red-500/5"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" /> Delete
+                    </button>
+                  </div>
+                </div>
+              </li>
+            );
+          })}
+        </ul>
+      )}
 
       {open && (
         <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 p-4">
-          <div className="w-full max-w-lg rounded-2xl border border-border bg-card p-5 sm:p-6 max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-bold">
-                {editing ? "Edit entry" : "New entry"}
-              </h2>
-              <button type="button" onClick={() => setOpen(false)} className="p-1.5 rounded-md hover:bg-muted">
+          <div className="w-full max-w-lg rounded-2xl border border-border bg-card shadow-xl max-h-[92vh] overflow-y-auto">
+            <div className="sticky top-0 z-10 flex items-center justify-between border-b border-border bg-card/95 backdrop-blur px-5 py-4">
+              <div>
+                <h2 className="text-lg font-bold">
+                  {editing ? "Edit entry" : "New entry"}
+                </h2>
+                <p className="text-xs text-muted-foreground">
+                  Only the task is required
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setOpen(false)}
+                className="p-2 rounded-xl hover:bg-muted"
+              >
                 <X className="h-4 w-4" />
               </button>
             </div>
 
-            <div className="space-y-3">
-              <label className="block text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                Task name
+            <div className="space-y-4 p-5">
+              <label className="block text-xs font-semibold text-muted-foreground">
+                Task
                 <input
-                  className={`${fieldClass} mt-1`}
+                  autoFocus
+                  className={`${fieldClass} mt-1.5`}
                   value={form.taskName}
                   onChange={(e) => patch({ taskName: e.target.value })}
+                  placeholder="What did you do?"
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && !showDetails) {
+                      e.preventDefault();
+                      void submit();
+                    }
+                  }}
                 />
               </label>
 
-              <div className="grid grid-cols-2 gap-3">
-                <label className="block text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                  From
-                  <input
-                    type="datetime-local"
-                    className={`${fieldClass} mt-1`}
-                    value={form.startsAt}
-                    onChange={(e) => patch({ startsAt: e.target.value })}
-                  />
-                </label>
-                <label className="block text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                  To
-                  <input
-                    type="datetime-local"
-                    className={`${fieldClass} mt-1`}
-                    value={form.endsAt}
-                    onChange={(e) => patch({ endsAt: e.target.value })}
-                  />
-                </label>
-              </div>
+              <button
+                type="button"
+                onClick={() => setShowDetails((v) => !v)}
+                className="inline-flex items-center gap-1.5 text-xs font-semibold text-muted-foreground hover:text-foreground"
+              >
+                <ChevronDown
+                  className={`h-3.5 w-3.5 transition-transform ${showDetails ? "rotate-180" : ""}`}
+                />
+                {showDetails ? "Hide details" : "Add details (optional)"}
+              </button>
 
-              <div>
-                <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1">
-                  Mentors (search by name / Member ID)
-                </p>
-                <p className="text-[11px] text-muted-foreground mb-2">
-                  Multiple mentors: select several. Use comma in Others for free-text names.
-                </p>
-                <div className="relative">
-                  <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-                  <input
-                    className={`${fieldClass} pl-8`}
-                    value={form.mentorQuery}
-                    onChange={(e) => onSearchMentors(e.target.value)}
-                    placeholder="Search registered members…"
-                  />
-                </div>
-                {form.mentorQuery.trim().length >= 2 && filteredSearch.length > 0 && (
-                  <ul className="mt-1 rounded-lg border border-border bg-background max-h-36 overflow-y-auto">
-                    {filteredSearch.map((m) => (
-                      <li key={m.id}>
-                        <button
-                          type="button"
-                          className="w-full text-left px-3 py-2 text-sm hover:bg-muted"
-                          onClick={() => addMentor(m)}
+              {showDetails && (
+                <div className="space-y-4 rounded-xl border border-border bg-muted/20 p-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <label className="block text-xs font-semibold text-muted-foreground">
+                      From
+                      <input
+                        type="datetime-local"
+                        className={`${fieldClass} mt-1.5`}
+                        value={form.startsAt}
+                        onChange={(e) => patch({ startsAt: e.target.value })}
+                      />
+                    </label>
+                    <label className="block text-xs font-semibold text-muted-foreground">
+                      To
+                      <input
+                        type="datetime-local"
+                        className={`${fieldClass} mt-1.5`}
+                        value={form.endsAt}
+                        onChange={(e) => patch({ endsAt: e.target.value })}
+                      />
+                    </label>
+                  </div>
+
+                  <label className="block text-xs font-semibold text-muted-foreground">
+                    Description
+                    <textarea
+                      className={`${fieldClass} mt-1.5`}
+                      rows={2}
+                      value={form.description}
+                      onChange={(e) => patch({ description: e.target.value })}
+                      placeholder="Optional notes…"
+                    />
+                  </label>
+
+                  <div className="space-y-2">
+                    <p className="text-xs font-semibold text-muted-foreground">
+                      Mentors (optional)
+                    </p>
+                    <div className="relative">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+                      <input
+                        className={`${fieldClass} pl-9`}
+                        value={form.mentorQuery}
+                        onChange={(e) => onSearchMentors(e.target.value)}
+                        placeholder="Search by name or Member ID…"
+                      />
+                    </div>
+                    {form.mentorQuery.trim().length >= 2 &&
+                      filteredSearch.length > 0 && (
+                        <ul className="rounded-xl border border-border bg-background max-h-36 overflow-y-auto divide-y divide-border">
+                          {filteredSearch.map((m) => (
+                            <li key={m.id}>
+                              <button
+                                type="button"
+                                className="w-full text-left px-3 py-2 text-sm hover:bg-muted"
+                                onClick={() => addMentor(m)}
+                              >
+                                <span className="font-medium">{m.fullName}</span>
+                                {m.memberId ? (
+                                  <span className="text-muted-foreground">
+                                    {" "}
+                                    · {m.memberId}
+                                  </span>
+                                ) : null}
+                              </button>
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                    <div className="flex flex-wrap gap-1.5">
+                      {selectedMentors.map((m) => (
+                        <span
+                          key={m.id}
+                          className="inline-flex items-center gap-1 text-xs px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200/70 dark:bg-emerald-900/30 dark:text-emerald-300 dark:border-emerald-800"
                         >
                           {m.fullName}
-                          {m.memberId ? (
-                            <span className="text-muted-foreground"> · {m.memberId}</span>
-                          ) : null}
-                        </button>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-                <div className="flex flex-wrap gap-1.5 mt-2">
-                  {selectedMentors.map((m) => (
-                    <span
-                      key={m.id}
-                      className="inline-flex items-center gap-1 text-xs px-2 py-1 rounded-full bg-emerald-50 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300"
-                    >
-                      {m.fullName}
-                      <button type="button" onClick={() => removeMentor(m.id)}>
-                        <X className="h-3 w-3" />
-                      </button>
-                    </span>
-                  ))}
-                </div>
-                <label className="flex items-center gap-2 mt-3 text-sm">
-                  <input
-                    type="checkbox"
-                    checked={form.includeOthers}
-                    onChange={(e) => patch({ includeOthers: e.target.checked })}
-                    className="accent-emerald-600"
-                  />
-                  Others (free text)
-                </label>
-                {form.includeOthers && (
-                  <input
-                    className={`${fieldClass} mt-1`}
-                    value={form.mentorsOther ?? ""}
-                    onChange={(e) => patch({ mentorsOther: e.target.value })}
-                    placeholder="Comma-separated names"
-                  />
-                )}
-              </div>
-
-              <div>
-                <span className="block text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                  Attendees
-                </span>
-                <div className="mt-1 flex gap-1.5">
-                  {(["NAMES", "COUNT"] as const).map((mode) => (
-                    <button
-                      key={mode}
-                      type="button"
-                      onClick={() => patch({ attendeeMode: mode })}
-                      className={`rounded-full px-3 py-1.5 text-xs font-semibold transition-colors ${
-                        form.attendeeMode === mode
-                          ? "bg-emerald-600 text-white"
-                          : "border border-border text-muted-foreground"
-                      }`}
-                    >
-                      {mode === "NAMES" ? "Names (under 5)" : "Headcount (5+)"}
-                    </button>
-                  ))}
-                </div>
-
-                {form.attendeeMode === "NAMES" ? (
-                  <div className="mt-2 space-y-1.5">
-                    {(form.attendeeNames ?? []).map((name, index) => (
-                      <div key={index} className="flex gap-1.5">
-                        <input
-                          className={fieldClass}
-                          value={name}
-                          onChange={(e) => {
-                            const next = [...(form.attendeeNames ?? [])];
-                            next[index] = e.target.value;
-                            patch({ attendeeNames: next });
-                          }}
-                          placeholder="Attendee name"
-                        />
-                        <button
-                          type="button"
-                          onClick={() =>
-                            patch({
-                              attendeeNames: (form.attendeeNames ?? []).filter(
-                                (_, i) => i !== index
-                              ),
-                            })
-                          }
-                          className="px-2 rounded-lg border border-border text-muted-foreground hover:text-rose-600"
-                          aria-label="Remove attendee"
-                        >
-                          <X className="h-3.5 w-3.5" />
-                        </button>
-                      </div>
-                    ))}
-                    {(form.attendeeNames ?? []).length < 4 && (
-                      <button
-                        type="button"
-                        onClick={() =>
-                          patch({
-                            attendeeNames: [...(form.attendeeNames ?? []), ""],
-                          })
+                          <button
+                            type="button"
+                            onClick={() => removeMentor(m.id)}
+                          >
+                            <X className="h-3 w-3" />
+                          </button>
+                        </span>
+                      ))}
+                    </div>
+                    <label className="flex items-center gap-2 text-sm">
+                      <input
+                        type="checkbox"
+                        checked={form.includeOthers}
+                        onChange={(e) =>
+                          patch({ includeOthers: e.target.checked })
                         }
-                        className="text-xs font-semibold text-emerald-600 hover:underline"
-                      >
-                        + Add attendee
-                      </button>
+                        className="accent-emerald-600 h-4 w-4"
+                      />
+                      Others (not registered)
+                    </label>
+                    {form.includeOthers && (
+                      <input
+                        className={fieldClass}
+                        value={form.mentorsOther ?? ""}
+                        onChange={(e) =>
+                          patch({ mentorsOther: e.target.value })
+                        }
+                        placeholder="Comma-separated names"
+                      />
                     )}
                   </div>
-                ) : (
-                  <input
-                    type="number"
-                    min={5}
-                    className={`${fieldClass} mt-2`}
-                    value={form.attendeeCount ?? ""}
-                    onChange={(e) =>
-                      patch({
-                        attendeeCount: e.target.value
-                          ? Number(e.target.value)
-                          : undefined,
-                      })
-                    }
-                    placeholder="How many attended"
-                  />
-                )}
 
-                <span className="mt-1.5 block text-[11px] text-muted-foreground">
-                  Under five people, record their names. From five, a headcount
-                  is enough — an activity note should not become a roster.
-                </span>
-              </div>
-
-              <label className="block text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                Task description
-                <textarea
-                  className={`${fieldClass} mt-1`}
-                  rows={3}
-                  value={form.description}
-                  onChange={(e) => patch({ description: e.target.value })}
-                />
-              </label>
-
-              {error && (
-                <p className="text-sm text-red-600">{error}</p>
+                  <div className="space-y-2">
+                    <p className="text-xs font-semibold text-muted-foreground">
+                      Attendees (optional)
+                    </p>
+                    <div className="flex gap-1.5">
+                      {(["NAMES", "COUNT"] as const).map((mode) => (
+                        <button
+                          key={mode}
+                          type="button"
+                          onClick={() => patch({ attendeeMode: mode })}
+                          className={`rounded-full px-3 py-1.5 text-xs font-semibold transition-colors ${
+                            form.attendeeMode === mode
+                              ? "bg-emerald-600 text-white"
+                              : "border border-border text-muted-foreground hover:bg-muted"
+                          }`}
+                        >
+                          {mode === "NAMES" ? "Names (1–4)" : "Headcount (5+)"}
+                        </button>
+                      ))}
+                    </div>
+                    {form.attendeeMode === "NAMES" ? (
+                      <div className="space-y-2">
+                        {(form.attendeeNames ?? []).map((name, index) => (
+                          <div key={index} className="flex gap-2">
+                            <input
+                              className={fieldClass}
+                              value={name}
+                              onChange={(e) => {
+                                const next = [...(form.attendeeNames ?? [])];
+                                next[index] = e.target.value;
+                                patch({ attendeeNames: next });
+                              }}
+                              placeholder={`Attendee ${index + 1}`}
+                            />
+                            <button
+                              type="button"
+                              onClick={() =>
+                                patch({
+                                  attendeeNames: (
+                                    form.attendeeNames ?? []
+                                  ).filter((_, i) => i !== index),
+                                })
+                              }
+                              className="px-2.5 rounded-xl border border-border text-muted-foreground hover:text-rose-600"
+                              aria-label="Remove attendee"
+                            >
+                              <X className="h-3.5 w-3.5" />
+                            </button>
+                          </div>
+                        ))}
+                        {(form.attendeeNames ?? []).length < 4 && (
+                          <button
+                            type="button"
+                            onClick={() =>
+                              patch({
+                                attendeeNames: [
+                                  ...(form.attendeeNames ?? []),
+                                  "",
+                                ],
+                              })
+                            }
+                            className="text-xs font-semibold text-emerald-600 hover:underline"
+                          >
+                            + Add attendee
+                          </button>
+                        )}
+                      </div>
+                    ) : (
+                      <input
+                        type="number"
+                        min={5}
+                        className={fieldClass}
+                        value={form.attendeeCount ?? ""}
+                        onChange={(e) =>
+                          patch({
+                            attendeeCount: e.target.value
+                              ? Number(e.target.value)
+                              : undefined,
+                          })
+                        }
+                        placeholder="How many attended (5 or more)"
+                      />
+                    )}
+                  </div>
+                </div>
               )}
 
-              <div className="flex justify-end gap-2 pt-2">
+              {error && (
+                <p className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700 dark:border-red-900 dark:bg-red-950/40 dark:text-red-300">
+                  {error}
+                </p>
+              )}
+
+              <div className="flex justify-end gap-2 pt-1 border-t border-border">
                 <button
                   type="button"
                   onClick={() => setOpen(false)}
-                  className="px-4 py-2 rounded-lg border border-border text-sm font-semibold"
+                  className="px-4 py-2.5 rounded-xl border border-border text-sm font-semibold"
                 >
                   Cancel
                 </button>
                 <button
                   type="button"
                   disabled={creating || updating}
-                  onClick={submit}
-                  className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-emerald-600 text-white text-sm font-semibold disabled:opacity-60"
+                  onClick={() => void submit()}
+                  className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-600 text-white text-sm font-semibold disabled:opacity-60"
                 >
                   {(creating || updating) && (
                     <Loader2 className="h-4 w-4 animate-spin" />

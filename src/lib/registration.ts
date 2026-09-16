@@ -246,13 +246,10 @@ export const HOME_DISTRICTS = [
   "Thakurgaon",
 ] as const;
 
-export const FOUNDATION_WELCOME_TEXT =
-  "Student Square Foundation works with young people across Bangladesh on education, wellbeing, and leadership. This registration collects contact details, education background, occupation status, and optionally disability/accessibility information so we can match you with programmes and support. Your Member ID will be emailed after you verify your address.";
-
 /**
- * FR-01-003. Shown on step 1 as its own checkbox, separate from the Terms.
+ * Sensitive-data disclosure shown on the Terms of Use page.
  * Kept verbatim in sync with the server's consent registry — the server
- * stores its own copy, so this is what the applicant reads, not what is saved.
+ * stores its own copy; this is what the applicant reads.
  */
 export const SENSITIVE_CONSENT_SUMMARY = {
   categories: [
@@ -268,6 +265,27 @@ export const SENSITIVE_CONSENT_SUMMARY = {
     "Kept while your account is active and for two years afterwards, then deleted.",
   withdrawal:
     "You may withdraw this consent at any time by contacting the Foundation. Withdrawing it does not affect your use of the rest of the platform.",
+} as const;
+
+/**
+ * The same disclosure in Bangla, for readers of the Bangla Terms page. Display
+ * only: the English above is the version the consent registry records, so any
+ * change there must be mirrored here.
+ */
+export const SENSITIVE_CONSENT_SUMMARY_BN = {
+  categories: [
+    "প্রতিবন্ধিতা ও অ্যাক্সেসিবিলিটি সংক্রান্ত অবস্থা",
+    "স্বাস্থ্য তথ্য (হেপাটাইটিস-বি অবস্থা, ঘুম, মাইগ্রেন, পুষ্টি)",
+    "মনস্তাত্ত্বিক স্ব-মূল্যায়নের উত্তর",
+  ],
+  purpose:
+    "শুধু আপনার জন্য নির্ধারিত একজন কাউন্সেলর যেন আপনার পরিস্থিতি বুঝে আরও ভালো পরামর্শ দিতে পারেন, সে জন্য ব্যবহার করা হয়। এটি দিয়ে কখনো আপনাকে নম্বর দেওয়া, গ্রেড করা বা অন্যদের সঙ্গে তুলনা করে ক্রম নির্ধারণ করা হয় না, এবং প্ল্যাটফর্মটি কোনো চিকিৎসা বা মনস্তাত্ত্বিক রোগনির্ণয় করে না।",
+  access:
+    "আপনার জন্য নির্ধারিত কাউন্সেলর এবং ফাউন্ডেশনের অ্যাডমিনিস্ট্রেটররা। আপনার নির্ধারিত মেন্টর আপনার স্বাস্থ্য বা মনস্তাত্ত্বিক উত্তর দেখতে পারেন না।",
+  retention:
+    "আপনার অ্যাকাউন্ট সক্রিয় থাকা পর্যন্ত এবং তার পরে দুই বছর রাখা হয়, তারপর মুছে ফেলা হয়।",
+  withdrawal:
+    "ফাউন্ডেশনের সঙ্গে যোগাযোগ করে আপনি যেকোনো সময় এই সম্মতি প্রত্যাহার করতে পারেন। প্রত্যাহার করলেও প্ল্যাটফর্মের বাকি অংশ ব্যবহারে কোনো প্রভাব পড়বে না।",
 } as const;
 
 /** Mirrors the server payload in auth.service.ts. */

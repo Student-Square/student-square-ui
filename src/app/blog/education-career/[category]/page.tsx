@@ -1,5 +1,6 @@
 "use client";
 
+import { Suspense } from "react";
 import { useParams, notFound } from "next/navigation";
 import EducationCareerContent, { SUB_CATEGORIES } from "../_content";
 
@@ -14,5 +15,10 @@ export default function EducationCareerSubCategoryPage() {
     notFound();
   }
 
-  return <EducationCareerContent initialCategory={category} />;
+  // The content reads useSearchParams(), which needs a Suspense boundary.
+  return (
+    <Suspense fallback={null}>
+      <EducationCareerContent initialCategory={category} />
+    </Suspense>
+  );
 }

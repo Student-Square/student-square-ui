@@ -4,6 +4,7 @@ export const blogData: Blog[] = [
   {
     id: 1,
     title: "Empowering Students Through Counselling Excellence",
+    titleBn: "উৎকৃষ্ট কাউন্সেলিংয়ের মাধ্যমে শিক্ষার্থীদের ক্ষমতায়ন",
     paragraph:
       "Discover how our comprehensive counselling programs are transforming student lives and helping them navigate challenges with confidence and resilience.",
     body: [
@@ -26,6 +27,7 @@ export const blogData: Blog[] = [
   {
     id: 2,
     title: "Student Excellence & Recognition Programs",
+    titleBn: "শিক্ষার্থীদের কৃতিত্ব ও স্বীকৃতি কার্যক্রম",
     paragraph:
       "Explore the various scholarship programs and recognition initiatives available to deserving students. Learn how to apply and take the first step toward your dreams.",
     body: [
@@ -48,6 +50,7 @@ export const blogData: Blog[] = [
   {
     id: 3,
     title: "Building Stronger Communities Through Education",
+    titleBn: "শিক্ষার মাধ্যমে শক্তিশালী কমিউনিটি গড়া",
     paragraph:
       "Learn about our community initiatives that promote educational excellence and create lasting positive impact in the lives of students and their families.",
     body: [
@@ -70,6 +73,7 @@ export const blogData: Blog[] = [
   {
     id: 4,
     title: "Mental Health Awareness in Educational Settings",
+    titleBn: "শিক্ষাপ্রতিষ্ঠানে মানসিক স্বাস্থ্য সচেতনতা",
     paragraph:
       "Understanding the importance of mental health support in schools and colleges. A comprehensive guide to resources and support systems available for students.",
     body: [
@@ -92,6 +96,7 @@ export const blogData: Blog[] = [
   {
     id: 5,
     title: "Emergency Response & Community Resilience",
+    titleBn: "জরুরি সাড়াদান ও কমিউনিটির সহনশীলতা",
     paragraph:
       "Expert insights on emergency preparedness, community service, and how Student Square supports communities during challenging times with practical assistance.",
     body: [
@@ -114,6 +119,7 @@ export const blogData: Blog[] = [
   {
     id: 6,
     title: "Environmental Initiatives & Sustainability",
+    titleBn: "পরিবেশ উদ্যোগ ও টেকসই উন্নয়ন",
     paragraph:
       "Exploring our environmental programs and how student-led initiatives are making meaningful contributions to sustainability and community development.",
     body: [
@@ -136,6 +142,7 @@ export const blogData: Blog[] = [
   {
     id: 7,
     title: "Career Pathways Beyond the Public University Door",
+    titleBn: "পাবলিক বিশ্ববিদ্যালয়ের পরে ক্যারিয়ারের পথ",
     paragraph:
       "An honest look at the career paths available after university — drawn from interviews with faculty, professionals, and recent graduates.",
     body: [
@@ -158,6 +165,7 @@ export const blogData: Blog[] = [
   {
     id: 8,
     title: "Why Group Counselling Workshops Work",
+    titleBn: "গ্রুপ কাউন্সেলিং কর্মশালা কেন কাজ করে",
     paragraph:
       "Group counselling lowers stigma, normalises asking for help, and builds peer support networks. Here is what we have learned from running sixteen workshops.",
     body: [
@@ -180,6 +188,7 @@ export const blogData: Blog[] = [
   {
     id: 9,
     title: "Designing Scholarships That Reach the Right Students",
+    titleBn: "সঠিক শিক্ষার্থীর কাছে পৌঁছানোর মতো বৃত্তির পরিকল্পনা",
     paragraph:
       "Targeted scholarships outperform broad ones. We share the design principles behind our merit-and-need-based scholarship programme.",
     body: [
@@ -202,6 +211,7 @@ export const blogData: Blog[] = [
   {
     id: 10,
     title: "How Parents Become Partners in a Student's Journey",
+    titleBn: "শিক্ষার্থীর পথচলায় অভিভাবক যেভাবে সহযাত্রী হন",
     paragraph:
       "Parent engagement is not optional — it is foundational. Practical lessons from running parent advocacy workshops across Bangladesh.",
     body: [
@@ -224,6 +234,7 @@ export const blogData: Blog[] = [
   {
     id: 11,
     title: "Planting Hope: Lessons From Our Tree Plantation Drives",
+    titleBn: "আশার চারা রোপণ: আমাদের বৃক্ষরোপণ কর্মসূচির শিক্ষা",
     paragraph:
       "Environmental work is most powerful when communities own it. Reflections from our palm tree plantation initiative across six districts.",
     body: [
@@ -246,6 +257,7 @@ export const blogData: Blog[] = [
   {
     id: 12,
     title: "Talking About Mental Health Without Stigma",
+    titleBn: "সংকোচ ছাড়াই মানসিক স্বাস্থ্য নিয়ে কথা বলা",
     paragraph:
       "Practical strategies teachers, parents, and peers can use to start conversations about mental health in environments where it has long been taboo.",
     body: [

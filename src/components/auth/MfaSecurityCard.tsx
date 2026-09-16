@@ -10,6 +10,7 @@ import {
   useGetMeQuery,
 } from "@/redux/features/auth/authApi";
 import { selectCurrentUser } from "@/redux/features/auth/authSlice";
+import OtpQrCode from "@/components/auth/OtpQrCode";
 import {
   AlertCircle,
   CheckCircle2,
@@ -231,16 +232,7 @@ export default function MfaSecurityCard() {
             <p className="text-sm text-muted-foreground">
               Scan this QR in your authenticator app, or enter the secret manually.
             </p>
-            {otpauthUrl && (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(otpauthUrl)}`}
-                alt="MFA QR code"
-                width={180}
-                height={180}
-                className="mx-auto rounded-md border border-border bg-white p-2"
-              />
-            )}
+            {otpauthUrl && <OtpQrCode otpauthUrl={otpauthUrl} />}
             {secret && (
               <div className="flex items-center gap-2">
                 <code className="flex-1 break-all rounded-md border border-border px-3 py-2 font-mono text-xs">

@@ -1,14 +1,15 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useSelector } from "react-redux";
 import { toast } from "sonner";
 import { Heart, Loader2, Sparkles } from "lucide-react";
-import { amountOptions, heroStats } from "../constants";
+import { amountOptions, closestAmountKey, heroStats } from "../constants";
 import type { ImpactEntry } from "../types";
 import { container, field } from "../ui";
 import { useDonateContent } from "../useDonateContent";
 import { useImpactStats } from "@/components/common/ImpactStats";
+import { useLanguage } from "@/components/i18n/LanguageProvider";
 import { selectCurrentUser } from "@/redux/features/auth/authSlice";
 import { useGetCampaignsQuery } from "@/redux/features/campaigns/campaignsApi";
 import { useCreateDonationMutation } from "@/redux/features/donations/donationsApi";
@@ -33,11 +34,12 @@ export default function DonateHeroSection({
   onCustomAmountChange,
 }: DonateHeroSectionProps) {
   const user = useSelector(selectCurrentUser);
+  const { t, tr, pick, digits } = useLanguage();
   const { hero } = useDonateContent();
   const impactStats = useImpactStats();
   const stats = impactStats.length
     ? impactStats
-    : heroStats.map((s) => ({ value: s.number, label: s.label, detail: undefined }));
+    : heroStats.map((s) => ({ value: digits(s.number), label: tr(s.label), detail: undefined }));
   const { data: campaigns, isLoading: campaignsLoading } = useGetCampaignsQuery({
     status: "ACTIVE",
   });
@@ -50,18 +52,24 @@ export default function DonateHeroSection({
   const [donorEmail, setDonorEmail] = useState(user?.email ?? "");
   const [isAnonymous, setIsAnonymous] = useState(false);
   const [paying, setPaying] = useState(false);
+  const idempotency = useRef<{ body: string; key: string } | null>(null);
 
   const targetIsOther = target === OTHER;
   const busy = paying || isLoading;
 
   const handleDonate = async () => {
-    if (!target) return toast.error("Please choose a project or 'Other'.");
+    if (!target) return toast.error(t("donate.err.target"));
     if (targetIsOther && !purpose.trim())
-      return toast.error("Please say what your donation is for (e.g. Zakat, Sadakah).");
+      return toast.error(t("donate.err.purpose"));
     if (currentAmt < MIN_AMOUNT)
-      return toast.error(`Minimum donation is ${MIN_AMOUNT} BDT.`);
-    if (!donorName.trim()) return toast.error("Please enter your name.");
-    if (!donorEmail.trim()) return toast.error("Please enter your email.");
+      return toast.error(t("donate.err.min", { min: MIN_AMOUNT }));
+    if (!isAnonymous && !donorName.trim())
+      return toast.error(t("donate.err.name"));
+    if (!isAnonymous && !donorEmail.trim())
+      return toast.error(t("donate.err.email"));
+    // Required for a named gift: it is what the confirmation SMS is sent to.
+    if (!isAnonymous && !donorPhone.trim())
+      return toast.error(t("donate.err.phone"));
 
     const body: CreateDonationBody = {
       amount: String(currentAmt),
@@ -70,18 +78,35 @@ export default function DonateHeroSection({
       campaignId: targetIsOther ? undefined : target,
       purpose: targetIsOther ? purpose.trim() : undefined,
       method: "SSLCOMMERZ",
-      donorName: donorName.trim(),
-      donorEmail: donorEmail.trim(),
-      donorPhone: donorPhone.trim() || undefined,
+      // Anonymous gifts omit personal details; the API stores placeholders for the gateway.
+      donorName: isAnonymous ? "Anonymous" : donorName.trim(),
+      donorEmail: isAnonymous ? "anonymous@studentsquare.org" : donorEmail.trim(),
+      donorPhone: isAnonymous ? undefined : donorPhone.trim(),
       isAnonymous,
     };
+
+    // Same form contents → same key, so retrying after a timeout gets back the
+    // donation the first attempt created; any change makes it a new donation.
+    const fingerprint = JSON.stringify(body);
+    if (idempotency.current?.body !== fingerprint) {
+      idempotency.current = {
+        body: fingerprint,
+        key:
+          typeof crypto.randomUUID === "function"
+            ? crypto.randomUUID()
+            : `${Date.now()}-${Math.random().toString(36).slice(2)}`,
+      };
+    }
 
     setPaying(true);
     try {
       // Create the PENDING donation, then hand the donor over to SSLCommerz's
       // own hosted page. Staying on our domain is not an option worth the
       // complexity here — the gateway page is where donors expect to land.
-      const res = await createDonation(body).unwrap();
+      const res = await createDonation({
+        body,
+        idempotencyKey: idempotency.current.key,
+      }).unwrap();
 
       const gatewayRes = await fetch(res.embedEndpoint, {
         method: "POST",
@@ -98,7 +123,7 @@ export default function DonateHeroSection({
         window.location.href = data.data;
         return;
       }
-      toast.error(data.message ?? "Could not start payment. Please try again.");
+      toast.error(data.message ?? t("donate.err.payment"));
     } catch {
       // createDonation errors are surfaced by baseApi
     } finally {
@@ -118,23 +143,23 @@ export default function DonateHeroSection({
             <div>
               <span className="inline-flex items-center gap-2 rounded-full border border-emerald-400/30 bg-emerald-400/10 px-4 py-1.5 text-[11px] font-semibold uppercase tracking-[0.2em] text-emerald-200">
                 <Sparkles className="h-3 w-3" />
-                {hero?.eyebrow ?? "Student Square Foundation"}
+                {tr(hero?.eyebrow ?? "Student Square Foundation")}
               </span>
 
               <h1 className="mt-6 text-3xl font-bold leading-tight tracking-tight text-white sm:text-4xl lg:text-5xl">
-                Make a <em className="not-italic text-emerald-300">Difference</em>
+                {t("donate.headingLead")}{" "}
+                <em className="not-italic text-emerald-300">{t("donate.headingAccent")}</em>
                 <br />
-                with Your Donation
+                {t("donate.headingTail")}
               </h1>
 
               <p className="mt-5 max-w-xl text-sm leading-relaxed text-emerald-50/80 sm:text-base">
-                {hero?.body ??
-                  "In a world where collective action holds immense power, individual efforts remain invaluable. Your single donation can create ripples of change, transforming lives and building a brighter future."}
+                {hero?.body ? tr(hero.body) : t("donate.heroBodyFallback")}
               </p>
 
               <div className="mt-10 border-t border-white/10 pt-8">
                 <span className="text-[11px] font-bold uppercase tracking-[0.2em] text-emerald-300/70">
-                  Our Impact
+                  {t("donate.ourImpact")}
                 </span>
                 <div className="mt-5 grid grid-cols-2 gap-x-8 gap-y-6">
                   {stats.map((stat) => (
@@ -161,36 +186,36 @@ export default function DonateHeroSection({
             <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-xl">
               <div className="border-b border-border bg-emerald-50 px-5 py-4 dark:bg-emerald-950/40">
                 <h2 className="text-base font-bold text-foreground sm:text-lg">
-                  Your Donation Can Change a Life
+                  {t("donate.formTitle")}
                 </h2>
               </div>
 
               <div className="space-y-4 p-5">
                 <div>
                   <label className="mb-1.5 block text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
-                    Where your gift goes
+                    {t("donate.whereGoes")}
                   </label>
                   <select
                     className={`${field} cursor-pointer`}
                     value={target}
                     onChange={(e) => setTarget(e.target.value)}
-                    aria-label="Project or purpose"
+                    aria-label={t("donate.projectOrPurpose")}
                   >
                     <option value="" disabled>
-                      {campaignsLoading ? "Loading projects…" : "Select a project or purpose…"}
+                      {campaignsLoading ? t("donate.loadingProjects") : t("donate.selectProject")}
                     </option>
                     {(campaigns ?? []).map((c) => (
                       <option key={c.id} value={c.id}>
-                        {c.title}
+                        {pick(c.title, c.titleBn)}
                       </option>
                     ))}
-                    <option value={OTHER}>Other — Zakat, Sadakah, or general fund</option>
+                    <option value={OTHER}>{t("donate.otherOption")}</option>
                   </select>
                   {targetIsOther && (
                     <input
                       className={`${field} mt-2`}
                       type="text"
-                      placeholder="e.g. Zakat, Sadakah, General fund"
+                      placeholder={t("donate.otherPlaceholder")}
                       value={purpose}
                       onChange={(e) => setPurpose(e.target.value)}
                     />
@@ -199,7 +224,7 @@ export default function DonateHeroSection({
 
                 <div>
                   <span className="mb-1.5 block text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
-                    Select Amount (BDT)
+                    {t("donate.selectAmount")}
                   </span>
                   <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
                     {amountOptions.map((amount) => {
@@ -215,7 +240,7 @@ export default function DonateHeroSection({
                               : "border-border bg-background text-foreground hover:border-emerald-500 hover:text-emerald-600"
                           }`}
                         >
-                          BDT {amount.toLocaleString()}
+                          {t("donate.amount", { amount })}
                         </button>
                       );
                     })}
@@ -225,47 +250,20 @@ export default function DonateHeroSection({
                 <div className="flex items-start gap-2.5 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2.5 dark:border-emerald-900 dark:bg-emerald-950/40">
                   <span className="text-sm leading-none">{heroImpact.icon}</span>
                   <span className="text-xs font-medium leading-relaxed text-emerald-800 dark:text-emerald-200">
-                    {heroImpact.text}
+                    {t(`donate.impact.${closestAmountKey(currentAmt)}`)}
                   </span>
                 </div>
 
                 <div className="flex overflow-hidden rounded-lg border border-border focus-within:border-emerald-500">
                   <span className="flex items-center bg-muted px-3 text-xs font-bold text-muted-foreground">
-                    BDT
+                    {t("donate.currency")}
                   </span>
                   <input
                     className="w-full bg-background px-3 py-2.5 text-sm text-foreground outline-none placeholder:text-muted-foreground"
                     type="number"
-                    placeholder="Enter other amount"
+                    placeholder={t("donate.otherAmount")}
                     value={heroCustomValue}
                     onChange={(event) => onCustomAmountChange(event.target.value)}
-                  />
-                </div>
-
-                <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-                  <input
-                    className={field}
-                    type="text"
-                    placeholder="Your Name"
-                    autoComplete="name"
-                    value={donorName}
-                    onChange={(e) => setDonorName(e.target.value)}
-                  />
-                  <input
-                    className={field}
-                    type="tel"
-                    placeholder="Phone Number"
-                    autoComplete="tel"
-                    value={donorPhone}
-                    onChange={(e) => setDonorPhone(e.target.value)}
-                  />
-                  <input
-                    className={`${field} sm:col-span-2`}
-                    type="email"
-                    placeholder="Email Address"
-                    autoComplete="email"
-                    value={donorEmail}
-                    onChange={(e) => setDonorEmail(e.target.value)}
                   />
                 </div>
 
@@ -276,8 +274,46 @@ export default function DonateHeroSection({
                     checked={isAnonymous}
                     onChange={(e) => setIsAnonymous(e.target.checked)}
                   />
-                  Make my donation anonymous
+                  {t("donate.anonymous")}
                 </label>
+
+                {isAnonymous ? (
+                  <p className="rounded-lg border border-border bg-muted/40 px-3 py-2 text-xs leading-relaxed text-muted-foreground">
+                    {t("donate.anonymousNote")}
+                  </p>
+                ) : (
+                  <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                    {/* All three are required for a named gift — marked so the
+                        donor knows before pressing Donate, not after. */}
+                    <input
+                      className={field}
+                      type="text"
+                      placeholder={t("donate.name")}
+                      autoComplete="name"
+                      aria-required="true"
+                      value={donorName}
+                      onChange={(e) => setDonorName(e.target.value)}
+                    />
+                    <input
+                      className={field}
+                      type="tel"
+                      placeholder={t("donate.phone")}
+                      autoComplete="tel"
+                      aria-required="true"
+                      value={donorPhone}
+                      onChange={(e) => setDonorPhone(e.target.value)}
+                    />
+                    <input
+                      className={`${field} sm:col-span-2`}
+                      type="email"
+                      placeholder={t("donate.email")}
+                      autoComplete="email"
+                      aria-required="true"
+                      value={donorEmail}
+                      onChange={(e) => setDonorEmail(e.target.value)}
+                    />
+                  </div>
+                )}
 
                 <button
                   type="button"
@@ -288,18 +324,18 @@ export default function DonateHeroSection({
                   {busy ? (
                     <>
                       <Loader2 className="h-4 w-4 animate-spin" />
-                      Redirecting to secure payment…
+                      {t("donate.redirecting")}
                     </>
                   ) : (
                     <>
                       <Heart className="h-4 w-4" />
-                      Donate BDT {currentAmt.toLocaleString()}
+                      {t("donate.donateAmount", { amount: currentAmt })}
                     </>
                   )}
                 </button>
 
                 <p className="text-center text-[11px] text-muted-foreground">
-                  You will be taken to SSLCommerz to complete your payment securely.
+                  {t("donate.sslNote")}
                 </p>
               </div>
             </div>

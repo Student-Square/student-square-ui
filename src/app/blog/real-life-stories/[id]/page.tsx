@@ -3,6 +3,7 @@ import { serverGet } from "@/lib/serverApi";
 import { storiesData } from "@/data/stories";
 import type { ApiStory } from "@/types/stories";
 import StoryView from "./_components/StoryView";
+import { serializeJsonLd } from "@/lib/jsonLd";
 
 type PageProps = {
   params: Promise<{ id: string }>;
@@ -64,7 +65,7 @@ export default async function StoryDetailPage({ params }: PageProps) {
       {jsonLd && (
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+          dangerouslySetInnerHTML={{ __html: serializeJsonLd(jsonLd) }}
         />
       )}
       <StoryView id={id} />

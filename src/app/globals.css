@@ -100,8 +100,8 @@
 }
 
 @theme inline {
-  --font-sans: var(--font-saira), 'Saira', system-ui, sans-serif;
-  --font-heading: var(--font-saira), 'Saira', system-ui, sans-serif;
+  --font-sans: var(--font-saira), 'Saira', var(--font-bangla), system-ui, sans-serif;
+  --font-heading: var(--font-saira), 'Saira', var(--font-bangla), system-ui, sans-serif;
   --font-mono: var(--font-jetbrains-mono), 'JetBrains Mono', monospace;
   
   /* Extended container for extra large screens */
@@ -155,7 +155,7 @@
   }
 
   .font-oswald {
-    font-family: var(--font-oswald), 'Oswald', system-ui, sans-serif;
+    font-family: var(--font-oswald), 'Oswald', var(--font-bangla), system-ui, sans-serif;
   }
   
   /* Smooth scrolling */
@@ -374,4 +374,19 @@
 }
 .rich-text em, .ProseMirror em {
   font-style: italic;
+}
+
+/* Bangla mode (LanguageProvider sets <html lang="bn">). Hind Siliguri leads so
+   Bangla text, its punctuation and spacing come from one face; Latin glyphs it
+   lacks (only the bengali subset is loaded) still fall through to Saira.
+   Unlayered on purpose: it must beat the font-sans/font-heading utilities. */
+html[lang="bn"] body,
+html[lang="bn"] .font-sans,
+html[lang="bn"] .font-heading {
+  font-family: var(--font-bangla), var(--font-saira), 'Saira', system-ui, sans-serif;
+}
+/* Letter-spacing pulls Bangla's joined letter clusters apart ("সা ফ ল্যে র"),
+   so the tracked eyebrows and labels use normal spacing in Bangla. */
+html[lang="bn"] [class*="tracking-"] {
+  letter-spacing: normal;
 }

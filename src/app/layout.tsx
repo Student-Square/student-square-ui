@@ -1,11 +1,12 @@
 ﻿import React from "react"
 import type { Metadata, Viewport } from "next";
-import { Saira, JetBrains_Mono, Space_Grotesk, DM_Sans, Pacifico, Oswald } from "next/font/google";
+import { Saira, JetBrains_Mono, Space_Grotesk, DM_Sans, Pacifico, Oswald, Hind_Siliguri } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
 import { ThemeProvider } from "@/components/common/theme-provider";
 import { Providers } from "@/components/common/Providers";
 import { Toaster } from "@/components/ui/sonner";
 import AnalyticsTracker from "@/components/common/AnalyticsTracker";
+import { serializeJsonLd } from "@/lib/jsonLd";
 import "./globals.css";
 
 const saira = Saira({
@@ -18,6 +19,14 @@ const oswald = Oswald({
   subsets: ["latin"],
   variable: "--font-oswald",
   weight: ["400", "500", "600", "700"],
+});
+
+// Saira and Oswald have no Bengali glyphs. Only the bengali subset is loaded,
+// and its unicode-range means English-only pages never download it.
+const hindSiliguri = Hind_Siliguri({
+  subsets: ["bengali"],
+  variable: "--font-bangla",
+  weight: ["300", "400", "500", "600", "700"],
 });
 
 const jetBrainsMono = JetBrains_Mono({
@@ -110,11 +119,11 @@ export default function RootLayout({
           hydrates, which React reports as a mismatch we cannot fix. */}
       <body
         suppressHydrationWarning
-        className={`${saira.variable} ${oswald.variable} ${jetBrainsMono.variable} font-sans antialiased`}
+        className={`${saira.variable} ${oswald.variable} ${hindSiliguri.variable} ${jetBrainsMono.variable} font-sans antialiased`}
       >
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(orgJsonLd) }}
+          dangerouslySetInnerHTML={{ __html: serializeJsonLd(orgJsonLd) }}
         />
         <Providers>
           <ThemeProvider

@@ -11,35 +11,41 @@ import { fadeInWhileInView } from "@/lib/motion";
 import { useGetBoardGroupsQuery, useGetEditablePageQuery } from "@/redux/features/content/contentApi";
 import type { ApiBoardAssignment } from "@/types/content";
 import { BriefcaseBusiness, ChevronLeft, ChevronRight, Lightbulb, Loader2, ShieldCheck, Users, type LucideIcon } from "lucide-react";
+import { useLanguage } from "@/components/i18n/LanguageProvider";
 
 const PLACEHOLDER_AVATAR = "/images/student-square-school-session.jpg";
 
-const SECTION_META: Record<string, { icon: LucideIcon; eyebrow: string }> = {
-  "Our People": { icon: Users, eyebrow: "" },
-  "Board of Trustees": { icon: ShieldCheck, eyebrow: "Governance" },
-  "Advisory Board": { icon: Lightbulb, eyebrow: "Guidance" },
-  "Leadership Team": { icon: Users, eyebrow: "Leadership" },
-  "Management Team": { icon: BriefcaseBusiness, eyebrow: "Operations" },
+type SectionId = "people" | "board" | "advisory" | "leadership" | "management";
+
+/** Heading text and eyebrow label are dictionary keys. */
+const SECTION_META: Record<SectionId, { icon: LucideIcon; titleKey: string; eyebrowKey: string | null }> = {
+  people: { icon: Users, titleKey: "team.ourPeople", eyebrowKey: null },
+  board: { icon: ShieldCheck, titleKey: "team.board", eyebrowKey: "team.eyebrowGovernance" },
+  advisory: { icon: Lightbulb, titleKey: "team.advisory", eyebrowKey: "team.eyebrowGuidance" },
+  leadership: { icon: Users, titleKey: "team.leadership", eyebrowKey: "team.eyebrowLeadership" },
+  management: { icon: BriefcaseBusiness, titleKey: "team.management", eyebrowKey: "team.eyebrowOperations" },
 };
 
-function SectionHeading({ title, center = true }: { title: string; center?: boolean }) {
-  const meta = SECTION_META[title] ?? { icon: Users, eyebrow: "Student Square" };
+function SectionHeading({ section, title, center = true }: { section: SectionId; title?: string; center?: boolean }) {
+  const { t } = useLanguage();
+  const meta = SECTION_META[section];
   const Icon = meta.icon;
+  const eyebrow = meta.eyebrowKey ? t(meta.eyebrowKey) : "";
 
   return (
     <div className={center ? "mb-10 text-center" : "mb-5"}>
-      {meta.eyebrow ? (
+      {eyebrow ? (
         <div
           className={`inline-flex items-center gap-2 rounded-full border border-emerald-500/20 bg-emerald-500/8 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.2em] text-emerald-700 dark:text-emerald-300 ${
             center ? "" : "mb-0"
           }`}
         >
           <Icon className="h-3.5 w-3.5" />
-          <span>{meta.eyebrow}</span>
+          <span>{eyebrow}</span>
         </div>
       ) : null}
       <h2 className={`mt-4 text-2xl font-bold tracking-[0.02em] text-foreground sm:text-3xl ${center ? "" : "text-left"}`}>
-        {title}
+        {title ?? t(meta.titleKey)}
       </h2>
     </div>
   );
@@ -56,7 +62,8 @@ function MemberCard({
   member: ApiBoardAssignment;
   variant?: "board" | "grid";
 }) {
-  const href = `/about/who-we-are/${member.slug ?? member.userId}`;
+  const { tr } = useLanguage();
+  const href = `/about/who-we-are/${member.slug}`;
   const isBoard = variant === "board";
 
   return (
@@ -86,7 +93,7 @@ function MemberCard({
           isBoard ? "mt-1 tracking-widest" : "mt-0.5 tracking-wide"
         }`}
       >
-        {member.roleLabel}
+        {tr(member.roleLabel)}
       </p>
     </Link>
   );
@@ -103,6 +110,7 @@ function Pagination({
   perPage: number;
   onChange: (p: number) => void;
 }) {
+  const { t, num } = useLanguage();
   const totalPages = Math.ceil(total / perPage);
   if (totalPages <= 1) return null;
 
@@ -121,7 +129,7 @@ function Pagination({
         onClick={() => onChange(Math.max(1, page - 1))}
         disabled={page === 1}
         className="p-1.5 rounded-md hover:bg-muted disabled:opacity-30 transition-colors"
-        aria-label="Previous page"
+        aria-label={t("common.previousPage")}
       >
         <ChevronLeft className="h-4 w-4" />
       </button>
@@ -140,7 +148,7 @@ function Pagination({
                 : "hover:bg-muted text-foreground"
             }`}
           >
-            {p}
+            {num(p as number, false)}
           </button>
         )
       )}
@@ -148,7 +156,7 @@ function Pagination({
         onClick={() => onChange(Math.min(totalPages, page + 1))}
         disabled={page === totalPages}
         className="p-1.5 rounded-md hover:bg-muted disabled:opacity-30 transition-colors"
-        aria-label="Next page"
+        aria-label={t("common.nextPage")}
       >
         <ChevronRight className="h-4 w-4" />
       </button>
@@ -157,12 +165,12 @@ function Pagination({
 }
 
 function PaginatedSection({
-  title,
+  section,
   members,
   perPage,
   variant = "grid",
 }: {
-  title: string;
+  section: SectionId;
   members: ApiBoardAssignment[];
   perPage: number;
   variant?: "board" | "grid";
@@ -180,7 +188,7 @@ function PaginatedSection({
 
   return (
     <motion.div {...fadeInWhileInView}>
-      <SectionHeading title={title} />
+      <SectionHeading section={section} />
       <div className={`grid ${gridCols} gap-6`}>
         {visible.map((m) => (
           <MemberCard key={m.id} member={m} variant={variant} />
@@ -202,6 +210,7 @@ function PaginatedSection({
 export default function WhoWeArePage() {
   const { data: page } = useGetEditablePageQuery("about-who-we-are");
   const { data: groups, isLoading, isError } = useGetBoardGroupsQuery();
+  const { t, tr } = useLanguage();
 
   const bannerUrl = page?.bannerUrl ?? "/images/student-square-introduction-presention-by-Humayra-Nasrin.jpg";
   const heroTitle = page?.heroTitle || "Who We Are";
@@ -219,9 +228,9 @@ export default function WhoWeArePage() {
       <section className="bg-background py-12 lg:py-16">
         <Container>
           <motion.div {...fadeInWhileInView} className="w-[90%] mx-auto">
-            <SectionHeading title="Our People" center={false} />
+            <SectionHeading section="people" title={tr(ourPeopleSection?.heading ?? "Our People")} center={false} />
             <p className="text-base text-muted-foreground leading-relaxed">
-              {ourPeopleBody}
+              {tr(ourPeopleBody)}
             </p>
           </motion.div>
         </Container>
@@ -229,11 +238,11 @@ export default function WhoWeArePage() {
 
       {isLoading && (
         <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground py-20">
-          <Loader2 className="h-5 w-5 animate-spin" /> Loading…
+          <Loader2 className="h-5 w-5 animate-spin" /> {t("common.loading")}
         </div>
       )}
       {isError && (
-        <p className="text-center text-sm text-red-600 py-20">Failed to load team data.</p>
+        <p className="text-center text-sm text-red-600 py-20">{t("team.loadFailed")}</p>
       )}
 
       {groups && (
@@ -244,7 +253,7 @@ export default function WhoWeArePage() {
               <Container>
                 <div className="w-[90%] mx-auto">
                   <PaginatedSection
-                    title="Board of Trustees"
+                    section="board"
                     members={groups.board}
                     perPage={4}
                     variant="board"
@@ -260,7 +269,7 @@ export default function WhoWeArePage() {
               <Container>
                 <div className="w-[90%] mx-auto">
                   <PaginatedSection
-                    title="Advisory Board"
+                    section="advisory"
                     members={groups.advisory}
                     perPage={5}
                   />
@@ -275,7 +284,7 @@ export default function WhoWeArePage() {
               <Container>
                 <div className="w-[90%] mx-auto">
                   <PaginatedSection
-                    title="Leadership Team"
+                    section="leadership"
                     members={groups.leadership}
                     perPage={10}
                   />
@@ -290,7 +299,7 @@ export default function WhoWeArePage() {
               <Container>
                 <div className="w-[90%] mx-auto">
                   <PaginatedSection
-                    title="Management Team"
+                    section="management"
                     members={groups.management}
                     perPage={10}
                   />
@@ -304,7 +313,7 @@ export default function WhoWeArePage() {
             groups.leadership.length === 0 &&
             groups.management.length === 0 && (
               <p className="text-center text-sm text-muted-foreground py-20">
-                No team members have been added yet.
+                {t("team.empty")}
               </p>
             )}
         </>

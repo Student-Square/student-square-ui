@@ -17,6 +17,7 @@ import {
 } from "@/redux/features/auth/authSlice";
 import { pickPostLoginDestination } from "@/lib/auth-routing";
 import AuthShell from "@/components/auth/AuthShell";
+import OtpQrCode from "@/components/auth/OtpQrCode";
 import {
   authButtonClass,
   authHeadingClass,
@@ -35,6 +36,8 @@ import {
   Loader2,
   ShieldCheck,
 } from "lucide-react";
+import T from "@/components/i18n/T";
+import { useLanguage } from "@/components/i18n/LanguageProvider";
 
 type Step = "credentials" | "mfa" | "enrol" | "recovery";
 
@@ -49,12 +52,13 @@ export default function LoginPage() {
 function LoginFallback() {
   return (
     <AuthShell variant="login">
-      <p className="text-center text-sm text-muted-foreground">Loading…</p>
+      <p className="text-center text-sm text-muted-foreground"><T k="common.loading" /></p>
     </AuthShell>
   );
 }
 
 function LoginForm() {
+  const { t, rich } = useLanguage();
   const router = useRouter();
   const searchParams = useSearchParams();
   const next = searchParams.get("next");
@@ -89,14 +93,26 @@ function LoginForm() {
   }, [isAuthenticated, user, next, router]);
 
   function errMessage(err: unknown, fallback: string) {
-    return (
-      (err as { data?: { message?: string } })?.data?.message ?? fallback
-    );
+    const data = (
+      err as {
+        data?: { message?: string; error?: { body?: { field: string }[] } };
+      }
+    )?.data;
+    // A 400 only says "Validation failed"; name the field so the visitor
+    // knows what to change.
+    const fields = data?.error?.body?.map((issue) => issue.field) ?? [];
+    if (fields.includes("email")) {
+      return t("contact.errorEmail");
+    }
+    if (fields.includes("mfaCode")) {
+      return t("login.errCode");
+    }
+    return data?.message ?? fallback;
   }
 
   async function finishWithSession(result: LoginResult) {
     if ("accessToken" in result && result.accessToken) {
-      toast.success("Welcome back!");
+      toast.success(t("login.welcome"));
       return true;
     }
     return false;
@@ -106,7 +122,7 @@ function LoginForm() {
     e.preventDefault();
     setFormError(null);
     if (!email.trim() || !password) {
-      setFormError("Email and password are required.");
+      setFormError(t("login.errRequired"));
       return;
     }
     try {
@@ -126,7 +142,7 @@ function LoginForm() {
         setOtpauthUrl(enrol.otpauthUrl);
         setMfaCode("");
         setStep("enrol");
-        toast.message("Set up authenticator to continue");
+        toast.message(t("login.toastSetup"));
         return;
       }
 
@@ -135,13 +151,13 @@ function LoginForm() {
         setUseRecovery(false);
         setRecoveryCode("");
         setStep("mfa");
-        toast.message("Enter your authenticator code");
+        toast.message(t("login.toastEnterCode"));
         return;
       }
 
-      setFormError("Unexpected login response. Please try again.");
+      setFormError(t("login.errUnexpected"));
     } catch (err) {
-      setFormError(errMessage(err, "Something went wrong. Please try again."));
+      setFormError(errMessage(err, t("common.somethingWrong")));
     }
   }
 
@@ -151,11 +167,11 @@ function LoginForm() {
 
     if (useRecovery) {
       if (recoveryCode.trim().length < 8) {
-        setFormError("Enter a valid recovery code.");
+        setFormError(t("login.errRecovery"));
         return;
       }
     } else if (!/^\d{6}$/.test(mfaCode.trim())) {
-      setFormError("Enter the 6-digit code from your authenticator app.");
+      setFormError(t("login.errCode"));
       return;
     }
 
@@ -169,9 +185,9 @@ function LoginForm() {
       }).unwrap();
 
       if (await finishWithSession(result)) return;
-      setFormError("Could not complete sign-in. Try a fresh code.");
+      setFormError(t("login.errFresh"));
     } catch (err) {
-      setFormError(errMessage(err, "Invalid verification code."));
+      setFormError(errMessage(err, t("login.errInvalidCode")));
     }
   }
 
@@ -179,12 +195,12 @@ function LoginForm() {
     e.preventDefault();
     setFormError(null);
     if (!enrolmentToken) {
-      setFormError("Enrolment expired. Sign in again.");
+      setFormError(t("login.errEnrolExpired"));
       setStep("credentials");
       return;
     }
     if (!/^\d{6}$/.test(mfaCode.trim())) {
-      setFormError("Enter the 6-digit code from your authenticator app.");
+      setFormError(t("login.errCode"));
       return;
     }
 
@@ -195,9 +211,9 @@ function LoginForm() {
       }).unwrap();
       setRecoveryCodes(confirmed.recoveryCodes ?? []);
       setStep("recovery");
-      toast.success("Authenticator enabled");
+      toast.success(t("login.toastEnabled"));
     } catch (err) {
-      setFormError(errMessage(err, "Invalid verification code."));
+      setFormError(errMessage(err, t("login.errInvalidCode")));
     }
   }
 
@@ -212,45 +228,30 @@ function LoginForm() {
     if (!mfaSecret) return;
     try {
       await navigator.clipboard.writeText(mfaSecret);
-      toast.success("Secret copied");
+      toast.success(t("login.toastSecretCopied"));
     } catch {
-      toast.error("Could not copy — select the secret manually");
+      toast.error(t("login.toastSecretFailed"));
     }
   }
 
   async function copyRecoveryCodes() {
     try {
       await navigator.clipboard.writeText(recoveryCodes.join("\n"));
-      toast.success("Recovery codes copied");
+      toast.success(t("login.toastCodesCopied"));
     } catch {
-      toast.error("Could not copy");
+      toast.error(t("login.toastCopyFailed"));
     }
   }
 
-  const title =
-    step === "credentials"
-      ? "Welcome back!"
-      : step === "enrol"
-        ? "Set up authenticator"
-        : step === "recovery"
-          ? "Save recovery codes"
-          : "Two-factor verification";
-
-  const subtitle =
-    step === "credentials"
-      ? "Login to your account"
-      : step === "enrol"
-        ? "Staff accounts require an authenticator app before access."
-        : step === "recovery"
-          ? "These codes are shown once. Store them somewhere safe."
-          : "Enter the code from your authenticator app.";
+  const title = step === "credentials" ? t("login.welcome") : t(`login.title.${step}`);
+  const subtitle = t(`login.sub.${step}`);
 
   return (
     <AuthShell variant="login">
       <div>
         {step === "credentials" && (
           <p className="mb-7 text-xs font-semibold uppercase tracking-[0.18em] text-emerald-700">
-            Secure member access
+            {t("login.eyebrow")}
           </p>
         )}
         <div className="flex items-start gap-3">
@@ -271,34 +272,38 @@ function LoginForm() {
           <form onSubmit={handleCredentials} className="mt-7 space-y-4">
             <div className="grid grid-cols-2 rounded-xl bg-gray-100 p-1 text-center text-sm text-gray-500">
               <span className="rounded-lg bg-white px-4 py-3 font-semibold text-gray-900 shadow-sm">
-                Log in
+                {t("login.tabLogin")}
               </span>
               <Link
                 href="/auth/register"
                 className="rounded-lg px-4 py-3 transition-colors hover:text-gray-900"
               >
-                Register
+                {t("login.tabRegister")}
               </Link>
             </div>
 
             <label className="block">
               <span className="mb-2 block text-xs font-semibold text-gray-700">
-                Email Address
+                {t("contact.emailAddress")}
               </span>
               <input
                 type="email"
                 autoComplete="email"
                 required
+                // type="email" alone accepts "name@example"; the server
+                // wants a domain with a dot in it.
+                pattern="[^@\s]+@[^@\s]+\.[^@\s]+"
+                title={t("login.emailTitle")}
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="Enter your email"
+                placeholder={t("login.emailPlaceholder")}
                 className={authLoginInputClass}
               />
             </label>
 
             <label className="block">
               <span className="mb-2 block text-xs font-semibold text-gray-700">
-                Password
+                {t("auth.password")}
               </span>
               <div className="relative">
                 <input
@@ -307,12 +312,12 @@ function LoginForm() {
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Enter your password"
+                  placeholder={t("login.passwordPlaceholder")}
                   className={`${authLoginInputClass} pr-10`}
                 />
                 <button
                   type="button"
-                  aria-label={showPassword ? "Hide password" : "Show password"}
+                  aria-label={showPassword ? t("auth.hidePassword") : t("auth.showPassword")}
                   onClick={() => setShowPassword((v) => !v)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 rounded-md p-1 text-muted-foreground hover:text-foreground"
                 >
@@ -332,7 +337,7 @@ function LoginForm() {
                 href="/auth/forgot-password"
                 className={`text-xs ${authLoginLinkClass}`}
               >
-                Forgot password?
+                {t("forgot.title")}
               </Link>
             </p>
 
@@ -344,11 +349,11 @@ function LoginForm() {
               {busy ? (
                 <span className="inline-flex items-center justify-center gap-2">
                   <Loader2 className="h-4 w-4 animate-spin" />
-                  Signing in…
+                  {t("login.signingIn")}
                 </span>
               ) : (
                 <span className="inline-flex items-center justify-center gap-2">
-                  Login
+                  {t("login")}
                   <ArrowRight className="h-4 w-4" />
                 </span>
               )}
@@ -360,11 +365,11 @@ function LoginForm() {
             <form onSubmit={handleEnrolConfirm} className="mt-6 space-y-4">
               <div className="rounded-lg border border-border bg-muted/40 p-4 space-y-3">
                 <p className="text-sm text-foreground">
-                  1. Open Google Authenticator / Authy
+                  {t("login.enrolStep1")}
                   <br />
-                  2. Add account → enter setup key
+                  {t("login.enrolStep2")}
                   <br />
-                  3. Paste the secret below, then enter the 6-digit code
+                  {t("login.enrolStep3")}
                 </p>
                 {mfaSecret && (
                   <div className="flex items-center gap-2">
@@ -377,25 +382,16 @@ function LoginForm() {
                       className="shrink-0 inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-2 text-xs font-semibold hover:bg-muted"
                     >
                       <Copy className="h-3.5 w-3.5" />
-                      Copy
+                      {t("login.copy")}
                     </button>
                   </div>
                 )}
-                {otpauthUrl && (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(otpauthUrl)}`}
-                    alt="Authenticator QR code"
-                    width={180}
-                    height={180}
-                    className="mx-auto rounded-md border border-border bg-white p-2"
-                  />
-                )}
+                {otpauthUrl && <OtpQrCode otpauthUrl={otpauthUrl} />}
               </div>
 
               <label className="block">
                 <span className="block text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1.5">
-                  Authenticator code
+                  {t("login.codeLabel")}
                 </span>
                 <div className="relative">
                   <KeyRound className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -424,10 +420,10 @@ function LoginForm() {
                 {busy ? (
                   <>
                     <Loader2 className="h-4 w-4 animate-spin" />
-                    Verifying…
+                    {t("login.verifying")}
                   </>
                 ) : (
-                  "Enable authenticator"
+                  t("login.enable")
                 )}
               </button>
 
@@ -440,7 +436,7 @@ function LoginForm() {
                 }}
                 className="w-full text-xs font-semibold text-muted-foreground hover:text-foreground"
               >
-                Back to email / password
+                {t("login.backToCredentials")}
               </button>
             </form>
           )}
@@ -458,7 +454,7 @@ function LoginForm() {
                 className="w-full inline-flex items-center justify-center gap-2 rounded-lg border border-border px-4 py-2.5 text-sm font-semibold hover:bg-muted"
               >
                 <Copy className="h-4 w-4" />
-                Copy recovery codes
+                {t("login.copyCodes")}
               </button>
               {formError && <FormError message={formError} />}
               <button
@@ -466,7 +462,7 @@ function LoginForm() {
                 onClick={handleContinueAfterRecovery}
                 className={authButtonClass}
               >
-                Continue to verification
+                {t("login.continueVerify")}
               </button>
             </div>
           )}
@@ -474,13 +470,13 @@ function LoginForm() {
           {step === "mfa" && (
             <form onSubmit={handleMfa} className="mt-6 space-y-4">
               <p className="text-xs text-muted-foreground">
-                Signing in as <span className="font-semibold text-foreground">{email}</span>
+                {rich("login.signingInAs", { email: <span className="font-semibold text-foreground">{email}</span> })}
               </p>
 
               {!useRecovery ? (
                 <label className="block">
                   <span className="block text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1.5">
-                    Authenticator code
+                    {t("login.codeLabel")}
                   </span>
                   <div className="relative">
                     <KeyRound className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -501,7 +497,7 @@ function LoginForm() {
               ) : (
                 <label className="block">
                   <span className="block text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1.5">
-                    Recovery code
+                    {t("login.recoveryLabel")}
                   </span>
                   <div className="relative">
                     <KeyRound className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -527,10 +523,10 @@ function LoginForm() {
                 {busy ? (
                   <>
                     <Loader2 className="h-4 w-4 animate-spin" />
-                    Verifying…
+                    {t("login.verifying")}
                   </>
                 ) : (
-                  "Verify and continue"
+                  t("login.verifyContinue")
                 )}
               </button>
 
@@ -543,7 +539,7 @@ function LoginForm() {
                   }}
                   className="font-semibold text-emerald-600 hover:text-emerald-700"
                 >
-                  {useRecovery ? "Use authenticator code" : "Use a recovery code"}
+                  {useRecovery ? t("login.useCode") : t("login.useRecovery")}
                 </button>
                 <button
                   type="button"
@@ -555,7 +551,7 @@ function LoginForm() {
                   }}
                   className="font-semibold text-muted-foreground hover:text-foreground"
                 >
-                  Back
+                  {t("auth.back")}
                 </button>
               </div>
             </form>
@@ -563,10 +559,13 @@ function LoginForm() {
 
           {step === "credentials" && (
             <p className="mt-8 text-center text-sm text-muted-foreground">
-              Don&apos;t have an account?{" "}
-              <Link href="/auth/register" className={authLoginLinkClass}>
-                Register here
-              </Link>
+              {rich("login.noAccount", {
+                link: (
+                  <Link href="/auth/register" className={authLoginLinkClass}>
+                    {t("login.registerHere")}
+                  </Link>
+                ),
+              })}
             </p>
           )}
       </div>

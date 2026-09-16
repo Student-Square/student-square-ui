@@ -4,12 +4,13 @@ import Image from "next/image"
 import Link from "next/link"
 import { motion } from "motion/react"
 import { useGetBlogsQuery } from "@/redux/features/blogs/blogsApi"
+import { useLanguage } from "@/components/i18n/LanguageProvider"
 
 const PLACEHOLDER = "/images/emergency-tran-bitoron-activities-4.jpg"
 
-const formatDate = (iso: string | null) => {
+const formatDate = (iso: string | null, locale = "en-GB") => {
   if (!iso) return ""
-  return new Date(iso).toLocaleDateString("en-GB", {
+  return new Date(iso).toLocaleDateString(locale, {
     day: "numeric",
     month: "long",
     year: "numeric",
@@ -22,14 +23,16 @@ const NewsCardSkeleton = ({ large = false }: { large?: boolean }) => (
 
 export default function News() {
   const { data, isLoading } = useGetBlogsQuery({ categorySlug: "news", limit: 6 })
+  const { lang, pick, t } = useLanguage()
   const items = data?.data ?? []
+  const locale = lang === "BN" ? "bn-BD" : "en-GB"
 
   const featured = items[0]
   const side = items.slice(1, 3)
   const rest = items.slice(3)
 
   return (
-    <section className="relative w-full py-10 sm:py-12 md:py-16 px-4 sm:px-6 md:px-8 overflow-hidden">
+    <section className="relative w-full py-6 sm:py-8 md:py-10 px-4 sm:px-6 md:px-8 overflow-hidden">
       <div className="container relative z-10 w-full max-w-7xl mx-auto 2xl:max-w-[1600px] 3xl:max-w-[1800px] 4xl:max-w-[2000px]">
         {/* Header */}
         <motion.div
@@ -44,16 +47,16 @@ export default function News() {
 
           <div className="inline-flex items-center gap-2 text-muted-foreground text-xs sm:text-sm font-medium tracking-[0.25em] uppercase mb-4 sm:mb-6">
             <div className="w-8 h-px bg-primary/50" />
-            Press
+            {t("home.press")}
             <div className="w-8 h-px bg-primary/50" />
           </div>
 
           <h2 className="font-heading text-3xl sm:text-4xl md:text-[48px] lg:text-[48px] xl:text-[48px] font-bold tracking-[0.02em] text-foreground mb-4 leading-tight text-balance sm:mb-3">
-            Student Square
+            {t("home.newsTitleBrand")}
             <br />
             <span className="relative inline-block">
               <span className="bg-clip-text text-transparent bg-gradient-to-r from-emerald-600 via-teal-500 to-emerald-500 dark:from-emerald-400 dark:via-teal-400 dark:to-emerald-400">
-                in the News
+                {t("home.newsTitleAccent")}
               </span>
               <div className="absolute -bottom-2 left-0 right-0 h-1 bg-gradient-to-r from-emerald-600/0 via-emerald-600/50 to-emerald-600/0 rounded-full blur" />
             </span>
@@ -77,7 +80,7 @@ export default function News() {
                 <div className="relative w-full h-56 sm:h-96 md:h-[450px] lg:h-[520px] rounded-2xl lg:rounded-l-2xl lg:rounded-r-none overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300">
                   <Image
                     src={featured.coverImage?.url ?? PLACEHOLDER}
-                    alt={featured.title}
+                    alt={pick(featured.title, featured.titleBn)}
                     fill
                     className="object-cover group-hover:scale-105 transition-transform duration-300"
                     sizes="(max-width: 768px) 100vw, (max-width: 1024px) 66vw, 50vw"
@@ -87,10 +90,10 @@ export default function News() {
                   <div className="absolute bottom-0 left-0 right-0 p-4 sm:p-8 md:p-10">
                     <div className="space-y-2 sm:space-y-4">
                       <span className="text-[10px] sm:text-sm text-white/70 font-medium tracking-wide">
-                        {formatDate(featured.publishedAt)}
+                        {formatDate(featured.publishedAt, locale)}
                       </span>
                       <h3 className="text-base sm:text-xl md:text-2xl lg:text-3xl font-bold text-white leading-tight group-hover:text-emerald-200 transition-colors duration-300 text-balance">
-                        {featured.title}
+                        {pick(featured.title, featured.titleBn)}
                       </h3>
                     </div>
                   </div>
@@ -116,7 +119,7 @@ export default function News() {
                       <div className="relative w-full h-48 sm:h-64 lg:h-[252px] rounded-xl lg:rounded-r-2xl lg:rounded-l-none overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300">
                         <Image
                           src={news.coverImage?.url ?? PLACEHOLDER}
-                          alt={news.title}
+                          alt={pick(news.title, news.titleBn)}
                           fill
                           className="object-cover group-hover:scale-105 transition-transform duration-300"
                           sizes="(max-width: 768px) 100vw, (max-width: 1024px) 33vw, 33vw"
@@ -125,10 +128,10 @@ export default function News() {
                         <div className="absolute bottom-0 left-0 right-0 p-3 sm:p-6">
                           <div className="space-y-1 sm:space-y-2">
                             <span className="text-[10px] sm:text-xs font-medium text-white/70 tracking-wide">
-                              {formatDate(news.publishedAt)}
+                              {formatDate(news.publishedAt, locale)}
                             </span>
                             <h4 className="text-xs sm:text-base font-semibold text-white leading-snug group-hover:text-emerald-200 transition-colors duration-300 line-clamp-3">
-                              {news.title}
+                              {pick(news.title, news.titleBn)}
                             </h4>
                           </div>
                         </div>
@@ -162,7 +165,7 @@ export default function News() {
                     <div className="relative w-full h-40 sm:h-48 rounded-lg sm:rounded-xl overflow-hidden shadow-md hover:shadow-lg transition-all duration-300">
                       <Image
                         src={news.coverImage?.url ?? PLACEHOLDER}
-                        alt={news.title}
+                        alt={pick(news.title, news.titleBn)}
                         fill
                         className="object-cover group-hover:scale-105 transition-transform duration-300"
                         sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
@@ -170,10 +173,10 @@ export default function News() {
                       <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
                       <div className="absolute bottom-0 left-0 right-0 p-3 sm:p-4">
                         <p className="text-[10px] sm:text-xs text-white/70 font-medium mb-1 sm:mb-2">
-                          {formatDate(news.publishedAt)}
+                          {formatDate(news.publishedAt, locale)}
                         </p>
                         <p className="text-xs sm:text-sm font-semibold text-white group-hover:text-emerald-200 transition-colors line-clamp-2">
-                          {news.title}
+                          {pick(news.title, news.titleBn)}
                         </p>
                       </div>
                     </div>
@@ -196,7 +199,7 @@ export default function News() {
             href="/news"
             className="inline-flex items-center justify-center gap-1.5 h-9 sm:h-12 px-4 sm:px-10 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs sm:text-lg shadow-lg hover:shadow-xl transition-all duration-300 group"
           >
-            <span>View All News & Updates</span>
+            <span>{t("home.viewAllNews")}</span>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="group-hover:translate-x-1 transition-transform sm:w-5 sm:h-5">
               <path d="M5 12h14M12 5l7 7-7 7" />
             </svg>

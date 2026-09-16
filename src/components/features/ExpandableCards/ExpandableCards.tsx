@@ -5,6 +5,7 @@ import { motion } from "motion/react"
 import Link from "next/link"
 import { BookOpen, GraduationCap, HeartHandshake } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { useLanguage } from "@/components/i18n/LanguageProvider"
 
 /**
  * The three sections the client's homepage document names: "Magazine,
@@ -14,46 +15,51 @@ import { cn } from "@/lib/utils"
 const cardsData = [
   {
     id: "magazine",
-    title: "Magazine",
+    titleKey: "home.magazine",
     href: "/blog/magazine",
     image: "/images/start-magazine.webp",
-    tintClass: "bg-gradient-to-br from-blue-900/90 via-blue-700/70 to-cyan-500/40",
-    footerLabel: "Magazine",
+    footerLabelKey: "home.magazine",
     icon: BookOpen,
     buttonHoverClass: "hover:bg-blue-500/70 hover:border-blue-300/80",
     iconColorClass: "text-blue-700",
+    imageClass: "group-hover:scale-105",
   },
   {
     id: "education-career-blog",
-    title: "Education &\nCareer Blog",
+    titleKey: "home.educationCareerBlog",
     href: "/blog/education-career",
     image: "/images/start-education-career-blog.webp",
-    tintClass: "bg-gradient-to-br from-teal-950/85 via-emerald-900/70 to-black/55",
-    footerLabel: "Education & Career Blog",
+    footerLabelKey: "home.educationCareerBlog",
     icon: GraduationCap,
     buttonHoverClass: "hover:bg-emerald-500/70 hover:border-emerald-300/80",
     iconColorClass: "text-emerald-700",
+    // This cover is a full poster with its own headline ("Building Bridges to
+    // Knowledge") baked into the top third, which collided with the overlay
+    // title. Zoom in from the bottom edge so the crop starts below it and only
+    // the book-staircase illustration shows.
+    imageClass: "origin-bottom scale-[1.65] group-hover:scale-[1.73]",
   },
   {
     id: "real-life-stories",
-    title: "Real life\nstories",
+    titleKey: "home.realLifeStories",
     href: "/blog/real-life-stories",
     image: "/images/start-real-life-stories.webp",
-    tintClass: "bg-gradient-to-br from-violet-950/90 via-purple-900/70 to-indigo-700/50",
-    footerLabel: "Real life stories",
+    footerLabelKey: "home.realLifeStories",
     icon: HeartHandshake,
     buttonHoverClass: "hover:bg-violet-500/70 hover:border-violet-300/80",
     iconColorClass: "text-violet-700",
+    imageClass: "group-hover:scale-105",
   },
 ]
 
 export default function ExpandableCards() {
   const [activeIndex, setActiveIndex] = useState<number | null>(null)
+  const { t } = useLanguage()
 
   return (
-    <section className="relative w-full px-4 py-10 sm:px-6 sm:py-12 md:px-8 md:py-16">
+    <section className="relative w-full px-4 pt-2 pb-6 sm:px-6 sm:pt-3 sm:pb-8 md:px-8 md:pt-4 md:pb-10">
       <div className="container relative z-10 mx-auto w-full max-w-7xl 2xl:max-w-[1600px] 3xl:max-w-[1800px] 4xl:max-w-[2000px]">
-        <div className="p-2 sm:p-3 md:p-4">
+        <div className="p-0 sm:p-1 md:p-2">
           {/* Expandable Cards Row */}
           <motion.div
             className="flex flex-col gap-4 md:min-h-[520px] md:flex-row md:gap-5 lg:min-h-[580px] xl:min-h-[620px]"
@@ -66,6 +72,7 @@ export default function ExpandableCards() {
             {cardsData.map((card, index) => {
               const isExpanded = activeIndex === index
               const Icon = card.icon
+              const title = t(card.titleKey).replace(" & ", " &\n")
 
               return (
                 <Link
@@ -81,29 +88,24 @@ export default function ExpandableCards() {
                   onTouchStart={() => setActiveIndex(index)}
                   onFocus={() => setActiveIndex(index)}
                 >
-                  {/* Background */}
+                  {/* Background — image plus a legibility scrim so the white title stays readable over light or busy artwork */}
                   <div className="absolute inset-0">
                     <div
-                      className="absolute inset-0 bg-cover bg-center bg-no-repeat transition-transform duration-300 group-hover:scale-105"
+                      className={cn(
+                        "absolute inset-0 bg-cover bg-center bg-no-repeat transition-transform duration-300",
+                        card.imageClass
+                      )}
                       style={{ backgroundImage: `url(${card.image})` }}
                     />
-                    {/* Both washes lift on hover so the artwork shows in its
-                        own colours; the bottom gradient stays partly on to
-                        keep the white label readable. */}
-                    <div
-                      className={cn(
-                        "absolute inset-0 mix-blend-multiply transition-opacity duration-300 group-hover:opacity-0",
-                        card.tintClass
-                      )}
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-b from-black/25 via-black/15 to-black/72 transition-opacity duration-300 group-hover:opacity-45" />
+                    <div className="pointer-events-none absolute inset-x-0 top-0 h-[55%] bg-gradient-to-b from-black/80 via-black/45 to-transparent" />
+                    <div className="pointer-events-none absolute inset-x-0 bottom-0 h-[35%] bg-gradient-to-t from-black/55 to-transparent" />
                     <div className="absolute inset-0 ring-1 ring-inset ring-white/10" />
                   </div>
 
                   {/* Content */}
                   <div className="relative z-10 flex h-full flex-col justify-between p-4 sm:p-5 md:p-7">
-                    <h3 className="max-w-[13ch] whitespace-pre-line font-heading text-2xl font-semibold leading-[1.05] text-white [text-shadow:0_2px_10px_rgba(0,0,0,0.55)] sm:text-3xl md:text-[2.2rem]">
-                      {card.title}
+                    <h3 className="max-w-[13ch] whitespace-pre-line font-heading text-2xl font-bold leading-[1.05] tracking-tight text-white [text-shadow:0_2px_12px_rgba(0,0,0,0.75)] sm:text-3xl md:text-[2.2rem]">
+                      {title}
                     </h3>
 
                     <div className="mt-4">
@@ -117,7 +119,7 @@ export default function ExpandableCards() {
                         <span className={cn("flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-white sm:h-6 sm:w-6", card.iconColorClass)}>
                           <Icon className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                         </span>
-                        <span className="truncate whitespace-nowrap">{card.footerLabel}</span>
+                        <span className="truncate whitespace-nowrap">{t(card.footerLabelKey)}</span>
                       </span>
                     </div>
                   </div>
@@ -128,7 +130,7 @@ export default function ExpandableCards() {
 
           {/* View All Changes Button */}
           <motion.div
-            className="text-center mt-12 sm:mt-16 md:mt-20"
+            className="text-center mt-8 sm:mt-10 md:mt-12"
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.3 }}
@@ -138,7 +140,7 @@ export default function ExpandableCards() {
               href="/blog"
               className="inline-flex items-center justify-center gap-2 px-6 sm:px-8 py-3 sm:py-3.5 rounded-lg border-2 border-emerald-600 text-emerald-600 font-medium text-sm sm:text-base hover:bg-emerald-600 hover:text-white transition-colors"
             >
-              View All Changes
+              {t("home.viewAllChanges")}
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
               </svg>

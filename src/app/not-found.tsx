@@ -10,15 +10,18 @@ import {
   Home,
   Users,
 } from "lucide-react";
+import { useLanguage } from "@/components/i18n/LanguageProvider";
 
+/** `label` is a dictionary key. */
 const SUGGESTIONS = [
-  { label: "Home", href: "/", icon: Home },
-  { label: "What We Do", href: "/what-we-do", icon: Compass },
-  { label: "Blog & Stories", href: "/blog", icon: BookOpen },
-  { label: "Real Life Stories", href: "/blog/real-life-stories", icon: Users },
+  { label: "common.home", href: "/", icon: Home },
+  { label: "wwd.badge", href: "/what-we-do", icon: Compass },
+  { label: "blog.eyebrow", href: "/blog", icon: BookOpen },
+  { label: "blog.storiesBadge", href: "/blog/real-life-stories", icon: Users },
 ] as const;
 
 export default function NotFound() {
+  const { t, digits } = useLanguage();
   return (
     <main className="relative min-h-screen bg-background flex items-center justify-center px-4 py-12 overflow-hidden">
       {/* Soft backdrop */}
@@ -39,7 +42,7 @@ export default function NotFound() {
           transition={{ duration: 0.4 }}
           className="text-[11px] font-bold uppercase tracking-[0.25em] text-emerald-600 dark:text-emerald-400 mb-5"
         >
-          Error 404
+          {t("notFound.eyebrow")}
         </motion.p>
 
         {/* The big number */}
@@ -50,7 +53,7 @@ export default function NotFound() {
           className="font-extrabold tracking-tight text-emerald-600 dark:text-emerald-400 text-7xl sm:text-8xl md:text-9xl leading-[0.9] mb-4"
           style={{ fontVariantNumeric: "tabular-nums" }}
         >
-          404
+          {digits("404")}
         </motion.h1>
 
         {/* Headline */}
@@ -60,7 +63,7 @@ export default function NotFound() {
           transition={{ duration: 0.5, delay: 0.15 }}
           className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight"
         >
-          Page not found
+          {t("notFound.title")}
         </motion.h2>
 
         <motion.p
@@ -69,8 +72,7 @@ export default function NotFound() {
           transition={{ duration: 0.5, delay: 0.2 }}
           className="mt-3 text-sm sm:text-base text-muted-foreground max-w-md mx-auto leading-relaxed"
         >
-          The page you&apos;re looking for doesn&apos;t exist or may have been
-          moved. Try one of the destinations below.
+          {t("notFound.body")}
         </motion.p>
 
         {/* Actions */}
@@ -85,7 +87,7 @@ export default function NotFound() {
             className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-emerald-600 text-white text-sm font-semibold hover:bg-emerald-700 transition-colors shadow-sm shadow-emerald-600/30"
           >
             <Home className="h-4 w-4" />
-            Take me home
+            {t("notFound.home")}
           </Link>
           <button
             type="button"
@@ -95,7 +97,7 @@ export default function NotFound() {
             className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full border border-border bg-card text-sm font-semibold text-foreground hover:border-emerald-500/60 hover:text-emerald-600 transition-colors"
           >
             <ArrowLeft className="h-4 w-4" />
-            Go back
+            {t("notFound.back")}
           </button>
         </motion.div>
 
@@ -107,7 +109,7 @@ export default function NotFound() {
           className="mt-10 sm:mt-12"
         >
           <p className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground mb-3">
-            Quick links
+            {t("notFound.quickLinks")}
           </p>
           <div className="flex flex-wrap items-center justify-center gap-2">
             {SUGGESTIONS.map((s) => {
@@ -119,7 +121,7 @@ export default function NotFound() {
                   className="group inline-flex items-center gap-2 px-3.5 py-2 rounded-full border border-border bg-card text-xs sm:text-sm font-semibold text-foreground hover:border-emerald-500/60 hover:text-emerald-600 transition-colors"
                 >
                   <Icon className="h-3.5 w-3.5" />
-                  {s.label}
+                  {t(s.label)}
                   <ArrowUpRight className="h-3 w-3 opacity-0 -translate-x-1 group-hover:opacity-100 group-hover:translate-x-0 transition-all" />
                 </Link>
               );

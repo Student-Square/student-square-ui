@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useSelector } from "react-redux";
@@ -71,7 +71,17 @@ const shortDate = (iso?: string | null) =>
       })
     : "—";
 
+// useSearchParams() needs a Suspense boundary, or `next build` refuses to
+// prerender the page.
 export default function AdminUsersPage() {
+  return (
+    <Suspense fallback={null}>
+      <AdminUsersContent />
+    </Suspense>
+  );
+}
+
+function AdminUsersContent() {
   const me = useSelector(selectCurrentUser);
   const router = useRouter();
   const searchParams = useSearchParams();

@@ -8,13 +8,16 @@ import { motion } from "motion/react";
 import { getPartnerBySlug, partners } from "@/data/partners";
 import ImpactStats from "@/components/common/ImpactStats";
 import { ChevronRight, ArrowRight } from "lucide-react";
+import { useLanguage } from "@/components/i18n/LanguageProvider";
 
 export default function PartnerDetailPage() {
   const { slug } = useParams<{ slug: string }>();
+  const { t, pick } = useLanguage();
   const partner = getPartnerBySlug(slug);
   if (!partner) redirect("/get-involved/partner");
 
   const next = partners.find((p) => p.slug !== slug);
+  const title = pick(partner.title, partner.titleBn);
 
   return (
     <main className="min-h-screen">
@@ -24,7 +27,7 @@ export default function PartnerDetailPage() {
       <section className="relative mt-12 sm:mt-14 lg:mt-16 h-[36vh] min-h-[220px] w-full overflow-hidden">
         <img
           src={partner.image}
-          alt={partner.title}
+          alt={title}
           className="absolute inset-0 h-full w-full object-cover"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-black/10" />
@@ -35,7 +38,7 @@ export default function PartnerDetailPage() {
             transition={{ duration: 0.6 }}
             className="text-3xl sm:text-4xl font-bold text-white"
           >
-            {partner.title}
+            {title}
           </motion.h1>
         </div>
       </section>
@@ -47,10 +50,10 @@ export default function PartnerDetailPage() {
           {/* Breadcrumb */}
           <div className="flex items-center gap-2 text-xs text-muted-foreground flex-wrap">
             <Link href="/get-involved/partner" className="hover:text-emerald-600 transition-colors">
-              Partner With Us
+              {t("partner.title")}
             </Link>
             <ChevronRight className="h-3 w-3" />
-            <span className="text-foreground">{partner.title}</span>
+            <span className="text-foreground">{title}</span>
           </div>
 
           {/* Stats */}
@@ -71,7 +74,7 @@ export default function PartnerDetailPage() {
             viewport={{ once: true }}
             className="space-y-4"
           >
-            {partner.description.split("\n\n").map((para, i) => (
+            {pick(partner.description, partner.descriptionBn).split("\n\n").map((para, i) => (
               <p key={i} className="text-sm text-foreground leading-relaxed">{para}</p>
             ))}
           </motion.div>
@@ -84,12 +87,12 @@ export default function PartnerDetailPage() {
             viewport={{ once: true }}
           >
             <h2 className="text-base font-bold text-foreground mb-3">
-              Key Points of {partner.title.replace("Become A ", "").replace("Become An ", "")} Partnership
+              {t("partner.keyPoints", { type: pick(partner.type, partner.typeBn) })}
             </h2>
             <ul className="space-y-1.5 ml-4 list-disc">
               {partner.keyPoints.map((point, i) => (
                 <li key={i} className="text-sm text-foreground leading-relaxed">
-                  <span className="font-semibold">{point.bold}</span>{point.text}
+                  <span className="font-semibold">{pick(point.bold, point.boldBn)}</span>{pick(point.text, point.textBn)}
                 </li>
               ))}
             </ul>
@@ -102,11 +105,11 @@ export default function PartnerDetailPage() {
             transition={{ duration: 0.5, delay: 0.15 }}
             viewport={{ once: true }}
           >
-            <h2 className="text-base font-bold text-foreground mb-3">Our Campaigns</h2>
+            <h2 className="text-base font-bold text-foreground mb-3">{t("partner.campaigns")}</h2>
             <ul className="space-y-1.5 ml-4 list-disc">
               {partner.campaigns.map((item, i) => (
                 <li key={i} className="text-sm text-foreground leading-relaxed">
-                  <span className="font-semibold">{item.bold}</span>{item.text}
+                  <span className="font-semibold">{pick(item.bold, item.boldBn)}</span>{pick(item.text, item.textBn)}
                 </li>
               ))}
             </ul>
@@ -121,10 +124,9 @@ export default function PartnerDetailPage() {
           >
             <p className="text-sm text-foreground leading-relaxed italic">
               <Link href="/contact" className="font-semibold not-italic hover:text-emerald-600 transition-colors">
-                Get in touch
-              </Link>
-              {" "}(eita cursor dile jate FIND US page a nie jai ) with us to learn about the
-              current requirements for educational accessories and how you can meet these needs.
+                {t("partner.getInTouch")}
+              </Link>{" "}
+              {t("partner.getInTouchBody")}
             </p>
           </motion.div>
 
@@ -137,9 +139,9 @@ export default function PartnerDetailPage() {
             className="text-center"
           >
             <p className="text-sm text-foreground">
-              Learn More about{" "}
+              {t("partner.learnMoreAbout")}{" "}
               <Link href="/get-involved/partner" className="text-emerald-600 underline hover:text-emerald-700 transition-colors">
-                How to Partner With Us
+                {t("partner.howTo")}
               </Link>
             </p>
           </motion.div>
@@ -158,20 +160,19 @@ export default function PartnerDetailPage() {
               >
                 <img
                   src={next.image}
-                  alt={next.title}
+                  alt={pick(next.title, next.titleBn)}
                   className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
                 <div className="absolute bottom-0 left-0 right-0 p-5 flex items-end justify-between gap-4">
                   <div>
-                    <h3 className="text-base font-bold text-white leading-snug">{next.title}</h3>
+                    <h3 className="text-base font-bold text-white leading-snug">{pick(next.title, next.titleBn)}</h3>
                     <p className="text-xs text-white/80 mt-1 line-clamp-2 max-w-md">
-                      Our vision is to foster an inclusive society where every individual's potential is
-                      nurtured and developed, free from any form of discrimination.
+                      {t("partner.cardBody")}
                     </p>
                   </div>
                   <span className="flex-shrink-0 inline-flex items-center gap-1.5 bg-white/90 hover:bg-emerald-600 text-foreground hover:text-white text-xs font-semibold px-4 py-2 rounded-full transition-colors whitespace-nowrap">
-                    Donate <ArrowRight className="h-3 w-3" />
+                    {t("partner.donate")} <ArrowRight className="h-3 w-3" />
                   </span>
                 </div>
               </Link>

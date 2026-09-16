@@ -10,11 +10,12 @@ import {
   useAdminReorderAssignmentsMutation,
 } from "@/redux/features/content/contentApi";
 import {
-  useAdminListUsersQuery,
-  useAdminUpdateUserMutation,
-} from "@/redux/features/users/usersApi";
-import type { ApiBoardAssignment, BoardCategory } from "@/types/content";
-import type { AdminUser } from "@/types/users";
+  useAdminListPeopleQuery,
+  useAdminCreatePersonMutation,
+  useAdminUpdatePersonMutation,
+  useAdminDeletePersonMutation,
+} from "@/redux/features/content/contentApi";
+import type { ApiBoardAssignment, ApiPerson, BoardCategory } from "@/types/content";
 import {
   BriefcaseBusiness,
   Check,
@@ -26,6 +27,7 @@ import {
   Search,
   ShieldCheck,
   Trash2,
+  UserPlus,
   Users,
   X,
 } from "lucide-react";
@@ -39,6 +41,7 @@ const CATEGORIES: Array<{ value: BoardCategory; label: string; icon: React.React
 ];
 
 const NO_ASSIGNMENTS: ApiBoardAssignment[] = [];
+const NO_PEOPLE: ApiPerson[] = [];
 
 function slugify(str: string) {
   return str
@@ -60,7 +63,11 @@ export default function TeamPage() {
   const [updateAssignment] = useAdminUpdateAssignmentMutation();
   const [deleteAssignment] = useAdminDeleteAssignmentMutation();
   const [reorderAssignments, { isLoading: isReordering }] = useAdminReorderAssignmentsMutation();
-  const [updateUser] = useAdminUpdateUserMutation();
+  // People are curated here, not mirrored from user accounts.
+  const { data: allPeople = NO_PEOPLE } = useAdminListPeopleQuery();
+  const [createPerson, { isLoading: isCreatingPerson }] = useAdminCreatePersonMutation();
+  const [updatePerson] = useAdminUpdatePersonMutation();
+  const [deletePerson] = useAdminDeletePersonMutation();
 
   /* ── Local items for current tab (mirrors server, enables DnD) ── */
   const [localItems, setLocalItems] = useState<ApiBoardAssignment[]>([]);
@@ -80,30 +87,46 @@ export default function TeamPage() {
   const [addOpen, setAddOpen] = useState(false);
   const [searchQ, setSearchQ] = useState("");
   const [debouncedQ, setDebouncedQ] = useState("");
-  const [selectedUser, setSelectedUser] = useState<AdminUser | null>(null);
+  const [selectedPerson, setSelectedPerson] = useState<ApiPerson | null>(null);
   const [roleLabel, setRoleLabel] = useState("");
+
+  // "Add someone new" — the whole point of the curated directory is that the
+  // person need not have an account, so the admin types their details here.
+  const [newPersonOpen, setNewPersonOpen] = useState(false);
+  const [newPerson, setNewPerson] = useState({ fullName: "", email: "", avatarUrl: "", bio: "" });
+
+  // Editing a person's own details (name / photo / bio), as opposed to their
+  // role within one section.
+  const [editingPerson, setEditingPerson] = useState<ApiPerson | null>(null);
+  const [personDraft, setPersonDraft] = useState({ fullName: "", email: "", avatarUrl: "", bio: "" });
+  const [isSavingPerson, setIsSavingPerson] = useState(false);
 
   useEffect(() => {
     const t = setTimeout(() => setDebouncedQ(searchQ), 300);
     return () => clearTimeout(t);
   }, [searchQ]);
 
-  const { data: userSearch } = useAdminListUsersQuery(
-    debouncedQ.length >= 2 ? { q: debouncedQ, limit: 8 } : undefined,
-    { skip: debouncedQ.length < 2 }
+  // Anyone already in *this* section is filtered out, but someone in another
+  // section stays selectable — that is how one person holds several roles.
+  const assignedPersonIds = new Set(
+    allAssignments.filter((a) => a.category === activeCategory).map((a) => a.personId)
   );
-
-  const assignedUserIds = new Set(
-    allAssignments.filter((a) => a.category === activeCategory).map((a) => a.userId)
-  );
-  const searchResults = (userSearch?.data ?? []).filter(
-    (u) => !assignedUserIds.has(u.id)
-  );
+  const searchResults =
+    debouncedQ.length >= 2
+      ? allPeople
+          .filter(
+            (person) =>
+              !assignedPersonIds.has(person.id) &&
+              (person.fullName.toLowerCase().includes(debouncedQ.toLowerCase()) ||
+                (person.email ?? "").toLowerCase().includes(debouncedQ.toLowerCase()))
+          )
+          .slice(0, 8)
+      : [];
 
   /* ── Slug editing ── */
   const [editingSlug, setEditingSlug] = useState<{
     assignmentId: string;
-    userId: string;
+    personId: string;
     value: string;
   } | null>(null);
   const [slugError, setSlugError] = useState<string | null>(null);
@@ -156,19 +179,65 @@ export default function TeamPage() {
 
   /* ── Handlers ── */
   const handleAddMember = async () => {
-    if (!selectedUser || !roleLabel.trim()) return;
+    if (!selectedPerson || !roleLabel.trim()) return;
     try {
       await createAssignment({
-        userId: selectedUser.id,
+        personId: selectedPerson.id,
         category: activeCategory,
         roleLabel: roleLabel.trim(),
       }).unwrap();
       const cat = CATEGORIES.find((c) => c.value === activeCategory)?.label;
-      toast.success(`${selectedUser.fullName} added to ${cat}`);
+      toast.success(`${selectedPerson.fullName} added to ${cat}`);
       setAddOpen(false);
-      setSelectedUser(null);
+      setSelectedPerson(null);
       setRoleLabel("");
       setSearchQ("");
+    } catch { /* baseApi toasts */ }
+  };
+
+  /** Create a brand-new person and select them, ready to be given a role. */
+  const handleCreatePerson = async () => {
+    if (!newPerson.fullName.trim()) return;
+    try {
+      const created = await createPerson({
+        fullName: newPerson.fullName.trim(),
+        email: newPerson.email.trim() || null,
+        avatarUrl: newPerson.avatarUrl.trim() || null,
+        bio: newPerson.bio.trim() || null,
+      }).unwrap();
+      toast.success(`${created.fullName} added to the directory`);
+      setSelectedPerson(created);
+      setNewPersonOpen(false);
+      setNewPerson({ fullName: "", email: "", avatarUrl: "", bio: "" });
+      setSearchQ("");
+    } catch { /* baseApi toasts */ }
+  };
+
+  const handleSavePerson = async () => {
+    if (!editingPerson || !personDraft.fullName.trim()) return;
+    setIsSavingPerson(true);
+    try {
+      await updatePerson({
+        id: editingPerson.id,
+        data: {
+          fullName: personDraft.fullName.trim(),
+          email: personDraft.email.trim() || null,
+          avatarUrl: personDraft.avatarUrl.trim() || null,
+          bio: personDraft.bio.trim() || null,
+        },
+      }).unwrap();
+      toast.success("Details updated");
+      setEditingPerson(null);
+    } catch { /* baseApi toasts */ }
+    finally { setIsSavingPerson(false); }
+  };
+
+  /** Removes the person everywhere, not just from this section. */
+  const handleDeletePerson = async (personId: string, name: string) => {
+    try {
+      await deletePerson(personId).unwrap();
+      toast.success(`${name} removed from every section`);
+      setEditingPerson(null);
     } catch { /* baseApi toasts */ }
   };
 
@@ -179,7 +248,7 @@ export default function TeamPage() {
     setSlugError(null);
     setIsSavingSlug(true);
     try {
-      await updateUser({ id: editingSlug.userId, data: { slug } }).unwrap();
+      await updatePerson({ id: editingSlug.personId, data: { slug } }).unwrap();
       toast.success("Slug updated");
       setEditingSlug(null);
     } catch (err) {
@@ -227,6 +296,8 @@ export default function TeamPage() {
     setConfirmDelete(null);
     setEditingSlug(null);
     setEditingRole(null);
+    setSelectedPerson(null);
+    setNewPersonOpen(false);
   };
 
   return (
@@ -285,7 +356,7 @@ export default function TeamPage() {
                 Add to {CATEGORIES.find((c) => c.value === activeCategory)?.label}
               </p>
 
-              {!selectedUser ? (
+              {!selectedPerson ? (
                 <div className="space-y-2">
                   <div className="relative">
                     <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
@@ -300,37 +371,114 @@ export default function TeamPage() {
                   </div>
                   {searchResults.length > 0 && (
                     <div className="rounded-xl border border-border bg-card divide-y divide-border max-h-52 overflow-y-auto">
-                      {searchResults.map((u) => (
+                      {searchResults.map((person) => (
                         <button
-                          key={u.id}
+                          key={person.id}
                           type="button"
-                          onClick={() => { setSelectedUser(u); setSearchQ(""); }}
+                          onClick={() => { setSelectedPerson(person); setSearchQ(""); }}
                           className="w-full flex items-center gap-3 px-3 py-2.5 hover:bg-muted/50 text-left transition-colors"
                         >
-                          <UserAvatar user={u} />
-                          <div className="min-w-0">
-                            <p className="text-sm font-semibold text-foreground truncate">{u.fullName}</p>
-                            <p className="text-xs text-muted-foreground truncate">{u.email}</p>
+                          <PersonAvatar person={person} />
+                          <div className="min-w-0 flex-1">
+                            <p className="text-sm font-semibold text-foreground truncate">{person.fullName}</p>
+                            <p className="text-xs text-muted-foreground truncate">
+                              {person.email ?? `/${person.slug}`}
+                            </p>
                           </div>
+                          {person.assignments.length > 0 && (
+                            <span className="shrink-0 text-[10px] font-semibold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">
+                              already in {person.assignments.length}
+                            </span>
+                          )}
                         </button>
                       ))}
                     </div>
                   )}
                   {debouncedQ.length >= 2 && searchResults.length === 0 && (
                     <p className="text-xs text-muted-foreground text-center py-2">
-                      No users found, or all matches are already in this group.
+                      Nobody found, or every match is already in this group.
                     </p>
+                  )}
+
+                  {/* Someone who has never been added before. No account needed. */}
+                  {!newPersonOpen ? (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setNewPersonOpen(true);
+                        setNewPerson((d) => ({ ...d, fullName: searchQ.trim() }));
+                      }}
+                      className="w-full inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl border border-dashed border-border text-xs font-semibold text-muted-foreground hover:text-foreground hover:border-emerald-500/50 transition-colors"
+                    >
+                      <UserPlus className="h-3.5 w-3.5" />
+                      Add someone new
+                    </button>
+                  ) : (
+                    <div className="space-y-2 rounded-xl border border-border bg-card p-3">
+                      <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+                        New person
+                      </p>
+                      <input
+                        type="text"
+                        value={newPerson.fullName}
+                        onChange={(e) => setNewPerson((d) => ({ ...d, fullName: e.target.value }))}
+                        placeholder="Full name (required)"
+                        className="field-input"
+                        autoFocus
+                      />
+                      <input
+                        type="email"
+                        value={newPerson.email}
+                        onChange={(e) => setNewPerson((d) => ({ ...d, email: e.target.value }))}
+                        placeholder="Email (optional)"
+                        className="field-input"
+                      />
+                      <input
+                        type="text"
+                        value={newPerson.avatarUrl}
+                        onChange={(e) => setNewPerson((d) => ({ ...d, avatarUrl: e.target.value }))}
+                        placeholder="Photo URL (optional)"
+                        className="field-input"
+                      />
+                      <textarea
+                        value={newPerson.bio}
+                        onChange={(e) => setNewPerson((d) => ({ ...d, bio: e.target.value }))}
+                        placeholder="Short bio (optional)"
+                        rows={3}
+                        className="field-input resize-y"
+                      />
+                      <div className="flex gap-2">
+                        <button
+                          type="button"
+                          onClick={handleCreatePerson}
+                          disabled={isCreatingPerson || !newPerson.fullName.trim()}
+                          className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-emerald-600 text-white text-xs font-semibold hover:bg-emerald-700 disabled:opacity-60 transition-colors"
+                        >
+                          {isCreatingPerson ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Check className="h-3.5 w-3.5" />}
+                          Create
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setNewPersonOpen(false)}
+                          className="px-3 py-2 rounded-xl border border-border text-xs font-semibold text-muted-foreground hover:bg-muted transition-colors"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
                   )}
                 </div>
               ) : (
                 <div className="flex items-center gap-3 p-3 rounded-xl border border-emerald-500/30 bg-emerald-50/50 dark:bg-emerald-950/20">
-                  <UserAvatar user={selectedUser} />
+                  <PersonAvatar person={selectedPerson} />
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold text-foreground">{selectedUser.fullName}</p>
-                    <p className="text-xs text-muted-foreground truncate">{selectedUser.email}</p>
+                    <p className="text-sm font-semibold text-foreground">{selectedPerson.fullName}</p>
+                    <p className="text-xs text-muted-foreground truncate">
+                      {selectedPerson.email ?? `/${selectedPerson.slug}`}
+                    </p>
                   </div>
                   <button
-                    onClick={() => setSelectedUser(null)}
+                    onClick={() => setSelectedPerson(null)}
                     className="p-1 rounded text-muted-foreground hover:text-foreground"
                   >
                     <X className="h-3.5 w-3.5" />
@@ -338,7 +486,7 @@ export default function TeamPage() {
                 </div>
               )}
 
-              {selectedUser && (
+              {selectedPerson && (
                 <div className="flex gap-2 items-end">
                   <label className="flex-1 block">
                     <span className="block text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-1.5">
@@ -363,7 +511,7 @@ export default function TeamPage() {
                     Add
                   </button>
                   <button
-                    onClick={() => { setAddOpen(false); setSelectedUser(null); setRoleLabel(""); setSearchQ(""); }}
+                    onClick={() => { setAddOpen(false); setSelectedPerson(null); setRoleLabel(""); setSearchQ(""); }}
                     className="shrink-0 p-2 rounded-xl border border-border hover:bg-muted transition-colors"
                     aria-label="Cancel"
                   >
@@ -417,7 +565,29 @@ export default function TeamPage() {
 
                     {/* Name + slug */}
                     <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold text-foreground truncate">{member.fullName}</p>
+                    <div className="flex items-center gap-1.5">
+                      <p className="text-sm font-semibold text-foreground truncate">{member.fullName}</p>
+                      {/* Name/photo/bio are curated, so they are edited here —
+                          not on the person's account. */}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const person = allPeople.find((x) => x.id === member.personId);
+                          if (!person) return;
+                          setEditingPerson(person);
+                          setPersonDraft({
+                            fullName: person.fullName,
+                            email: person.email ?? "",
+                            avatarUrl: person.avatarUrl ?? "",
+                            bio: person.bio ?? "",
+                          });
+                        }}
+                        aria-label={`Edit ${member.fullName}'s details`}
+                        className="shrink-0 p-0.5 rounded text-muted-foreground/40 hover:text-foreground transition-colors"
+                      >
+                        <Pencil className="h-3 w-3" />
+                      </button>
+                    </div>
 
                     {editingSlug?.assignmentId === member.id ? (
                       <div className="mt-1 space-y-1">
@@ -458,14 +628,14 @@ export default function TeamPage() {
                         onClick={() =>
                           setEditingSlug({
                             assignmentId: member.id,
-                            userId: member.userId,
-                            value: member.slug ?? slugify(member.fullName),
+                            personId: member.personId,
+                            value: member.slug || slugify(member.fullName),
                           })
                         }
                         className="group/slug flex items-center gap-1 mt-0.5"
                       >
                         <span className="text-[11px] text-muted-foreground font-mono">
-                          /{member.slug ?? <span className="italic opacity-60">no slug</span>}
+                          /{member.slug || <span className="italic opacity-60">no slug</span>}
                         </span>
                         <Pencil className="h-2.5 w-2.5 opacity-0 group-hover/slug:opacity-60 transition-opacity text-muted-foreground" />
                       </button>
@@ -591,17 +761,127 @@ export default function TeamPage() {
           box-shadow: 0 0 0 2px rgb(16 185 129 / 0.12);
         }
       `}</style>
+
+      {/* Edit person details. Separate from the role editing above: this changes
+          who they are everywhere, that changes what they do in one section. */}
+      {editingPerson && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+          role="dialog"
+          aria-modal="true"
+          aria-label={`Edit ${editingPerson.fullName}`}
+          onClick={() => setEditingPerson(null)}
+        >
+          <div
+            className="w-full max-w-md rounded-2xl border border-border bg-card p-5 shadow-xl space-y-3"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between">
+              <h2 className="text-sm font-bold text-foreground">Edit details</h2>
+              <button
+                onClick={() => setEditingPerson(null)}
+                className="p-1 rounded text-muted-foreground hover:text-foreground"
+                aria-label="Close"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            {editingPerson.assignments.length > 1 && (
+              <p className="text-[11px] text-muted-foreground rounded-lg bg-muted/50 px-2.5 py-2">
+                This person appears in {editingPerson.assignments.length} sections. Changes here
+                apply to all of them.
+              </p>
+            )}
+
+            <label className="block">
+              <span className="block text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-1.5">
+                Full name
+              </span>
+              <input
+                type="text"
+                value={personDraft.fullName}
+                onChange={(e) => setPersonDraft((d) => ({ ...d, fullName: e.target.value }))}
+                className="field-input"
+              />
+            </label>
+
+            <label className="block">
+              <span className="block text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-1.5">
+                Email
+              </span>
+              <input
+                type="email"
+                value={personDraft.email}
+                onChange={(e) => setPersonDraft((d) => ({ ...d, email: e.target.value }))}
+                placeholder="Optional"
+                className="field-input"
+              />
+            </label>
+
+            <label className="block">
+              <span className="block text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-1.5">
+                Photo URL
+              </span>
+              <input
+                type="text"
+                value={personDraft.avatarUrl}
+                onChange={(e) => setPersonDraft((d) => ({ ...d, avatarUrl: e.target.value }))}
+                placeholder="Optional"
+                className="field-input"
+              />
+            </label>
+
+            <label className="block">
+              <span className="block text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-1.5">
+                Bio
+              </span>
+              <textarea
+                value={personDraft.bio}
+                onChange={(e) => setPersonDraft((d) => ({ ...d, bio: e.target.value }))}
+                rows={4}
+                placeholder="Shown on their public page"
+                className="field-input resize-y"
+              />
+            </label>
+
+            <div className="flex items-center gap-2 pt-1">
+              <button
+                onClick={handleSavePerson}
+                disabled={isSavingPerson || !personDraft.fullName.trim()}
+                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-emerald-600 text-white text-sm font-semibold hover:bg-emerald-700 disabled:opacity-60 transition-colors"
+              >
+                {isSavingPerson ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
+                Save
+              </button>
+              <button
+                onClick={() => setEditingPerson(null)}
+                className="px-4 py-2 rounded-xl border border-border text-sm font-semibold text-muted-foreground hover:bg-muted transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => handleDeletePerson(editingPerson.id, editingPerson.fullName)}
+                className="ml-auto inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-semibold text-red-600 hover:bg-red-500/10 transition-colors"
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+                Delete everywhere
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
 
-function UserAvatar({ user }: { user: Pick<AdminUser, "fullName" | "profile"> }) {
-  const initials = getInitials(user.fullName);
+function PersonAvatar({ person }: { person: Pick<ApiPerson, "fullName" | "avatarUrl"> }) {
+  const initials = getInitials(person.fullName);
   return (
     <div className="h-8 w-8 rounded-lg overflow-hidden bg-muted ring-1 ring-border shrink-0">
-      {user.profile?.avatarUrl ? (
+      {person.avatarUrl ? (
         // eslint-disable-next-line @next/next/no-img-element
-        <img src={user.profile.avatarUrl} alt={user.fullName} className="h-full w-full object-cover" />
+        <img src={person.avatarUrl} alt={person.fullName} className="h-full w-full object-cover" />
       ) : (
         <span className="flex h-full w-full items-center justify-center text-xs font-bold text-muted-foreground">
           {initials}

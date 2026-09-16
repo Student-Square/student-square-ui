@@ -3,6 +3,7 @@
 import { Landmark, Smartphone } from "lucide-react";
 import { container, eyebrow, heading, sub } from "../ui";
 import { useDonationDetails } from "../useDonateContent";
+import { useLanguage } from "@/components/i18n/LanguageProvider";
 
 /**
  * "HOW TO DONATE" — the foundation's own bank and mobile-banking details, for
@@ -11,13 +12,16 @@ import { useDonationDetails } from "../useDonateContent";
  */
 export default function DonateHowToSection() {
   const { bankTransfer, mobileBanking, zakat } = useDonationDetails();
+  const { lang, t, tr } = useLanguage();
 
+  // Account, SWIFT, routing and phone numbers stay in ASCII digits: donors copy
+  // them into banking apps, which do not accept Bangla numerals.
   const bankRows = [
-    { key: "A/C Name", value: bankTransfer?.accountName },
-    { key: "A/C No", value: bankTransfer?.accountNumber },
-    { key: "Bank", value: bankTransfer?.bank },
-    { key: "SWIFT", value: bankTransfer?.swift },
-    { key: "Routing Number", value: bankTransfer?.routingNumber },
+    { key: "donate.accountName", value: bankTransfer?.accountName && tr(bankTransfer.accountName) },
+    { key: "donate.accountNo", value: bankTransfer?.accountNumber },
+    { key: "donate.bank", value: bankTransfer?.bank && tr(bankTransfer.bank) },
+    { key: "donate.swift", value: bankTransfer?.swift },
+    { key: "donate.routing", value: bankTransfer?.routingNumber },
   ].filter((row) => Boolean(row.value));
 
   if (bankRows.length === 0 && !mobileBanking?.number) return null;
@@ -25,12 +29,9 @@ export default function DonateHowToSection() {
   return (
     <section id="how-to-donate" className="py-14 sm:py-20">
       <div className={container}>
-        <span className={eyebrow}>Direct Giving</span>
-        <h2 className={heading}>How to Donate</h2>
-        <p className={sub}>
-          Prefer to give without the gateway? Send your contribution straight to our bank account or
-          mobile banking number below.
-        </p>
+        <span className={eyebrow}>{t("donate.directEyebrow")}</span>
+        <h2 className={heading}>{t("donate.directHeading")}</h2>
+        <p className={sub}>{t("donate.directBody")}</p>
 
         <div className="mt-10 grid grid-cols-1 gap-5 md:grid-cols-2">
           {bankRows.length > 0 && (
@@ -40,14 +41,14 @@ export default function DonateHowToSection() {
                   <Landmark className="h-5 w-5" />
                 </div>
                 <div>
-                  <h3 className="text-sm font-bold text-foreground">Bank Transfer</h3>
-                  <p className="text-xs text-muted-foreground">Islami Bank Bangladesh</p>
+                  <h3 className="text-sm font-bold text-foreground">{t("donate.bankTransfer")}</h3>
+                  <p className="text-xs text-muted-foreground">{t("donate.bankName")}</p>
                 </div>
               </div>
               <dl className="divide-y divide-border">
                 {bankRows.map((row) => (
                   <div key={row.key} className="flex items-center justify-between gap-4 py-3">
-                    <dt className="text-xs text-muted-foreground">{row.key}</dt>
+                    <dt className="text-xs text-muted-foreground">{t(row.key)}</dt>
                     <dd className="text-right text-sm font-semibold text-foreground">{row.value}</dd>
                   </div>
                 ))}
@@ -62,21 +63,21 @@ export default function DonateHowToSection() {
                   <Smartphone className="h-5 w-5" />
                 </div>
                 <div>
-                  <h3 className="text-sm font-bold text-foreground">Mobile Banking</h3>
+                  <h3 className="text-sm font-bold text-foreground">{t("donate.mobile")}</h3>
                   <p className="text-xs text-muted-foreground">
-                    {(mobileBanking.providers ?? []).join(" / ")}
+                    {(mobileBanking.providers ?? []).map((provider) => tr(provider)).join(" / ")}
                   </p>
                 </div>
               </div>
               <div className="mt-5 rounded-xl border border-emerald-200 bg-emerald-50 px-5 py-6 text-center dark:border-emerald-900 dark:bg-emerald-950/40">
                 <p className="text-[11px] font-bold uppercase tracking-[0.15em] text-muted-foreground">
-                  Send Money To
+                  {t("donate.sendMoneyTo")}
                 </p>
                 <p className="mt-2 text-2xl font-bold tracking-wide text-emerald-700 dark:text-emerald-300 sm:text-3xl">
                   {mobileBanking.number}
                 </p>
                 {mobileBanking.accountType && (
-                  <p className="mt-1 text-xs text-muted-foreground">({mobileBanking.accountType})</p>
+                  <p className="mt-1 text-xs text-muted-foreground">({tr(mobileBanking.accountType)})</p>
                 )}
               </div>
             </article>
@@ -94,12 +95,12 @@ export default function DonateHowToSection() {
 
               <div>
                 <span className="inline-block rounded-full bg-amber-100 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-amber-800 dark:bg-amber-900/50 dark:text-amber-200">
-                  Zakat &amp; Sadaqah
+                  {t("donate.zakatSadaqah")}
                 </span>
 
                 {zakat.reference && (
                   <p className="mt-4 text-base font-semibold leading-relaxed text-foreground sm:text-lg">
-                    {zakat.reference}
+                    {tr(zakat.reference)}
                   </p>
                 )}
 
@@ -108,7 +109,7 @@ export default function DonateHowToSection() {
                     {zakat.noteBn && (
                       <p className="text-[15px] leading-loose text-foreground">{zakat.noteBn}</p>
                     )}
-                    {zakat.noteEn && (
+                    {zakat.noteEn && (lang === "EN" || !zakat.noteBn) && (
                       <footer className="mt-2 text-sm italic text-muted-foreground">
                         {zakat.noteEn}
                       </footer>

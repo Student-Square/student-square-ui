@@ -7,8 +7,8 @@ import Stories from "@/components/sections/Stories/Stories";
 import Video from "@/components/sections/Video/Video";
 import News from "@/components/sections/News/News";
 import { TestimonialsSection } from "@/components/sections/Testimonials/TestimonialsSection";
-import BlogSection from "@/components/sections/Blog/BlogSection";
-import ExpandableCards from "@/components/features/ExpandableCards/ExpandableCards";
+// Temporarily hidden on homepage — keep import for easy restore.
+// import BlogSection from "@/components/sections/Blog/BlogSection";
 import Contact from "@/components/sections/Contact/Contact";
 import Footer from "@/components/common/Footer/Footer";
 import SectionDivider from "@/components/ui/section-divider";
@@ -26,7 +26,7 @@ export default function Home() {
         <OurProjects />
         <Stories />
         <News />
-        <BlogSection />
+        {/* <BlogSection /> — Student Square Blog, hidden for now */}
         <TestimonialsSection />
         <Contact />
         <Footer />

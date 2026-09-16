@@ -3,6 +3,7 @@
 import Link from "next/link"
 import { ArrowRight, GraduationCap, MapPin } from "lucide-react"
 import type { ApiStoryListItem } from "@/types/stories"
+import { useLanguage } from "@/components/i18n/LanguageProvider"
 
 const PLACEHOLDER = "/images/student-square-school-session.jpg"
 
@@ -11,8 +12,11 @@ interface StoryCardProps {
 }
 
 export default function StoryCard({ story }: StoryCardProps) {
+  const { pick } = useLanguage()
   const image = story.coverImage?.url ?? PLACEHOLDER
   const href = `/blog/real-life-stories/${story.slug}`
+  const quote = pick(story.quote, story.quoteBn)
+  const summary = pick(story.summary, story.summaryBn)
 
   return (
     <Link
@@ -50,15 +54,15 @@ export default function StoryCard({ story }: StoryCardProps) {
           </p>
         )}
 
-        {story.quote && (
+        {quote && (
           <blockquote className="relative pl-4 border-l-2 border-emerald-500/60 text-xs sm:text-sm text-foreground italic leading-relaxed line-clamp-3 flex-1">
-            &ldquo;{story.quote}&rdquo;
+            &ldquo;{quote}&rdquo;
           </blockquote>
         )}
 
-        {!story.quote && story.summary && (
+        {!quote && summary && (
           <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed line-clamp-3 flex-1">
-            {story.summary}
+            {summary}
           </p>
         )}
 

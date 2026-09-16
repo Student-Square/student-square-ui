@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import DynamicMap from "./DynamicMap";
+import { useLanguage } from "@/components/i18n/LanguageProvider";
 
 type CountryEntry = { geoName: string; label: string; slug: string };
 
@@ -14,6 +15,7 @@ const HIGHLIGHT_COLOR = "#2bbfa4";
 
 export default function WorldMap() {
   const router = useRouter();
+  const { t, tr } = useLanguage();
 
   const regions = ACTIVE_COUNTRIES.map(({ geoName, slug }) => ({
     name: geoName,
@@ -37,7 +39,7 @@ export default function WorldMap() {
       <div className="px-4 pb-3 flex items-center gap-5 flex-wrap text-xs text-muted-foreground">
         <div className="flex items-center gap-1.5">
           <span className="inline-block w-3 h-3 rounded-sm" style={{ background: HIGHLIGHT_COLOR }} />
-          <span>Student Square presence</span>
+          <span>{t("common.presence")}</span>
         </div>
         {ACTIVE_COUNTRIES.map(({ label, slug }) => (
           <button
@@ -45,7 +47,7 @@ export default function WorldMap() {
             onClick={() => router.push(`/about/where-we-work/${slug}`)}
             className="hover:text-emerald-600 transition-colors"
           >
-            {label}
+            {tr(label)}
           </button>
         ))}
       </div>

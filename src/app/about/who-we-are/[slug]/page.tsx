@@ -10,14 +10,16 @@ import { useGetPublicUserBySlugQuery, useGetBoardGroupsQuery } from "@/redux/fea
 import type { ApiBoardAssignment } from "@/types/content";
 import { ArrowLeft, Check, ChevronRight, Loader2, Mail, Users } from "lucide-react";
 import blogData from "@/data/blog";
+import { useLanguage } from "@/components/i18n/LanguageProvider";
 
 const PLACEHOLDER_AVATAR = "/images/student-square-school-session.jpg";
 
+/** Dictionary keys for each board category's heading. */
 const CATEGORY_LABELS: Record<string, string> = {
-  BOARD: "Board of Trustees",
-  ADVISORY: "Advisory Board",
-  LEADERSHIP: "Leadership Team",
-  MANAGEMENT: "Management Team",
+  BOARD: "team.board",
+  ADVISORY: "team.advisory",
+  LEADERSHIP: "team.leadership",
+  MANAGEMENT: "team.management",
 };
 
 const CATEGORY_DOT: Record<string, string> = {
@@ -35,7 +37,8 @@ const CATEGORY_TEXT: Record<string, string> = {
 };
 
 function RelatedCard({ member }: { member: ApiBoardAssignment }) {
-  const href = `/about/who-we-are/${member.slug ?? member.userId}`;
+  const { tr } = useLanguage();
+  const href = `/about/who-we-are/${member.slug}`;
   return (
     <Link
       href={href}
@@ -52,7 +55,7 @@ function RelatedCard({ member }: { member: ApiBoardAssignment }) {
         <p className="text-sm font-semibold text-foreground group-hover:text-emerald-600 transition-colors truncate">
           {member.fullName}
         </p>
-        <p className="text-xs text-muted-foreground truncate mt-0.5">{member.roleLabel}</p>
+        <p className="text-xs text-muted-foreground truncate mt-0.5">{tr(member.roleLabel)}</p>
       </div>
       <ChevronRight className="h-4 w-4 text-muted-foreground/40 group-hover:text-emerald-500 group-hover:translate-x-0.5 shrink-0 transition-all" />
     </Link>
@@ -64,6 +67,7 @@ export default function MemberProfilePage() {
   const { data: user, isLoading, isError } = useGetPublicUserBySlugQuery(slug);
   const { data: groups } = useGetBoardGroupsQuery();
   const [copied, setCopied] = useState(false);
+  const { lang, t, pick, date } = useLanguage();
 
   const news = blogData.slice(0, 3);
 
@@ -78,11 +82,11 @@ export default function MemberProfilePage() {
     ? (groups[categoryKey.toLowerCase() as keyof typeof groups] ?? [])
     : [];
   const related = (categoryList as ApiBoardAssignment[])
-    .filter((m) => m.slug !== slug && m.userId !== slug)
+    .filter((m) => m.slug !== slug && m.personId !== slug)
     .slice(0, 6);
 
   const memberEmail = (categoryList as ApiBoardAssignment[])
-    .find((m) => m.slug === slug || m.userId === slug)?.email ?? null;
+    .find((m) => m.slug === slug || m.personId === slug)?.email ?? null;
 
   const handleCopyEmail = async () => {
     if (!memberEmail) return;
@@ -95,6 +99,17 @@ export default function MemberProfilePage() {
 
   const firstName = user?.fullName?.split(" ")[0] ?? "";
 
+  // In Bangla the Bangla name and bio lead, with the English kept underneath.
+  const nameBn = user?.profile?.fullNameBn ?? null;
+  const showBnFirst = lang === "BN";
+  const primaryName = showBnFirst ? nameBn ?? user?.fullName : user?.fullName;
+  const secondaryName = showBnFirst ? (nameBn ? user?.fullName : null) : nameBn;
+  const bio = user?.profile?.bio ?? null;
+  const bioBn = user?.profile?.bioBn ?? null;
+  const primaryBio = showBnFirst ? bioBn ?? bio : bio;
+  const secondaryBio = primaryBio === bioBn ? bio : bioBn;
+  const displayFirstName = showBnFirst && nameBn ? nameBn.split(" ")[0] : firstName;
+
   return (
     <main className="min-h-screen bg-background">
       <Header />
@@ -104,7 +119,7 @@ export default function MemberProfilePage() {
         <div className="flex h-[80vh] items-center justify-center">
           <div className="flex flex-col items-center gap-3">
             <Loader2 className="h-7 w-7 animate-spin text-emerald-500" />
-            <p className="text-sm text-muted-foreground">Loading profile…</p>
+            <p className="text-sm text-muted-foreground">{t("member.loading")}</p>
           </div>
         </div>
       )}
@@ -116,14 +131,14 @@ export default function MemberProfilePage() {
             <Users className="h-7 w-7 text-red-400" />
           </div>
           <div>
-            <p className="text-base font-semibold text-foreground">Member not found</p>
-            <p className="text-sm text-muted-foreground mt-1">We couldn&apos;t find this team member.</p>
+            <p className="text-base font-semibold text-foreground">{t("member.notFound")}</p>
+            <p className="text-sm text-muted-foreground mt-1">{t("member.notFoundBody")}</p>
           </div>
           <Link
             href="/about/who-we-are"
             className="inline-flex items-center gap-2 rounded-full bg-emerald-600 px-5 py-2 text-sm font-semibold text-white hover:bg-emerald-700 transition-colors"
           >
-            <ArrowLeft className="h-3.5 w-3.5" /> Back to Our Team
+            <ArrowLeft className="h-3.5 w-3.5" /> {t("member.backToTeam")}
           </Link>
         </div>
       )}
@@ -137,12 +152,12 @@ export default function MemberProfilePage() {
           <div className="mx-auto max-w-5xl px-6 sm:px-10 lg:px-8 pt-8 pb-6">
             <nav className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
               <Link href="/about/who-we-are" className="hover:text-emerald-600 transition-colors">
-                Our People
+                {t("team.ourPeople")}
               </Link>
               {categoryKey && (
                 <>
                   <ChevronRight className="h-3 w-3 opacity-50" />
-                  <span>{CATEGORY_LABELS[categoryKey]}</span>
+                  <span>{CATEGORY_LABELS[categoryKey] ? t(CATEGORY_LABELS[categoryKey]) : categoryKey}</span>
                 </>
               )}
             </nav>
@@ -164,7 +179,7 @@ export default function MemberProfilePage() {
                 <div className="w-44 sm:w-52 lg:w-60 aspect-[3/4] rounded-2xl overflow-hidden shadow-xl shadow-black/10 dark:shadow-black/30 ring-1 ring-border">
                   <img
                     src={user.profile?.avatarUrl ?? PLACEHOLDER_AVATAR}
-                    alt={user.fullName}
+                    alt={primaryName ?? user.fullName}
                     className="h-full w-full object-cover object-top"
                   />
                 </div>
@@ -179,11 +194,11 @@ export default function MemberProfilePage() {
               >
                 {/* Name */}
                 <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-foreground leading-tight tracking-tight">
-                  {user.fullName}
+                  {primaryName}
                 </h1>
-                {user.profile?.fullNameBn && (
+                {secondaryName && (
                   <p className="text-base text-muted-foreground mt-1 font-medium" dir="auto">
-                    {user.profile.fullNameBn}
+                    {secondaryName}
                   </p>
                 )}
 
@@ -194,7 +209,7 @@ export default function MemberProfilePage() {
                       <div key={a.id} className="flex items-center gap-1.5">
                         <div className={`h-2 w-2 rounded-full shrink-0 ${CATEGORY_DOT[a.category] ?? "bg-gray-400"}`} />
                         <span className={`text-xs font-semibold uppercase tracking-wide ${CATEGORY_TEXT[a.category] ?? "text-muted-foreground"}`}>
-                          {a.roleLabel}
+                          {pick(a.roleLabel, a.roleLabelBn)}
                         </span>
                       </div>
                     ))}
@@ -205,7 +220,7 @@ export default function MemberProfilePage() {
                 {memberEmail && (
                   <button
                     onClick={handleCopyEmail}
-                    title={copied ? "Copied!" : memberEmail}
+                    title={copied ? t("common.copied") : memberEmail}
                     className="mt-2.5 inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-emerald-600 transition-colors group/email"
                   >
                     {copied
@@ -213,7 +228,7 @@ export default function MemberProfilePage() {
                       : <Mail className="h-3.5 w-3.5 shrink-0 group-hover/email:text-emerald-600 transition-colors" />
                     }
                     <span className={copied ? "text-emerald-600 font-semibold" : "opacity-0 group-hover/email:opacity-100 transition-opacity font-mono"}>
-                      {copied ? "Copied!" : memberEmail}
+                      {copied ? t("common.copied") : memberEmail}
                     </span>
                   </button>
                 )}
@@ -222,9 +237,9 @@ export default function MemberProfilePage() {
                 <div className="my-5 h-px bg-border" />
 
                 {/* Bio */}
-                {user.profile?.bio ? (
+                {primaryBio ? (
                   <div className="space-y-4">
-                    {user.profile.bio.split(/\n\n+/).map((para, i) => (
+                    {primaryBio.split(/\n\n+/).map((para, i) => (
                       <p
                         key={i}
                         className="text-sm sm:text-[14.5px] leading-[1.85] text-foreground/75"
@@ -232,9 +247,9 @@ export default function MemberProfilePage() {
                         {para}
                       </p>
                     ))}
-                    {user.profile.bioBn && (
+                    {secondaryBio && (
                       <div className="mt-6 pt-6 border-t border-border" dir="auto">
-                        {user.profile.bioBn.split(/\n\n+/).map((para, i) => (
+                        {secondaryBio.split(/\n\n+/).map((para, i) => (
                           <p key={i} className="text-sm text-foreground/75 leading-relaxed mb-3">
                             {para}
                           </p>
@@ -243,7 +258,7 @@ export default function MemberProfilePage() {
                     )}
                   </div>
                 ) : (
-                  <p className="text-sm text-muted-foreground italic">No biography available yet.</p>
+                  <p className="text-sm text-muted-foreground italic">{t("member.noBio")}</p>
                 )}
               </motion.div>
             </div>
@@ -263,13 +278,15 @@ export default function MemberProfilePage() {
                 >
                   <div className="flex items-center justify-between mb-6">
                     <h2 className="text-lg font-bold text-foreground">
-                      More from {CATEGORY_LABELS[categoryKey] ?? "Our Team"}
+                      {t("member.moreFrom", {
+                        group: CATEGORY_LABELS[categoryKey] ? t(CATEGORY_LABELS[categoryKey]) : t("team.ourTeam"),
+                      })}
                     </h2>
                     <Link
                       href="/about/who-we-are"
                       className="text-xs font-semibold text-emerald-600 hover:text-emerald-700 uppercase tracking-wider transition-colors"
                     >
-                      View all
+                      {t("common.viewAll")}
                     </Link>
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
@@ -304,13 +321,13 @@ export default function MemberProfilePage() {
                 {/* Section header — matches reference exactly */}
                 <div className="flex items-center justify-between mb-7">
                   <h2 className="text-xl sm:text-2xl font-bold text-foreground">
-                    {firstName}&apos;s News
+                    {t("member.news", { name: displayFirstName })}
                   </h2>
                   <Link
                     href="/blog/magazine"
                     className="inline-flex items-center gap-2 rounded-full border border-emerald-500 px-4 py-1.5 text-xs font-bold uppercase tracking-widest text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 transition-colors"
                   >
-                    All {firstName}&apos;s News
+                    {t("member.allNews", { name: displayFirstName })}
                     <ChevronRight className="h-3.5 w-3.5" />
                   </Link>
                 </div>
@@ -330,12 +347,12 @@ export default function MemberProfilePage() {
                       <div className="aspect-video overflow-hidden bg-muted relative">
                         {post.tags[0] && (
                           <span className="absolute top-2 left-2 z-10 text-[9px] font-bold uppercase tracking-widest bg-emerald-600 text-white px-2 py-0.5 rounded-sm">
-                            {post.tags[0]}
+                            {pick(post.tags[0], null)}
                           </span>
                         )}
                         <img
                           src={post.image}
-                          alt={post.title}
+                          alt={pick(post.title, post.titleBn)}
                           className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-500"
                         />
                       </div>
@@ -343,10 +360,10 @@ export default function MemberProfilePage() {
                       {/* Card body */}
                       <div className="p-3.5">
                         <h3 className="font-semibold text-[13px] text-foreground leading-snug group-hover:text-emerald-600 transition-colors line-clamp-2 mb-2">
-                          {post.title}
+                          {pick(post.title, post.titleBn)}
                         </h3>
                         <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-wide">
-                          {post.publishDate}
+                          {lang === "BN" ? date(post.publishedAt) : post.publishDate}
                         </p>
                       </div>
                     </motion.article>

@@ -4,11 +4,13 @@ import dynamic from "next/dynamic";
 import { useParams, redirect } from "next/navigation";
 import Link from "next/link";
 import Header from "@/components/common/Header/Header";
+import { NAVBAR_OFFSET } from "@/components/common/Header/navbarHeight";
 import Footer from "@/components/common/Footer/Footer";
 import { motion } from "motion/react";
 import { getCountryBySlug } from "@/data/locations";
 import ImpactStats from "@/components/common/ImpactStats";
 import { ChevronRight } from "lucide-react";
+import { useLanguage } from "@/components/i18n/LanguageProvider";
 
 const CountryMap = dynamic(
   () => import("@/components/maps/CountryMap"),
@@ -24,8 +26,11 @@ const CountryMap = dynamic(
 
 export default function CountryPage() {
   const { country: slug } = useParams<{ country: string }>();
+  const { t, pick } = useLanguage();
   const country = getCountryBySlug(slug);
   if (!country) redirect("/about/where-we-work");
+  const countryName = pick(country.name, country.nameBn);
+  const description = pick(country.description, country.descriptionBn);
 
   const half = Math.ceil(country.cities.length / 2);
   const col1 = country.cities.slice(0, half);
@@ -36,7 +41,7 @@ export default function CountryPage() {
       <Header />
 
       {/* Country choropleth map */}
-      <div className="mt-12 sm:mt-14 lg:mt-16 w-full border-b border-border">
+      <div className={`${NAVBAR_OFFSET} w-full border-b border-border`}>
         <CountryMap country={slug} />
       </div>
 
@@ -47,10 +52,10 @@ export default function CountryPage() {
           {/* Breadcrumb */}
           <div className="flex items-center gap-2 text-xs text-muted-foreground">
             <Link href="/about/where-we-work" className="hover:text-emerald-600 transition-colors">
-              Where We Work
+              {t("where.title")}
             </Link>
             <ChevronRight className="h-3 w-3" />
-            <span className="text-foreground">{country.name}</span>
+            <span className="text-foreground">{countryName}</span>
           </div>
 
           {/* Country name + description */}
@@ -60,8 +65,8 @@ export default function CountryPage() {
             transition={{ duration: 0.5 }}
             viewport={{ once: true }}
           >
-            <h1 className="text-2xl font-bold text-foreground mb-4">{country.name}</h1>
-            <p className="text-base text-foreground leading-relaxed">{country.description}</p>
+            <h1 className="text-2xl font-bold text-foreground mb-4">{countryName}</h1>
+            <p className="text-base text-foreground leading-relaxed">{description}</p>
           </motion.div>
 
           {/* Stats */}
@@ -81,7 +86,7 @@ export default function CountryPage() {
             transition={{ duration: 0.5, delay: 0.2 }}
             viewport={{ once: true }}
           >
-            <p className="text-base text-foreground leading-relaxed">{country.description}</p>
+            <p className="text-base text-foreground leading-relaxed">{description}</p>
           </motion.div>
 
           {/* City listing */}
@@ -91,7 +96,7 @@ export default function CountryPage() {
             transition={{ duration: 0.5, delay: 0.3 }}
             viewport={{ once: true }}
           >
-            <h2 className="text-xl font-bold text-foreground mb-3">{country.name}</h2>
+            <h2 className="text-xl font-bold text-foreground mb-3">{countryName}</h2>
             <div className="grid grid-cols-2 gap-x-8 gap-y-0.5">
               <div className="space-y-0.5">
                 {col1.map((city) => (
@@ -100,7 +105,7 @@ export default function CountryPage() {
                     href={`/about/where-we-work/${country.slug}/${city.slug}`}
                     className="block text-sm text-foreground hover:text-emerald-600 transition-colors py-0.5"
                   >
-                    {city.name}
+                    {pick(city.name, city.nameBn)}
                   </Link>
                 ))}
               </div>
@@ -111,7 +116,7 @@ export default function CountryPage() {
                     href={`/about/where-we-work/${country.slug}/${city.slug}`}
                     className="block text-sm text-foreground hover:text-emerald-600 transition-colors py-0.5"
                   >
-                    {city.name}
+                    {pick(city.name, city.nameBn)}
                   </Link>
                 ))}
               </div>

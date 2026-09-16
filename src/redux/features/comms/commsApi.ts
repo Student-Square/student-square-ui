@@ -100,6 +100,11 @@ const commsApi = baseApi.injectEndpoints({
       invalidatesTags: [{ type: "Messaging", id: "NOTES" }],
     }),
 
+    deletePersonalNoteVersion: build.mutation<null, string>({
+      query: (id) => ({ url: `/messaging/notes/history/${id}`, method: "DELETE" }),
+      invalidatesTags: [{ type: "Messaging", id: "NOTES" }],
+    }),
+
     // ----- feedback -----
 
     submitFeedback: build.mutation<
@@ -451,6 +456,7 @@ export const {
   useSetThreadClosedMutation,
   useGetPersonalNoteQuery,
   useSavePersonalNoteMutation,
+  useDeletePersonalNoteVersionMutation,
   useSubmitFeedbackMutation,
   useGetMyFeedbackQuery,
   useGetAdminFeedbackQuery,

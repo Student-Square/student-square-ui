@@ -4,33 +4,36 @@ import { motion } from "motion/react"
 import TextAnimate from "@/components/ui/text-animate"
 import StarPopIn from "@/components/ui/star-pop-in"
 import ExpandableCards from "../../features/ExpandableCards/ExpandableCards"
+import { useLanguage } from "@/components/i18n/LanguageProvider"
 
 const StartSectionPipeline = () => {
+  const { t } = useLanguage()
+
   return (
     <section
       id="features"
-      className="relative w-full py-10 sm:py-12 md:py-16 px-4 sm:px-6 md:px-8 overflow-hidden"
+      className="relative w-full pt-6 sm:pt-8 md:pt-10 pb-2 sm:pb-3 md:pb-4 px-4 sm:px-6 md:px-8 overflow-hidden"
     >
       <div className="container relative z-10 w-full max-w-7xl mx-auto px-0 2xl:max-w-[1600px] 3xl:max-w-[1800px] 4xl:max-w-[2000px]">
         {/* Header Section */}
         <motion.div
-          className="text-center mb-8 sm:mb-10 md:mb-12"
+          className="text-center mb-4 sm:mb-5 md:mb-6"
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8 }}
           viewport={{ once: true }}
         >
           <div className="inline-flex items-center px-3 sm:px-4 py-1.5 sm:py-2 rounded-full bg-emerald-500/10 border border-emerald-500/30 backdrop-blur-sm text-emerald-700 dark:text-emerald-300 text-xs sm:text-sm font-medium mb-4 sm:mb-6">
-            ✨ Student Square — What We Do
+            {t("home.whatWeDoBadge")}
           </div>
           <h2 className="font-heading text-3xl sm:text-4xl md:text-4xl lg:text-5xl xl:text-6xl font-bold tracking-[0.02em] text-balance text-foreground mb-4 sm:mb-6 leading-tight">
             <span className="bg-clip-text text-transparent bg-gradient-to-b from-foreground to-muted-foreground">
-              Your Changes
+              {t("home.whatWeDoLead")}
             </span>
             {" "}
             <span className="relative inline-block">
               <TextAnimate
-                text="Start Here"
+                text={t("home.whatWeDoAccent")}
                 type="fadeInUp"
                 className="text-2xl sm:text-3xl md:text-3xl lg:text-4xl xl:text-5xl font-semibold text-emerald-600 dark:text-emerald-400 inline-block"
                 duration={0.6}
@@ -41,7 +44,7 @@ const StartSectionPipeline = () => {
             </span>
           </h2>
           <p className="text-sm sm:text-sm md:text-base text-muted-foreground max-w-3xl mx-auto font-light leading-relaxed px-2 sm:px-4">
-          All you need is real time dataand real-life stories to shape your career.
+            {t("home.whatWeDoSubheading")}
           </p>
         </motion.div>
 

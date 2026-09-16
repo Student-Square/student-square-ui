@@ -3,9 +3,11 @@
 import { transformCards } from "../constants";
 import { container } from "../ui";
 import { useDonateContent } from "../useDonateContent";
+import { useLanguage } from "@/components/i18n/LanguageProvider";
 
 export default function DonateTransformSection() {
   const { transformLives, targetedImpact } = useDonateContent();
+  const { t, tr } = useLanguage();
 
   // The seed splits this into a lead card ("Targeted Impact") plus three
   // supporting ones; the bundled copy already carries all four together.
@@ -32,19 +34,23 @@ export default function DonateTransformSection() {
         <div className="grid grid-cols-1 items-center gap-12 lg:grid-cols-2 lg:gap-16">
           <div>
             <span className="inline-block text-[11px] font-bold uppercase tracking-[0.2em] text-emerald-300">
-              Our Mission
+              {t("donate.ourMission")}
             </span>
             <h2 className="mt-3 text-2xl font-bold tracking-tight text-white sm:text-3xl lg:text-4xl">
-              {transformLives?.heading ?? "Transform Lives with Your Support"}
+              {tr(transformLives?.heading ?? "Transform Lives with Your Support")}
             </h2>
             <p className="mt-4 text-sm leading-relaxed text-emerald-50/70 sm:text-base">
-              {transformLives?.body ??
-                "Your donation, no matter the size, has the power to change someone's life. By contributing to Student Square, you become a vital part of a movement dedicated to education, environmental sustainability, community well-being, and skill development."}
+              {tr(
+                transformLives?.body ??
+                  "Your donation, no matter the size, has the power to change someone's life. By contributing to Student Square, you become a vital part of a movement dedicated to education, environmental sustainability, community well-being, and skill development."
+              )}
             </p>
             <blockquote className="mt-7 border-l-2 border-emerald-400/60 pl-5 text-base italic leading-relaxed text-emerald-100 sm:text-lg">
               &ldquo;
-              {transformLives?.quote ??
-                "Together, we can create a lasting impact and build a better tomorrow. We aim to create a chain effect for sustainable development in society."}
+              {tr(
+                transformLives?.quote ??
+                  "Together, we can create a lasting impact and build a better tomorrow. We aim to create a chain effect for sustainable development in society."
+              )}
               &rdquo;
             </blockquote>
           </div>
@@ -59,9 +65,9 @@ export default function DonateTransformSection() {
                   {card.icon}
                 </div>
                 <div>
-                  <div className="text-sm font-semibold text-white">{card.title}</div>
+                  <div className="text-sm font-semibold text-white">{tr(card.title)}</div>
                   <p className="mt-1 text-[13px] leading-relaxed text-emerald-50/60">
-                    {card.description}
+                    {tr(card.description)}
                   </p>
                 </div>
               </div>

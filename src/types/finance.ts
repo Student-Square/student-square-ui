@@ -51,7 +51,11 @@ export type PaginatedFinance = {
   limit: number;
   totalPages: number;
   closedPeriods?: number;
-  totals?: { moneyIn: string; moneyOut: string; net: string };
+  /**
+   * One entry per currency present in the result. Amounts are never summed
+   * across currencies — a mixed book has several totals, not one.
+   */
+  totals?: { currency: string; moneyIn: string; moneyOut: string; net: string }[];
 };
 
 export type FinancePeriodClose = {
@@ -62,6 +66,12 @@ export type FinancePeriodClose = {
   closedAt: string;
   closedById: string | null;
   entryCount: number;
+  /**
+   * Closing balance per currency, e.g. `{ BDT: "800.00", USD: "30.00" }`.
+   * Authoritative; `closingBalance` below is filled only for single-currency
+   * periods and is 0 otherwise.
+   */
+  closingBalances?: Record<string, string> | null;
   closingBalance: string;
   note: string | null;
 };
@@ -78,6 +88,10 @@ export type Invoice = {
   currency: string;
   subtotal: string;
   total: string;
+  /** What the invoice is for — the one name shared by all its lines. */
+  title: string | null;
+  /** The author's own filing reference. Free text; `number` is the identity. */
+  reference: string | null;
   billToName: string | null;
   billToAddress: string | null;
   notes: string | null;

@@ -4,7 +4,7 @@ import { motion } from "motion/react"
 
 export default function SectionDivider() {
   return (
-    <div className="relative py-6 sm:py-8 md:py-10 overflow-hidden">
+    <div className="relative py-3 sm:py-4 md:py-5 overflow-hidden">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8">
         <motion.div
           className="relative flex items-center justify-center"

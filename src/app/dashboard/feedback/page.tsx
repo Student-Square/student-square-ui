@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { toast } from "sonner";
 import {
   useGetMyFeedbackQuery,
   useSubmitFeedbackMutation,
@@ -35,22 +36,43 @@ export default function FeedbackPage() {
     body: "",
   });
   const [sent, setSent] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
 
   const send = async () => {
-    if (form.subject.trim().length < 3 || form.body.trim().length < 10) return;
-    await submit({
-      kind: form.kind,
-      rating: form.rating || undefined,
-      subject: form.subject.trim(),
-      body: form.body.trim(),
-      context: typeof window !== "undefined" ? window.location.pathname : undefined,
-    })
-      .unwrap()
-      .then(() => {
-        setForm({ kind: "PLATFORM", rating: 0, subject: "", body: "" });
-        setSent(true);
-      })
-      .catch(() => null);
+    const subject = form.subject.trim();
+    const body = form.body.trim();
+    setSent(false);
+    setFormError(null);
+
+    if (subject.length < 3) {
+      const msg = "Subject needs at least 3 characters.";
+      setFormError(msg);
+      toast.error(msg);
+      return;
+    }
+    if (body.length < 10) {
+      const msg = "Please write a bit more detail (at least 10 characters).";
+      setFormError(msg);
+      toast.error(msg);
+      return;
+    }
+
+    try {
+      await submit({
+        kind: form.kind,
+        rating: form.rating || undefined,
+        subject,
+        body,
+        context: typeof window !== "undefined" ? window.location.pathname : undefined,
+      }).unwrap();
+      setForm({ kind: "PLATFORM", rating: 0, subject: "", body: "" });
+      setSent(true);
+      toast.success("Feedback sent — thank you.");
+    } catch {
+      const msg = "Could not send feedback. Please try again.";
+      setFormError(msg);
+      toast.error(msg);
+    }
   };
 
   return (
@@ -126,6 +148,12 @@ export default function FeedbackPage() {
             className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:border-emerald-500"
           />
         </div>
+
+        {formError && (
+          <p className="text-xs text-red-600" role="alert">
+            {formError}
+          </p>
+        )}
 
         <button
           type="button"

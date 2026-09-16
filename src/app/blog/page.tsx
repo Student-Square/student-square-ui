@@ -1,7 +1,8 @@
 'use client';
 
-import { useEffect, useMemo, useState } from "react";
+import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import Header from "@/components/common/Header/Header";
 import Footer from "@/components/common/Footer/Footer";
 import Pagination from "@/components/common/Pagination";
@@ -23,15 +24,17 @@ import {
   Users,
   X,
 } from "lucide-react";
+import { useLanguage } from "@/components/i18n/LanguageProvider";
 
 type SortOption = "newest" | "oldest" | "title-asc" | "title-desc";
 const PAGE_SIZE = 6;
 
+/** Dictionary keys for the sort menu. */
 const sortLabels: Record<SortOption, string> = {
-  newest: "Newest first",
-  oldest: "Oldest first",
-  "title-asc": "Title A → Z",
-  "title-desc": "Title Z → A",
+  newest: "blog.sort.newest",
+  oldest: "blog.sort.oldest",
+  "title-asc": "blog.sort.titleAsc",
+  "title-desc": "blog.sort.titleDesc",
 };
 
 const SORT_MAP: Record<SortOption, { sortBy: string; sortOrder: "asc" | "desc" }> = {
@@ -41,30 +44,59 @@ const SORT_MAP: Record<SortOption, { sortBy: string; sortOrder: "asc" | "desc" }
   "title-desc": { sortBy: "title", sortOrder: "desc" },
 };
 
-function formatDate(iso: string | null | undefined): string {
-  if (!iso) return "";
-  return new Date(iso).toLocaleDateString("en-GB", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-  });
+// useSearchParams() needs a Suspense boundary, or `next build` refuses to
+// prerender the page.
+export default function BlogPage() {
+  return (
+    <Suspense fallback={null}>
+      <BlogPageContent />
+    </Suspense>
+  );
 }
 
-export default function BlogPage() {
+function BlogPageContent() {
+  const { t, pick, tr, date } = useLanguage();
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const skipFilterReset = useRef(true);
+
   const [query, setQuery] = useState("");
   const [debouncedQuery, setDebouncedQuery] = useState("");
   const [activeCategory, setActiveCategory] = useState("all");
   const [sort, setSort] = useState<SortOption>("newest");
-  const [page, setPage] = useState(1);
   const [filtersOpen, setFiltersOpen] = useState(false);
 
+  const page = Math.max(1, Number(searchParams.get("page") || "1") || 1);
+
+  const setPage = useCallback(
+    (next: number) => {
+      const params = new URLSearchParams(searchParams.toString());
+      if (next <= 1) params.delete("page");
+      else params.set("page", String(next));
+      const qs = params.toString();
+      router.push(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
+    },
+    [pathname, router, searchParams]
+  );
+
   useEffect(() => {
-    const t = setTimeout(() => setDebouncedQuery(query), 350);
-    return () => clearTimeout(t);
+    const timer = setTimeout(() => setDebouncedQuery(query), 350);
+    return () => clearTimeout(timer);
   }, [query]);
 
   useEffect(() => {
-    setPage(1);
+    if (skipFilterReset.current) {
+      skipFilterReset.current = false;
+      return;
+    }
+    const params = new URLSearchParams(searchParams.toString());
+    if (!params.has("page")) return;
+    params.delete("page");
+    const qs = params.toString();
+    router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
+    // Intentionally ignore searchParams: only reset page when filters change.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeCategory, debouncedQuery, sort]);
 
   // Queries
@@ -101,6 +133,11 @@ export default function BlogPage() {
   }, [categoriesData]);
 
 
+  const activeCategoryData = categoriesData?.find((c) => c.slug === activeCategory);
+  const activeCategoryName = activeCategoryData
+    ? pick(activeCategoryData.name, activeCategoryData.nameBn)
+    : activeCategory;
+
   const stories = storiesPreview?.data ?? [];
   const totalStories = storiesPreview?.meta?.total ?? 0;
 
@@ -136,7 +173,7 @@ export default function BlogPage() {
           >
             <span className="h-px w-8 bg-emerald-500" />
             <span className="text-[11px] font-bold uppercase tracking-[0.22em]">
-              Blog &amp; Stories
+              {t("blog.eyebrow")}
             </span>
           </motion.div>
 
@@ -146,11 +183,11 @@ export default function BlogPage() {
             transition={{ duration: 0.6 }}
             className="text-2xl sm:text-3xl lg:text-4xl font-bold text-foreground tracking-tight max-w-3xl leading-[1.15] text-balance"
           >
-            Insights, updates, and stories from the{" "}
+            {t("blog.headingLead")}{" "}
             <span className="bg-gradient-to-r from-emerald-600 to-emerald-400 bg-clip-text text-transparent">
-              Student Square
+              {t("blog.headingAccent")}
             </span>{" "}
-            community.
+            {t("blog.headingTail")}
           </motion.h1>
 
           <motion.p
@@ -159,8 +196,7 @@ export default function BlogPage() {
             transition={{ duration: 0.6, delay: 0.1 }}
             className="mt-4 text-sm sm:text-base text-muted-foreground leading-relaxed max-w-2xl"
           >
-            Read about our programs, the people who make them possible, and the change we are
-            building together — one student, one community at a time.
+            {t("blog.intro")}
           </motion.p>
         </div>
       </section>
@@ -172,10 +208,9 @@ export default function BlogPage() {
             <div className="flex items-center gap-2.5 mb-4 text-emerald-600">
               <Sparkles className="h-3.5 w-3.5" />
               <h2 className="text-xs font-bold uppercase tracking-[0.18em]">
-                Featured in{" "}
-                {activeCategory === "all"
-                  ? "All Stories"
-                  : (categoriesData?.find((c) => c.slug === activeCategory)?.name ?? activeCategory)}
+                {t("blog.featuredIn", {
+                  category: activeCategory === "all" ? t("blog.allStories") : activeCategoryName,
+                })}
               </h2>
               <span className="h-px flex-1 bg-gradient-to-r from-emerald-500/40 to-transparent" />
             </div>
@@ -187,14 +222,14 @@ export default function BlogPage() {
               transition={{ duration: 0.5 }}
             >
               <Link
-                href={`/blog/${featuredPost.slug}`}
+                href={`/blog/${featuredPost.category.slug}/${featuredPost.id}`}
                 className="group grid grid-cols-1 lg:grid-cols-2 gap-0 lg:gap-8 bg-card border border-border rounded-2xl overflow-hidden hover:shadow-xl hover:shadow-emerald-500/10 hover:border-emerald-500/40 hover:-translate-y-0.5 transition-all duration-300"
               >
                 <div className="relative aspect-[16/10] lg:aspect-auto lg:min-h-[360px] overflow-hidden bg-muted">
                   {featuredPost.coverImage ? (
                     <img
                       src={featuredPost.coverImage.url}
-                      alt={featuredPost.coverImage.alt ?? featuredPost.title}
+                      alt={featuredPost.coverImage.alt ?? pick(featuredPost.title, featuredPost.titleBn)}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                     />
                   ) : (
@@ -207,22 +242,22 @@ export default function BlogPage() {
                 <div className="p-5 sm:p-6 lg:p-8 flex flex-col justify-center">
                   <div className="flex flex-wrap items-center gap-2 mb-4">
                     <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded-full bg-emerald-600 text-white">
-                      {featuredPost.category.name}
+                      {pick(featuredPost.category.name, featuredPost.category.nameBn)}
                     </span>
-                    {featuredPost.tags.slice(0, 2).map((t) => (
+                    {featuredPost.tags.slice(0, 2).map((tagRef) => (
                       <span
-                        key={t.tag.id}
+                        key={tagRef.tag.id}
                         className="text-[10px] font-semibold uppercase tracking-wider px-2 py-1 rounded-full bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 border border-emerald-200/70 dark:border-emerald-800/70"
                       >
-                        {t.tag.name}
+                        {tr(tagRef.tag.name)}
                       </span>
                     ))}
                   </div>
                   <h3 className="text-xl sm:text-2xl lg:text-[1.75rem] font-bold text-foreground leading-tight tracking-tight group-hover:text-emerald-600 transition-colors line-clamp-3">
-                    {featuredPost.title}
+                    {pick(featuredPost.title, featuredPost.titleBn)}
                   </h3>
                   <p className="mt-3 text-sm text-muted-foreground leading-relaxed line-clamp-3">
-                    {featuredPost.excerpt}
+                    {pick(featuredPost.excerpt, featuredPost.excerptBn)}
                   </p>
 
                   <div className="mt-6 flex items-center justify-between gap-4 pt-5 border-t border-border">
@@ -230,7 +265,7 @@ export default function BlogPage() {
                       {featuredPost.displayAuthorImage ? (
                         <img
                           src={featuredPost.displayAuthorImage}
-                          alt={featuredPost.displayAuthorName ?? "Author"}
+                          alt={featuredPost.displayAuthorName ?? t("common.author")}
                           className="w-9 h-9 rounded-full object-cover border border-border shrink-0"
                         />
                       ) : (
@@ -240,16 +275,16 @@ export default function BlogPage() {
                       )}
                       <div className="min-w-0">
                         <p className="text-xs font-semibold text-foreground truncate">
-                          {featuredPost.displayAuthorName ?? "Student Square"}
+                          {featuredPost.displayAuthorName ?? t("common.studentSquare")}
                         </p>
                         <p className="text-[10px] text-muted-foreground flex items-center gap-1">
                           <Calendar className="h-2.5 w-2.5" />
-                          {formatDate(featuredPost.publishedAt)}
+                          {date(featuredPost.publishedAt)}
                         </p>
                       </div>
                     </div>
                     <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-600 group-hover:gap-2.5 transition-all whitespace-nowrap">
-                      Read story
+                      {t("common.readStory")}
                       <ArrowUpRight className="h-3.5 w-3.5" />
                     </span>
                   </div>
@@ -273,13 +308,13 @@ export default function BlogPage() {
                 type="text"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                placeholder="Search articles, authors, topics..."
+                placeholder={t("blog.searchPlaceholder")}
                 className="w-full pl-9 pr-9 py-2.5 text-sm rounded-lg bg-card border border-border focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 transition-colors"
               />
               {query && (
                 <button
                   onClick={() => setQuery("")}
-                  aria-label="Clear search"
+                  aria-label={t("common.clearSearch")}
                   className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
                 >
                   <X className="h-3.5 w-3.5" />
@@ -289,7 +324,7 @@ export default function BlogPage() {
 
             <div className="flex items-center gap-2">
               <label htmlFor="sort" className="text-xs font-semibold text-muted-foreground whitespace-nowrap">
-                Sort by
+                {t("common.sortBy")}
               </label>
               <select
                 id="sort"
@@ -298,7 +333,7 @@ export default function BlogPage() {
                 className="text-sm rounded-lg bg-card border border-border px-3 py-2 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 transition-colors"
               >
                 {(Object.keys(sortLabels) as SortOption[]).map((opt) => (
-                  <option key={opt} value={opt}>{sortLabels[opt]}</option>
+                  <option key={opt} value={opt}>{t(sortLabels[opt])}</option>
                 ))}
               </select>
             </div>
@@ -308,7 +343,7 @@ export default function BlogPage() {
               className="lg:hidden inline-flex items-center justify-center gap-2 px-3 py-2 rounded-lg border border-border bg-card text-sm font-semibold text-foreground hover:border-emerald-500/60 hover:text-emerald-600 transition-colors"
             >
               <SlidersHorizontal className="h-4 w-4" />
-              {filtersOpen ? "Hide filters" : "Filters"}
+              {filtersOpen ? t("blog.hideFilters") : t("blog.filters")}
             </button>
 
             {hasActiveFilters && (
@@ -317,7 +352,7 @@ export default function BlogPage() {
                 className="inline-flex items-center gap-1.5 text-xs font-semibold text-muted-foreground hover:text-emerald-600 transition-colors lg:ml-auto"
               >
                 <X className="h-3.5 w-3.5" />
-                Clear all
+                {t("common.clearAll")}
               </button>
             )}
           </div>
@@ -327,14 +362,14 @@ export default function BlogPage() {
           <div className="flex items-baseline justify-between gap-3 flex-wrap mb-4">
             <h2 className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
               {activeCategory === "all"
-                ? "Latest Articles"
-                : `${categoriesData?.find((c) => c.slug === activeCategory)?.name ?? activeCategory} Articles`}
+                ? t("blog.latest")
+                : t("blog.categoryArticles", { category: activeCategoryName })}
             </h2>
             <span className="text-xs text-muted-foreground">
               {meta ? (
                 <>
-                  {meta.total} article{meta.total === 1 ? "" : "s"}
-                  {meta.total > 0 && totalPages > 1 && ` — page ${page} of ${totalPages}`}
+                  {t(meta.total === 1 ? "blog.countOne" : "blog.countMany", { count: meta.total })}
+                  {meta.total > 0 && totalPages > 1 && t("common.pageOf", { page, total: totalPages })}
                 </>
               ) : null}
             </span>
@@ -344,22 +379,22 @@ export default function BlogPage() {
           {isBusy && (
             <div className="flex items-center justify-center gap-2 py-24 text-sm text-muted-foreground">
               <Loader2 className="h-5 w-5 animate-spin text-emerald-600" />
-              Loading articles…
+              {t("blog.loading")}
             </div>
           )}
 
           {/* Empty */}
           {!isBusy && posts.length === 0 && (
             <div className="text-center py-16 border border-dashed border-border rounded-2xl bg-card/40">
-              <p className="text-sm font-semibold text-foreground">No articles match your filters.</p>
+              <p className="text-sm font-semibold text-foreground">{t("blog.noMatch")}</p>
               <p className="text-xs text-muted-foreground mt-1">
-                Try a different keyword, category, or tag.
+                {t("blog.noMatchHint")}
               </p>
               <button
                 onClick={clearFilters}
                 className="mt-5 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-emerald-600 text-white hover:bg-emerald-700 transition-colors"
               >
-                Reset filters
+                {t("common.resetFilters")}
               </button>
             </div>
           )}
@@ -382,7 +417,7 @@ export default function BlogPage() {
                       {post.coverImage ? (
                         <img
                           src={post.coverImage.url}
-                          alt={post.coverImage.alt ?? post.title}
+                          alt={post.coverImage.alt ?? pick(post.title, post.titleBn)}
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                         />
                       ) : (
@@ -391,22 +426,22 @@ export default function BlogPage() {
                         </div>
                       )}
                       <span className="absolute top-3 left-3 text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full bg-white/95 dark:bg-black/80 backdrop-blur text-emerald-700 dark:text-emerald-300 border border-white/40 dark:border-emerald-800/60 shadow-sm">
-                        {post.category.name}
+                        {pick(post.category.name, post.category.nameBn)}
                       </span>
                     </div>
 
                     <div className="p-5 flex flex-col flex-1">
                       <div className="flex items-center gap-2 text-[11px] text-muted-foreground mb-3">
                         <Calendar className="h-3 w-3" />
-                        <span>{formatDate(post.publishedAt)}</span>
+                        <span>{date(post.publishedAt)}</span>
                       </div>
 
                       <h3 className="text-base font-bold text-foreground leading-snug group-hover:text-emerald-600 transition-colors line-clamp-2">
-                        {post.title}
+                        {pick(post.title, post.titleBn)}
                       </h3>
 
                       <p className="mt-2 text-xs text-muted-foreground leading-relaxed line-clamp-3 flex-1">
-                        {post.excerpt}
+                        {pick(post.excerpt, post.excerptBn)}
                       </p>
 
                       <div className="mt-5 flex items-center justify-between gap-3 pt-4 border-t border-border">
@@ -414,7 +449,7 @@ export default function BlogPage() {
                           {post.displayAuthorImage ? (
                             <img
                               src={post.displayAuthorImage}
-                              alt={post.displayAuthorName ?? "Author"}
+                              alt={post.displayAuthorName ?? t("common.author")}
                               className="w-7 h-7 rounded-full object-cover border border-border shrink-0"
                             />
                           ) : (
@@ -423,7 +458,7 @@ export default function BlogPage() {
                             </div>
                           )}
                           <p className="text-[11px] font-semibold text-foreground truncate">
-                            {post.displayAuthorName ?? "Student Square"}
+                            {post.displayAuthorName ?? t("common.studentSquare")}
                           </p>
                         </div>
                         <ArrowRight className="h-4 w-4 flex-shrink-0 text-muted-foreground group-hover:text-emerald-600 group-hover:translate-x-1 transition-all" />
@@ -464,29 +499,28 @@ export default function BlogPage() {
               <div className="lg:col-span-3 p-6 sm:p-8 lg:p-10 flex flex-col justify-center">
                 <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-600/10 dark:bg-emerald-500/20 border border-emerald-300/60 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300 text-[11px] font-bold uppercase tracking-wider w-fit">
                   <Users className="h-3 w-3" />
-                  Real Life Stories
+                  {t("blog.storiesBadge")}
                 </div>
                 <h3 className="mt-4 text-2xl sm:text-3xl lg:text-4xl font-bold text-foreground leading-tight">
-                  Read how students like you{" "}
+                  {t("blog.storiesHeadingLead")}{" "}
                   <span className="bg-gradient-to-r from-emerald-600 to-emerald-400 bg-clip-text text-transparent">
-                    found their path.
+                    {t("blog.storiesHeadingAccent")}
                   </span>
                 </h3>
                 <p className="mt-3 text-sm sm:text-base text-muted-foreground leading-relaxed max-w-xl">
-                  First-person stories from students across Bangladesh whose lives have been shaped by
-                  counselling, scholarships, and community support.
+                  {t("blog.storiesBody")}
                 </p>
                 <div className="mt-6 flex flex-wrap items-center gap-3">
                   <Link
                     href="/blog/real-life-stories"
                     className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-emerald-600 text-white text-sm font-semibold hover:bg-emerald-700 transition-colors shadow-sm shadow-emerald-600/30"
                   >
-                    Browse all stories
+                    {t("blog.browseStories")}
                     <ArrowRight className="h-4 w-4" />
                   </Link>
                   {totalStories > 0 && (
                     <span className="text-xs text-muted-foreground">
-                      {totalStories} stories and counting
+                      {t("blog.storiesCounting", { count: totalStories })}
                     </span>
                   )}
                 </div>
@@ -517,7 +551,7 @@ export default function BlogPage() {
                         </p>
                         <p className="text-[11px] text-muted-foreground truncate flex items-center gap-1">
                           <Quote className="h-2.5 w-2.5" />
-                          <span className="italic line-clamp-1">{s.quote}</span>
+                          <span className="italic line-clamp-1">{pick(s.quote, s.quoteBn)}</span>
                         </p>
                       </div>
                       <ArrowUpRight className="h-4 w-4 flex-shrink-0 text-muted-foreground group-hover:text-emerald-600 group-hover:rotate-12 transition-all" />

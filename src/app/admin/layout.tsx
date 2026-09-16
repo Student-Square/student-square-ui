@@ -102,6 +102,7 @@ const NAV: NavEntry[] = [
       { href: "/admin/blog/articles", label: "Articles", roles: AUTHOR_ROLES },
       { href: "/admin/blog/real-life-stories", label: "Real Life Stories", roles: [...AUTHOR_ROLES, "MODERATOR"] },
       { href: "/admin/blog/magazine", label: "Magazine", roles: EDIT_ROLES },
+      { href: "/admin/blog/reports", label: "Reports & Financials", roles: EDIT_ROLES },
       { href: "/admin/blog/events", label: "Events", roles: EDIT_ROLES },
       { href: "/admin/blog/categories", label: "Categories", roles: EDIT_ROLES },
     ],
@@ -112,8 +113,8 @@ const NAV: NavEntry[] = [
 
   { kind: "section", label: "Management", roles: EDIT_ROLES },
   { kind: "item", href: "/admin/donation", label: "Donation", icon: <HandCoins className="h-4 w-4" />, roles: EDIT_ROLES },
-  { kind: "item", href: "/admin/operations", label: "Operations (DOB)", icon: <BookOpen className="h-4 w-4" />, roles: EDIT_ROLES },
-  { kind: "item", href: "/admin/finance", label: "Financial Work Book", icon: <Wallet className="h-4 w-4" />, roles: EDIT_ROLES },
+  { kind: "item", href: "/admin/operations", label: "All DOB", icon: <BookOpen className="h-4 w-4" />, roles: EDIT_ROLES },
+  { kind: "item", href: "/admin/finance", label: "All FWB", icon: <Wallet className="h-4 w-4" />, roles: EDIT_ROLES },
   { kind: "item", href: "/admin/books", label: "All Books", icon: <Library className="h-4 w-4" />, roles: EDIT_ROLES },
   { kind: "item", href: "/admin/team", label: "Team", icon: <ShieldCheck className="h-4 w-4" />, roles: EDIT_ROLES },
   { kind: "item", href: "/admin/resources", label: "Resources", icon: <Library className="h-4 w-4" />, roles: EDIT_ROLES },
@@ -133,6 +134,16 @@ const NAV: NavEntry[] = [
   { kind: "item", href: "/admin/system", label: "Feature Switches", icon: <ToggleLeft className="h-4 w-4" />, roles: SYSTEM_ONLY },
 
   { kind: "section", label: "My Account" },
+  {
+    kind: "group",
+    label: "My books",
+    icon: <BookOpen className="h-4 w-4" />,
+    roles: TOP_ROLES,
+    items: [
+      { href: "/admin/my-operations", label: "My DOB" },
+      { href: "/admin/my-finance", label: "My FWB" },
+    ],
+  },
   {
     kind: "group",
     label: "My Activities",
@@ -178,7 +189,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   useEffect(() => {
     if (status === "unauthenticated") {
-      router.replace(`/?next=${encodeURIComponent(pathname)}`);
+      router.replace(`/auth/login?next=${encodeURIComponent(pathname)}`);
       return;
     }
     if (status === "authenticated" && role && !ADMIN_ROLES.has(role)) {

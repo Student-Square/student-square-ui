@@ -20,13 +20,15 @@ import {
   Loader2,
   XCircle,
 } from "lucide-react";
+import T from "@/components/i18n/T";
+import { useLanguage } from "@/components/i18n/LanguageProvider";
 
 export default function ResetPasswordPage() {
   return (
     <Suspense
       fallback={
         <AuthShell variant="split">
-          <p className="text-center text-sm text-muted-foreground">Loading…</p>
+          <p className="text-center text-sm text-muted-foreground"><T k="common.loading" /></p>
         </AuthShell>
       }
     >
@@ -38,6 +40,7 @@ export default function ResetPasswordPage() {
 type Stage = "form" | "success";
 
 function ResetPasswordForm() {
+  const { t, rich } = useLanguage();
   const router = useRouter();
   const searchParams = useSearchParams();
   const token = searchParams.get("token");
@@ -60,7 +63,7 @@ function ResetPasswordForm() {
     if (/[^A-Za-z0-9]/.test(newPassword)) s++;
     return s;
   })();
-  const strengthLabel = ["", "Weak", "Fair", "Good", "Strong"][strengthScore];
+  const strengthLabel = strengthScore ? t(`reset.strength.${strengthScore}`) : "";
   const strengthColor = [
     "",
     "bg-red-500",
@@ -83,13 +86,13 @@ function ResetPasswordForm() {
           <div className="mx-auto mb-5 flex h-20 w-20 items-center justify-center rounded-full bg-red-50 ring-8 ring-red-100 dark:bg-red-900/20 dark:ring-red-900/10">
             <XCircle className="h-10 w-10 text-red-500" />
           </div>
-          <h1 className="text-xl font-bold text-foreground">Invalid reset link</h1>
+          <h1 className="text-xl font-bold text-foreground">{t("reset.invalidTitle")}</h1>
           <p className="mt-2 text-sm text-muted-foreground">
-            This link is missing required parameters. Please request a new one.
+            {t("reset.invalidBody")}
           </p>
           <div className="mt-6">
             <Link href="/auth/forgot-password" className={authButtonClass}>
-              Request new link
+              {t("reset.requestNew")}
             </Link>
           </div>
         </div>
@@ -105,11 +108,10 @@ function ResetPasswordForm() {
             <CheckCircle2 className="h-10 w-10 text-emerald-600 dark:text-emerald-400" />
           </div>
           <h1 className="text-2xl font-bold tracking-tight text-foreground">
-            Password reset!
+            {t("reset.doneTitle")}
           </h1>
           <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
-            Your password has been updated successfully. You can now sign in with
-            your new password.
+            {t("reset.doneBody")}
           </p>
           <div className="mt-6">
             <button
@@ -117,7 +119,7 @@ function ResetPasswordForm() {
               onClick={() => router.replace("/auth/login")}
               className={authButtonClass}
             >
-              Continue to login
+              {t("reset.continue")}
             </button>
           </div>
         </div>
@@ -129,18 +131,16 @@ function ResetPasswordForm() {
     e.preventDefault();
     setFormError(null);
     if (newPassword.length < 8) {
-      setFormError("Password must be at least 8 characters.");
+      setFormError(t("reset.errLength"));
       return;
     }
     if (newPassword !== confirmPassword) {
-      setFormError("Passwords do not match.");
+      setFormError(t("reset.errMatch"));
       return;
     }
 
     if (!token || !email) {
-      setFormError(
-        "This reset link is incomplete. Please request a new password reset email."
-      );
+      setFormError(t("reset.errIncomplete"));
       return;
     }
 
@@ -150,7 +150,7 @@ function ResetPasswordForm() {
     } catch (err) {
       const msg =
         (err as { data?: { message?: string } })?.data?.message ??
-        "Reset failed. The link may have expired — please request a new one.";
+        t("reset.errFailed");
       setFormError(msg);
     }
   }
@@ -159,16 +159,15 @@ function ResetPasswordForm() {
     <AuthShell variant="split">
       <div>
         <h1 className={authHeadingClass}>
-          Set new password
+          {t("reset.title")}
         </h1>
         <p className={authSubheadingClass}>
-          Resetting password for{" "}
-          <span className="font-semibold text-foreground">{email}</span>.
+          {rich("reset.for", { email: <span className="font-semibold text-foreground">{email}</span> })}
         </p>
 
         <form onSubmit={handleSubmit} className="mt-8 space-y-4">
           <label className="block">
-            <span className="sr-only">New password</span>
+            <span className="sr-only">{t("reset.newPassword")}</span>
             <div className="relative">
               <input
                 type={showNew ? "text" : "password"}
@@ -177,12 +176,12 @@ function ResetPasswordForm() {
                 minLength={8}
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
-                placeholder="Password"
+                placeholder={t("auth.password")}
                 className={`${authInputClass} pr-10`}
               />
               <button
                 type="button"
-                aria-label={showNew ? "Hide password" : "Show password"}
+                aria-label={showNew ? t("auth.hidePassword") : t("auth.showPassword")}
                 onClick={() => setShowNew((v) => !v)}
                 className="absolute right-3 top-1/2 -translate-y-1/2 rounded-md p-1 text-muted-foreground hover:text-foreground"
               >
@@ -205,7 +204,7 @@ function ResetPasswordForm() {
                   ))}
                 </div>
                 <p className="text-[11px] text-muted-foreground">
-                  Strength:{" "}
+                  {t("reset.strength")}{" "}
                   <span className={`font-semibold ${strengthTextColor}`}>
                     {strengthLabel}
                   </span>
@@ -215,7 +214,7 @@ function ResetPasswordForm() {
           </label>
 
           <label className="block">
-            <span className="sr-only">Confirm password</span>
+            <span className="sr-only">{t("reset.confirmLabel")}</span>
             <div className="relative">
               <input
                 type={showConfirm ? "text" : "password"}
@@ -223,7 +222,7 @@ function ResetPasswordForm() {
                 required
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
-                placeholder="Confirm Password"
+                placeholder={t("reset.confirmPlaceholder")}
                 className={`${authInputClass} pr-10 ${
                   confirmPassword.length > 0 && confirmPassword !== newPassword
                     ? "border-red-400 focus:border-red-400 focus:ring-red-400/20"
@@ -235,7 +234,7 @@ function ResetPasswordForm() {
               />
               <button
                 type="button"
-                aria-label={showConfirm ? "Hide password" : "Show password"}
+                aria-label={showConfirm ? t("auth.hidePassword") : t("auth.showPassword")}
                 onClick={() => setShowConfirm((v) => !v)}
                 className="absolute right-3 top-1/2 -translate-y-1/2 rounded-md p-1 text-muted-foreground hover:text-foreground"
               >
@@ -248,7 +247,7 @@ function ResetPasswordForm() {
             </div>
             {confirmPassword.length > 0 && confirmPassword !== newPassword && (
               <p className="mt-1.5 text-[11px] font-medium text-red-500">
-                Passwords do not match.
+                {t("reset.errMatch")}
               </p>
             )}
           </label>
@@ -264,17 +263,17 @@ function ResetPasswordForm() {
             {isLoading ? (
               <span className="inline-flex items-center justify-center gap-2">
                 <Loader2 className="h-4 w-4 animate-spin" />
-                Resetting…
+                {t("reset.resetting")}
               </span>
             ) : (
-              "Reset password"
+              t("reset.submit")
             )}
           </button>
 
           <p className="pt-1 text-center text-sm text-muted-foreground">
-            Link expired?{" "}
+            {t("reset.expired")}{" "}
             <Link href="/auth/forgot-password" className={authLinkClass}>
-              Request a new one
+              {t("reset.requestOne")}
             </Link>
           </p>
         </form>

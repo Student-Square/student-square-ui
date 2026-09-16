@@ -1,6 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useSelector } from "react-redux";
 import { toast } from "sonner";
 import {
@@ -16,12 +18,14 @@ import { selectCurrentUser } from "@/redux/features/auth/authSlice";
 import {
   downloadFinanceExport,
   financeExportPath,
-  useCreateFinanceEntryMutation,
+  useCreateInvoiceMutation,
   useDeleteFinanceEntryMutation,
+  useListInvoicesQuery,
   useListMyFinanceQuery,
   useUpdateFinanceEntryMutation,
 } from "@/redux/features/finance/financeApi";
 import { formatMoney } from "@/lib/money";
+import { financeBasePath } from "@/lib/finance-paths";
 import type {
   ExportFormat,
   FinanceCurrency,
@@ -34,71 +38,153 @@ const fieldClass =
 
 const CURRENCIES: FinanceCurrency[] = ["BDT", "USD", "GBP"];
 
-const emptyForm = (): FinanceEntryInput => ({
-  entryDate: new Date().toISOString().slice(0, 10),
+/**
+ * One row of the entry form. The date and currency are shared by every line
+ * in a draft, so they live on the draft rather than being retyped per row.
+ *
+ * No totals are derived here on purpose: per lib/money.ts the UI never does
+ * arithmetic on an amount — the server computes balances from what is saved.
+ */
+type DraftLine = {
+  key: string;
+  itemName: string;
+  quantity: string;
+  unitCost: string;
+  moneyIn: string;
+  moneyOut: string;
+};
+
+type Draft = {
+  entryDate: string;
+  currency: FinanceCurrency;
+  lines: DraftLine[];
+};
+
+let lineSeq = 0;
+const newLine = (): DraftLine => ({
+  key: `line-${(lineSeq += 1)}`,
   itemName: "",
   quantity: "1",
   unitCost: "0",
-  currency: "BDT",
   moneyIn: "0",
   moneyOut: "0",
 });
 
-// Amounts stay strings from the API to the input and back — FR-13-009.
+const emptyDraft = (): Draft => ({
+  entryDate: new Date().toISOString().slice(0, 10),
+  currency: "BDT",
+  lines: [newLine()],
+});
+
+/** One line plus the draft's shared header, in the shape the API takes. */
+const toInput = (draft: Draft, line: DraftLine): FinanceEntryInput => ({
+  entryDate: draft.entryDate,
+  currency: draft.currency,
+  itemName: line.itemName.trim(),
+  quantity: line.quantity,
+  unitCost: line.unitCost,
+  moneyIn: line.moneyIn,
+  moneyOut: line.moneyOut,
+});
+
 const money = (value: string | null | undefined, currency: string) =>
   formatMoney(value, currency);
 
+const isExpense = (row: FinanceEntry) => {
+  const n = Number(row.moneyOut);
+  return Number.isFinite(n) && n > 0;
+};
+
 export default function DashboardFinancePage() {
   const user = useSelector(selectCurrentUser);
+  const basePath = financeBasePath(usePathname());
   const { data, isLoading } = useListMyFinanceQuery({ limit: 200 });
-  const [createEntry, { isLoading: creating }] = useCreateFinanceEntryMutation();
+  const { data: invoices = [], isLoading: invoicesLoading } =
+    useListInvoicesQuery();
   const [updateEntry, { isLoading: updating }] = useUpdateFinanceEntryMutation();
   const [deleteEntry] = useDeleteFinanceEntryMutation();
+  const [createInvoice, { isLoading: invoicing }] = useCreateInvoiceMutation();
 
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<FinanceEntry | null>(null);
-  const [form, setForm] = useState<FinanceEntryInput>(emptyForm);
+  const [draft, setDraft] = useState<Draft>(emptyDraft);
   const [error, setError] = useState<string | null>(null);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
 
   const rows = data?.data ?? [];
-  const latestBalance = rows[0]?.balance;
 
-  const openCreate = () => {
-    setEditing(null);
-    setForm(emptyForm());
-    setError(null);
-    setOpen(true);
-  };
+  // One balance per currency. Rows arrive newest-first, so the first row seen
+  // for a currency carries that currency's current balance. They are shown
+  // side by side and never added together — a combined figure would not be
+  // money in any of them.
+  const latestBalances = useMemo(() => {
+    const seen = new Map<string, string>();
+    for (const row of rows) {
+      if (!seen.has(row.currency)) seen.set(row.currency, row.balance);
+    }
+    return [...seen].sort(([a], [b]) => a.localeCompare(b));
+  }, [rows]);
 
+  const selectableIds = useMemo(
+    () =>
+      new Set(
+        rows
+          .filter((r) => isExpense(r) && !r.invoiceId)
+          .map((r) => r.id)
+      ),
+    [rows]
+  );
+
+  const selectedRows = rows.filter((r) => selected.has(r.id));
+  const selectedCurrencyOk =
+    selectedRows.length === 0 ||
+    selectedRows.every((r) => r.currency === selectedRows[0].currency);
+
+  // Editing stays one row: a saved ledger line is edited on its own, and
+  // splitting it into several would change what the balance was built from.
   const openEdit = (row: FinanceEntry) => {
     setEditing(row);
-    setForm({
+    setDraft({
       entryDate: row.entryDate.slice(0, 10),
-      itemName: row.itemName,
-      quantity: row.quantity,
-      unitCost: row.unitCost,
       currency: row.currency as FinanceCurrency,
-      moneyIn: row.moneyIn,
-      moneyOut: row.moneyOut,
+      lines: [
+        {
+          key: `line-${(lineSeq += 1)}`,
+          itemName: row.itemName,
+          quantity: row.quantity,
+          unitCost: row.unitCost,
+          moneyIn: row.moneyIn,
+          moneyOut: row.moneyOut,
+        },
+      ],
     });
     setError(null);
     setOpen(true);
   };
 
-  const patch = (p: Partial<FinanceEntryInput>) =>
-    setForm((f) => ({ ...f, ...p }));
+  const patch = (p: Partial<Omit<Draft, "lines">>) =>
+    setDraft((d) => ({ ...d, ...p }));
+
+  const patchLine = (key: string, p: Partial<DraftLine>) =>
+    setDraft((d) => ({
+      ...d,
+      lines: d.lines.map((l) => (l.key === key ? { ...l, ...p } : l)),
+    }));
 
   const submit = async () => {
     setError(null);
-    if (!form.itemName.trim()) return setError("Item name is required.");
+
+    if (!editing) return;
+    if (!draft.lines[0].itemName.trim()) {
+      return setError("Name or description is required.");
+    }
+
     try {
-      if (editing) {
-        await updateEntry({ id: editing.id, data: form }).unwrap();
-        toast.success("Entry updated");
-      } else {
-        await createEntry(form).unwrap();
-        toast.success("Entry created");
-      }
+      await updateEntry({
+        id: editing.id,
+        data: toInput(draft, draft.lines[0]),
+      }).unwrap();
+      toast.success("Entry updated");
       setOpen(false);
     } catch (e) {
       setError(
@@ -111,11 +197,68 @@ export default function DashboardFinancePage() {
     if (!confirm("Delete this entry? Balances will be recalculated.")) return;
     try {
       await deleteEntry(id).unwrap();
+      setSelected((prev) => {
+        const next = new Set(prev);
+        next.delete(id);
+        return next;
+      });
       toast.success("Deleted");
     } catch {
       /* toasted */
     }
   };
+
+  const toggleRow = (id: string) => {
+    if (!selectableIds.has(id)) return;
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const toggleAllSelectable = () => {
+    setSelected((prev) => {
+      if (prev.size === selectableIds.size && selectableIds.size > 0) {
+        return new Set();
+      }
+      return new Set(selectableIds);
+    });
+  };
+
+  const onCreateInvoice = async () => {
+    if (selected.size === 0) {
+      toast.error("Select one or more expense lines first.");
+      return;
+    }
+    if (!selectedCurrencyOk) {
+      toast.error("Selected lines must use the same currency.");
+      return;
+    }
+    try {
+      const invoice = await createInvoice({
+        entryIds: Array.from(selected),
+      }).unwrap();
+      setSelected(new Set());
+      toast.success(`Invoice ${invoice.number} created`);
+      await downloadFinanceExport(
+        `/finance/invoices/${invoice.id}/pdf`,
+        `${invoice.number}.pdf`
+      );
+    } catch (e) {
+      toast.error(
+        (e as { data?: { message?: string } })?.data?.message ??
+          "Could not create invoice"
+      );
+    }
+  };
+
+  const downloadInvoice = (invoiceId: string, number: string) =>
+    downloadFinanceExport(
+      `/finance/invoices/${invoiceId}/pdf`,
+      `${number}.pdf`
+    ).catch(() => toast.error("Invoice download failed"));
 
   return (
     <div>
@@ -125,13 +268,17 @@ export default function DashboardFinancePage() {
           <p className="mt-1 text-sm text-muted-foreground">
             {user?.fullName}
             {user?.memberId ? ` · ${user.memberId}` : ""}
-            {latestBalance != null
-              ? ` · Balance ${money(latestBalance, rows[0]?.currency ?? "BDT")}`
-              : ""}
+            {latestBalances.map(([currency, balance]) => (
+              <span key={currency}>{` · Balance ${money(balance, currency)}`}</span>
+            ))}
+          </p>
+          <p className="mt-1 text-xs text-muted-foreground max-w-xl">
+            Add money-in and expense lines separately, then select several
+            expenses (e.g. book, pen, tuition) and create one downloadable
+            invoice.
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
-          {/* FR-13-012 — the same book in three formats, one route each. */}
           {(["xlsx", "csv", "pdf"] as ExportFormat[]).map((format) => (
             <button
               key={format}
@@ -147,21 +294,63 @@ export default function DashboardFinancePage() {
               <Download className="h-4 w-4" /> {format.toUpperCase()}
             </button>
           ))}
-          <button
-            type="button"
-            onClick={openCreate}
+          <Link
+            href={`${basePath}/new`}
             className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-emerald-600 text-white text-sm font-semibold hover:bg-emerald-700"
           >
             <Plus className="h-4 w-4" /> New entry
-          </button>
+          </Link>
         </div>
       </div>
+
+      {selected.size > 0 && (
+        <div className="mb-4 flex flex-wrap items-center gap-3 rounded-xl border border-emerald-500/30 bg-emerald-500/5 px-4 py-3">
+          <p className="text-sm font-medium">
+            {selected.size} expense line{selected.size === 1 ? "" : "s"} selected
+          </p>
+          <button
+            type="button"
+            disabled={invoicing || !selectedCurrencyOk}
+            onClick={() => void onCreateInvoice()}
+            className="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-3 py-2 text-sm font-semibold text-white hover:bg-emerald-700 disabled:opacity-60"
+          >
+            {invoicing ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <FileText className="h-4 w-4" />
+            )}
+            Create one invoice
+          </button>
+          <button
+            type="button"
+            onClick={() => setSelected(new Set())}
+            className="text-sm text-muted-foreground hover:text-foreground"
+          >
+            Clear
+          </button>
+          {!selectedCurrencyOk && (
+            <p className="text-xs text-red-600">Mixed currencies — deselect some lines.</p>
+          )}
+        </div>
+      )}
 
       <div className="rounded-xl border border-border overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead className="bg-muted/50 text-left text-xs uppercase tracking-wider text-muted-foreground">
               <tr>
+                <th className="px-3 py-2.5 font-bold w-10">
+                  <input
+                    type="checkbox"
+                    aria-label="Select all uninvoiced expenses"
+                    checked={
+                      selectableIds.size > 0 &&
+                      selected.size === selectableIds.size
+                    }
+                    onChange={toggleAllSelectable}
+                    disabled={selectableIds.size === 0}
+                  />
+                </th>
                 <th className="px-3 py-2.5 font-bold">Sl.</th>
                 <th className="px-3 py-2.5 font-bold">Date</th>
                 <th className="px-3 py-2.5 font-bold">Description</th>
@@ -169,13 +358,14 @@ export default function DashboardFinancePage() {
                 <th className="px-3 py-2.5 font-bold text-right">In</th>
                 <th className="px-3 py-2.5 font-bold text-right">Out</th>
                 <th className="px-3 py-2.5 font-bold text-right">Balance</th>
+                <th className="px-3 py-2.5 font-bold">Invoice</th>
                 <th className="px-3 py-2.5 font-bold w-28" />
               </tr>
             </thead>
             <tbody>
               {isLoading && (
                 <tr>
-                  <td colSpan={8} className="px-3 py-8 text-center text-muted-foreground">
+                  <td colSpan={10} className="px-3 py-8 text-center text-muted-foreground">
                     <Loader2 className="h-4 w-4 animate-spin inline mr-2" />
                     Loading…
                   </td>
@@ -183,77 +373,159 @@ export default function DashboardFinancePage() {
               )}
               {!isLoading && rows.length === 0 && (
                 <tr>
-                  <td colSpan={8} className="px-3 py-8 text-center text-muted-foreground">
+                  <td colSpan={10} className="px-3 py-8 text-center text-muted-foreground">
                     No ledger entries yet.
                   </td>
                 </tr>
               )}
-              {rows.map((row) => (
-                <tr key={row.id} className="border-t border-border align-top">
-                  <td className="px-3 py-3 font-mono text-xs">{row.slNo}</td>
-                  <td className="px-3 py-3 text-xs whitespace-nowrap">
-                    {row.entryDate.slice(0, 10)}
+              {rows.map((row) => {
+                const canSelect = selectableIds.has(row.id);
+                return (
+                  <tr key={row.id} className="border-t border-border align-top">
+                    <td className="px-3 py-3">
+                      <input
+                        type="checkbox"
+                        aria-label={`Select ${row.itemName}`}
+                        checked={selected.has(row.id)}
+                        disabled={!canSelect}
+                        onChange={() => toggleRow(row.id)}
+                      />
+                    </td>
+                    <td className="px-3 py-3 font-mono text-xs">{row.slNo}</td>
+                    <td className="px-3 py-3 text-xs whitespace-nowrap">
+                      {row.entryDate.slice(0, 10)}
+                    </td>
+                    <td className="px-3 py-3">
+                      <p className="font-medium">{row.itemName}</p>
+                      <p className="text-[11px] text-muted-foreground">
+                        Qty {row.quantity} × {row.unitCost}
+                      </p>
+                    </td>
+                    <td className="px-3 py-3 text-xs">{row.currency}</td>
+                    <td className="px-3 py-3 text-right text-emerald-700 dark:text-emerald-400">
+                      {formatMoney(row.moneyIn)}
+                    </td>
+                    <td className="px-3 py-3 text-right text-red-600">
+                      {formatMoney(row.moneyOut)}
+                    </td>
+                    <td className="px-3 py-3 text-right font-semibold">
+                      {formatMoney(row.balance)}
+                    </td>
+                    <td className="px-3 py-3 text-xs">
+                      {row.invoiceId ? (
+                        <button
+                          type="button"
+                          className="text-emerald-700 hover:underline dark:text-emerald-400"
+                          onClick={() =>
+                            void downloadInvoice(
+                              row.invoiceId!,
+                              `invoice-${row.slNo}`
+                            )
+                          }
+                        >
+                          PDF
+                        </button>
+                      ) : canSelect ? (
+                        <span className="text-muted-foreground">—</span>
+                      ) : (
+                        <span className="text-muted-foreground">n/a</span>
+                      )}
+                    </td>
+                    <td className="px-3 py-3">
+                      <div className="flex gap-1 justify-end">
+                        <button
+                          type="button"
+                          onClick={() => openEdit(row)}
+                          className="p-1.5 rounded-md hover:bg-muted"
+                        >
+                          <Pencil className="h-3.5 w-3.5" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => onDelete(row.id)}
+                          className="p-1.5 rounded-md hover:bg-muted text-red-600"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <section className="mt-8">
+        <h2 className="text-sm font-bold uppercase tracking-widest text-muted-foreground mb-3">
+          Invoices
+        </h2>
+        <div className="rounded-xl border border-border overflow-hidden">
+          <table className="w-full text-sm">
+            <thead className="bg-muted/50 text-left text-xs uppercase tracking-wider text-muted-foreground">
+              <tr>
+                <th className="px-3 py-2.5 font-bold">Number</th>
+                <th className="px-3 py-2.5 font-bold">Issued</th>
+                <th className="px-3 py-2.5 font-bold">Lines</th>
+                <th className="px-3 py-2.5 font-bold text-right">Total</th>
+                <th className="px-3 py-2.5 font-bold">Status</th>
+                <th className="px-3 py-2.5 font-bold w-24" />
+              </tr>
+            </thead>
+            <tbody>
+              {invoicesLoading && (
+                <tr>
+                  <td colSpan={6} className="px-3 py-6 text-center text-muted-foreground">
+                    <Loader2 className="h-4 w-4 animate-spin inline mr-2" />
+                    Loading…
                   </td>
-                  <td className="px-3 py-3">
-                    <p className="font-medium">{row.itemName}</p>
-                    <p className="text-[11px] text-muted-foreground">
-                      Qty {row.quantity} × {row.unitCost}
-                    </p>
+                </tr>
+              )}
+              {!invoicesLoading && invoices.length === 0 && (
+                <tr>
+                  <td colSpan={6} className="px-3 py-6 text-center text-muted-foreground">
+                    No invoices yet. Select expense lines above to create one.
                   </td>
-                  <td className="px-3 py-3 text-xs">{row.currency}</td>
-                  <td className="px-3 py-3 text-right text-emerald-700 dark:text-emerald-400">
-                    {formatMoney(row.moneyIn)}
+                </tr>
+              )}
+              {invoices.map((inv) => (
+                <tr key={inv.id} className="border-t border-border">
+                  <td className="px-3 py-3 font-mono text-xs font-semibold">
+                    {inv.number}
                   </td>
-                  <td className="px-3 py-3 text-right text-red-600">
-                    {formatMoney(row.moneyOut)}
+                  <td className="px-3 py-3 text-xs">
+                    {inv.issuedAt.slice(0, 10)}
+                  </td>
+                  <td className="px-3 py-3 text-xs">
+                    {inv.entries?.length ?? 0}
                   </td>
                   <td className="px-3 py-3 text-right font-semibold">
-                    {formatMoney(row.balance)}
+                    {money(inv.total, inv.currency)}
                   </td>
-                  <td className="px-3 py-3">
-                    <div className="flex gap-1 justify-end">
-                      <button
-                        type="button"
-                        title="Invoice PDF"
-                        onClick={() =>
-                          downloadFinanceExport(
-                            `/finance/${row.id}/invoice.pdf`,
-                            `finance-invoice-${row.slNo}.pdf`
-                          ).catch(() => toast.error("Invoice download failed"))
-                        }
-                        className="p-1.5 rounded-md hover:bg-muted"
-                      >
-                        <FileText className="h-3.5 w-3.5" />
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => openEdit(row)}
-                        className="p-1.5 rounded-md hover:bg-muted"
-                      >
-                        <Pencil className="h-3.5 w-3.5" />
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => onDelete(row.id)}
-                        className="p-1.5 rounded-md hover:bg-muted text-red-600"
-                      >
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </button>
-                    </div>
+                  <td className="px-3 py-3 text-xs">{inv.status}</td>
+                  <td className="px-3 py-3 text-right">
+                    <button
+                      type="button"
+                      onClick={() => void downloadInvoice(inv.id, inv.number)}
+                      className="inline-flex items-center gap-1.5 rounded-lg border border-border px-2.5 py-1.5 text-xs font-semibold hover:bg-muted"
+                    >
+                      <Download className="h-3.5 w-3.5" /> PDF
+                    </button>
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
-      </div>
+      </section>
 
       {open && (
         <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 p-4">
-          <div className="w-full max-w-lg rounded-2xl border border-border bg-card p-5 sm:p-6 max-h-[90vh] overflow-y-auto">
+          <div className="w-full max-w-3xl rounded-2xl border border-border bg-card p-5 sm:p-6 max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-bold">
-                {editing ? "Edit entry" : "New entry"}
+                Edit entry
               </h2>
               <button type="button" onClick={() => setOpen(false)} className="p-1.5 rounded-md hover:bg-muted">
                 <X className="h-4 w-4" />
@@ -261,89 +533,114 @@ export default function DashboardFinancePage() {
             </div>
 
             <div className="space-y-3">
-              <label className="block text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                Date
-                <input
-                  type="date"
-                  className={`${fieldClass} mt-1`}
-                  value={form.entryDate}
-                  onChange={(e) => patch({ entryDate: e.target.value })}
-                />
-              </label>
-              <label className="block text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                Name / description
-                <input
-                  className={`${fieldClass} mt-1`}
-                  value={form.itemName}
-                  onChange={(e) => patch({ itemName: e.target.value })}
-                />
-              </label>
-              <div className="grid grid-cols-2 gap-3">
+              {/* Shared by every line in this draft. */}
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <label className="block text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                  Quantity
+                  Date
                   <input
-                    type="number"
-                    min={0}
-                    step="any"
+                    type="date"
                     className={`${fieldClass} mt-1`}
-                    value={form.quantity}
-                    onChange={(e) => patch({ quantity: e.target.value })}
+                    value={draft.entryDate}
+                    onChange={(e) => patch({ entryDate: e.target.value })}
                   />
                 </label>
                 <label className="block text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                  Unit cost
-                  <input
-                    type="number"
-                    min={0}
-                    step="any"
+                  Currency
+                  <select
                     className={`${fieldClass} mt-1`}
-                    value={form.unitCost}
-                    onChange={(e) => patch({ unitCost: e.target.value })}
-                  />
+                    value={draft.currency}
+                    onChange={(e) =>
+                      patch({ currency: e.target.value as FinanceCurrency })
+                    }
+                  >
+                    {CURRENCIES.map((c) => (
+                      <option key={c} value={c}>
+                        {c}
+                      </option>
+                    ))}
+                  </select>
                 </label>
               </div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                Currency
-                <select
-                  className={`${fieldClass} mt-1`}
-                  value={form.currency}
-                  onChange={(e) =>
-                    patch({ currency: e.target.value as FinanceCurrency })
-                  }
-                >
-                  {CURRENCIES.map((c) => (
-                    <option key={c} value={c}>
-                      {c}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <div className="grid grid-cols-2 gap-3">
-                <label className="block text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                  Money in
-                  <input
-                    type="number"
-                    min={0}
-                    step="any"
-                    className={`${fieldClass} mt-1`}
-                    value={form.moneyIn}
-                    onChange={(e) => patch({ moneyIn: e.target.value })}
-                  />
-                </label>
-                <label className="block text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                  Money out
-                  <input
-                    type="number"
-                    min={0}
-                    step="any"
-                    className={`${fieldClass} mt-1`}
-                    value={form.moneyOut}
-                    onChange={(e) => patch({ moneyOut: e.target.value })}
-                  />
-                </label>
+
+              <div className="space-y-3">
+                {draft.lines.map((line, i) => (
+                  <div
+                    key={line.key}
+                    className="rounded-xl border border-border bg-background/60 p-3"
+                  >
+                    <label className="block text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                      Name / description
+                      <input
+                        className={`${fieldClass} mt-1`}
+                        value={line.itemName}
+                        onChange={(e) =>
+                          patchLine(line.key, { itemName: e.target.value })
+                        }
+                        placeholder="e.g. Tuition fee, Book, Funds from Foundation"
+                      />
+                    </label>
+
+                    <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
+                      <label className="block text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                        Quantity
+                        <input
+                          type="number"
+                          min={0}
+                          step="any"
+                          className={`${fieldClass} mt-1`}
+                          value={line.quantity}
+                          onChange={(e) =>
+                            patchLine(line.key, { quantity: e.target.value })
+                          }
+                        />
+                      </label>
+                      <label className="block text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                        Unit cost
+                        <input
+                          type="number"
+                          min={0}
+                          step="any"
+                          className={`${fieldClass} mt-1`}
+                          value={line.unitCost}
+                          onChange={(e) =>
+                            patchLine(line.key, { unitCost: e.target.value })
+                          }
+                        />
+                      </label>
+                      <label className="block text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                        Money in
+                        <input
+                          type="number"
+                          min={0}
+                          step="any"
+                          className={`${fieldClass} mt-1`}
+                          value={line.moneyIn}
+                          onChange={(e) =>
+                            patchLine(line.key, { moneyIn: e.target.value })
+                          }
+                        />
+                      </label>
+                      <label className="block text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                        Money out
+                        <input
+                          type="number"
+                          min={0}
+                          step="any"
+                          className={`${fieldClass} mt-1`}
+                          value={line.moneyOut}
+                          onChange={(e) =>
+                            patchLine(line.key, { moneyOut: e.target.value })
+                          }
+                        />
+                      </label>
+                    </div>
+                  </div>
+                ))}
               </div>
+
               <p className="text-[11px] text-muted-foreground">
-                Balance is calculated automatically after save.
+                Balance is recalculated after save. Expense lines (money out)
+                can be grouped into one invoice later.
               </p>
 
               {error && <p className="text-sm text-red-600">{error}</p>}
@@ -358,11 +655,11 @@ export default function DashboardFinancePage() {
                 </button>
                 <button
                   type="button"
-                  disabled={creating || updating}
+                  disabled={updating}
                   onClick={submit}
                   className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-emerald-600 text-white text-sm font-semibold disabled:opacity-60"
                 >
-                  {(creating || updating) && (
+                  {(updating) && (
                     <Loader2 className="h-4 w-4 animate-spin" />
                   )}
                   Save

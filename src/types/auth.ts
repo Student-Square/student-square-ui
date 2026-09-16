@@ -70,7 +70,7 @@ export type ApiMe = {
   } | null;
 };
 
+/** Login response body. The refresh token is cookie-only, never in the body. */
 export type ApiAuthTokens = {
   accessToken: string;
-  refreshToken: string;
 };
