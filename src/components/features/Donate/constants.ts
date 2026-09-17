@@ -33,30 +33,35 @@ export const oneTimeInlineImpacts: Record<DonationPresetAmount, string> = {
  */
 export const projectCards: ProjectCard[] = [
   {
+    slug: "beyond-the-journey",
     icon: "🎯",
     title: "Beyond The Journey Project",
     description:
       "A special initiative that presents accurate career information, ongoing research and prospective fields of work for the various departments of the country's public universities, in the light of the experience of faculty members, specialists and professionals.",
   },
   {
+    slug: "health-care-for-all",
     icon: "🏥",
     title: "Project Health Care for All",
     description:
       "Health camps are held at fixed intervals every year to bring healthcare within reach of people in marginal areas, with particular emphasis on the char lands and the Barind region.",
   },
   {
+    slug: "amar-bhai-er-eid",
     icon: "🕌",
     title: "Amar Bhai Er Eid Project",
     description:
       "Every Eid-ul-Fitr, Eid food supplies including beef are gifted to families in need so they can share in the joy of the festival. The project also takes part in relief and rehabilitation during emergencies such as floods and COVID-19.",
   },
   {
+    slug: "one-minute-investment",
     icon: "📚",
     title: "One Minute Investment Project",
     description:
       "Ensuring sustainable human development through students' education, mental wellbeing, career development and social empowerment.",
   },
   {
+    slug: "counter-climate-change",
     icon: "🌿",
     title: "Counter Climate Change Project",
     description:

@@ -71,6 +71,7 @@ type NavEntry = NavItem | NavGroupEntry | NavSectionEntry;
 
 const CONTENT_ROLES: UserRole[] = ["SYSTEM_ADMIN", "SUPER_ADMIN", "ADMIN", "EDITOR", "AUTHOR", "MODERATOR"];
 const EDIT_ROLES: UserRole[] = ["SYSTEM_ADMIN", "SUPER_ADMIN", "ADMIN", "EDITOR"];
+const FINANCE_ROLES: UserRole[] = [...EDIT_ROLES, "FINANCE_MANAGER"];
 const AUTHOR_ROLES: UserRole[] = ["SYSTEM_ADMIN", "SUPER_ADMIN", "ADMIN", "EDITOR", "AUTHOR"];
 const MOD_ROLES: UserRole[] = ["SYSTEM_ADMIN", "SUPER_ADMIN", "ADMIN", "MODERATOR"];
 const TOP_ROLES: UserRole[] = ["SYSTEM_ADMIN", "SUPER_ADMIN", "ADMIN"];
@@ -111,11 +112,11 @@ const NAV: NavEntry[] = [
   { kind: "section", label: "Moderation", roles: MOD_ROLES },
   { kind: "item", href: "/admin/moderation", label: "Moderation Queue", icon: <FlagTriangleRight className="h-4 w-4" />, roles: MOD_ROLES },
 
-  { kind: "section", label: "Management", roles: EDIT_ROLES },
-  { kind: "item", href: "/admin/donation", label: "Donation", icon: <HandCoins className="h-4 w-4" />, roles: EDIT_ROLES },
+  { kind: "section", label: "Management", roles: [...EDIT_ROLES, "FINANCE_MANAGER"] },
+  { kind: "item", href: "/admin/donation", label: "Donation", icon: <HandCoins className="h-4 w-4" />, roles: FINANCE_ROLES },
   { kind: "item", href: "/admin/operations", label: "All DOB", icon: <BookOpen className="h-4 w-4" />, roles: EDIT_ROLES },
-  { kind: "item", href: "/admin/finance", label: "All FWB", icon: <Wallet className="h-4 w-4" />, roles: EDIT_ROLES },
-  { kind: "item", href: "/admin/books", label: "All Books", icon: <Library className="h-4 w-4" />, roles: EDIT_ROLES },
+  { kind: "item", href: "/admin/finance", label: "All FWB", icon: <Wallet className="h-4 w-4" />, roles: FINANCE_ROLES },
+  { kind: "item", href: "/admin/books", label: "All Books", icon: <Library className="h-4 w-4" />, roles: FINANCE_ROLES },
   { kind: "item", href: "/admin/team", label: "Team", icon: <ShieldCheck className="h-4 w-4" />, roles: EDIT_ROLES },
   { kind: "item", href: "/admin/resources", label: "Resources", icon: <Library className="h-4 w-4" />, roles: EDIT_ROLES },
   { kind: "item", href: "/admin/feedback", label: "Feedback", icon: <MessageSquareText className="h-4 w-4" />, roles: EDIT_ROLES },

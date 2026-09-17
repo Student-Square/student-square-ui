@@ -9,11 +9,15 @@
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8080/api/v1";
 
-export async function serverGet<T>(path: string): Promise<T | null> {
+export async function serverGet<T>(
+  path: string,
+  // SEO metadata can lag a build behind — cheaper than SSR-ing every request.
+  // Pass 0 for data that must be current.
+  { revalidate = 300 }: { revalidate?: number } = {}
+): Promise<T | null> {
   try {
     const res = await fetch(`${API_BASE_URL}${path}`, {
-      // SEO metadata can lag a build behind — cheaper than SSR-ing every request.
-      next: { revalidate: 300 },
+      next: { revalidate },
     });
     if (!res.ok) return null;
     const payload = (await res.json()) as { success?: boolean; data?: T };

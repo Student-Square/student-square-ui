@@ -12,11 +12,17 @@ interface StoryCardProps {
 }
 
 export default function StoryCard({ story }: StoryCardProps) {
-  const { pick } = useLanguage()
+  const { pick, tr } = useLanguage()
   const image = story.coverImage?.url ?? PLACEHOLDER
   const href = `/blog/real-life-stories/${story.slug}`
   const quote = pick(story.quote, story.quoteBn)
   const summary = pick(story.summary, story.summaryBn)
+  // department/university/achievement have no Bangla column; they come from the
+  // known-content table instead.
+  const department = tr(story.department)
+  const university = tr(story.university)
+  const achievement = tr(story.achievement)
+  const name = tr(story.name)
 
   return (
     <Link
@@ -28,18 +34,18 @@ export default function StoryCard({ story }: StoryCardProps) {
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={image}
-          alt={story.name}
+          alt={name}
           className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
         <div className="absolute bottom-3 left-3 right-3">
           <h3 className="text-white text-base sm:text-lg font-bold drop-shadow leading-snug">
-            {story.name}
+            {name}
           </h3>
-          {story.department && (
+          {department && (
             <p className="text-white/85 text-xs flex items-center gap-1.5 mt-0.5">
               <GraduationCap className="h-3 w-3" />
-              {story.department}
+              {department}
             </p>
           )}
         </div>
@@ -47,10 +53,10 @@ export default function StoryCard({ story }: StoryCardProps) {
 
       {/* Content */}
       <div className="p-5 flex flex-col flex-1">
-        {story.university && (
+        {university && (
           <p className="text-[11px] text-muted-foreground flex items-center gap-1.5 mb-3">
             <MapPin className="h-3 w-3 text-emerald-600 shrink-0" />
-            {story.university}
+            {university}
           </p>
         )}
 
@@ -67,9 +73,9 @@ export default function StoryCard({ story }: StoryCardProps) {
         )}
 
         <div className="mt-5 flex items-center justify-between gap-3 pt-4 border-t border-border">
-          {story.achievement ? (
-            <span title={story.achievement} className="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded-full bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 border border-emerald-200/70 dark:border-emerald-800/70 whitespace-nowrap">
-              {story.achievement.length > 40 ? `${story.achievement.slice(0, 35)}…` : story.achievement}
+          {achievement ? (
+            <span title={achievement} className="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded-full bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 border border-emerald-200/70 dark:border-emerald-800/70 whitespace-nowrap">
+              {achievement.length > 40 ? `${achievement.slice(0, 35)}…` : achievement}
             </span>
           ) : (
             <span />

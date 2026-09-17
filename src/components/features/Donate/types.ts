@@ -6,6 +6,8 @@ export interface ImpactEntry {
 }
 
 export interface ProjectCard {
+  /** Matches the seeded campaign, so the fallback's donate buttons work. */
+  slug: string;
   icon: string;
   title: string;
   description: string;

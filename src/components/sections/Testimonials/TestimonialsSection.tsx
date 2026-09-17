@@ -16,7 +16,7 @@ function excerpt(text: string, limit = 220): string {
 export function TestimonialsSection() {
   const sectionRef = useRef<HTMLElement>(null)
   const { data } = useGetStoriesQuery({ limit: 12 })
-  const { pick, t } = useLanguage()
+  const { pick, t, tr } = useLanguage()
 
   // Real students, in their own words: the summary is the opening of the story
   // each of them wrote, first person. The `quote` field is not used here — for
@@ -27,12 +27,15 @@ export function TestimonialsSection() {
     .filter((story) => story.summary)
     .map((story) => ({
       text: excerpt(pick(story.summary, story.summaryBn)),
-      name: story.name,
-      role: [story.department, story.university].filter(Boolean).join(", "),
+      name: tr(story.name),
+      role: [tr(story.department), tr(story.university)].filter(Boolean).join(", "),
       image: story.coverImage?.url,
     }))
 
   const hasTestimonials = testimonials.length > 0
+
+  // Dealt out in turn, so no student appears in two columns.
+  const columns = [0, 1, 2].map((column) => testimonials.filter((_, index) => index % 3 === column))
 
   // Depends on hasTestimonials because the section is not in the DOM until the
   // stories arrive — observing on mount alone would leave it stuck at opacity 0.
@@ -94,7 +97,9 @@ export function TestimonialsSection() {
           </div>
           <h2 className="fade-in-element opacity-0 translate-y-8 transition-all duration-1000 ease-out font-heading text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-light text-foreground mb-6 tracking-tight text-balance">
             {t("home.testimonialsLead")}{" "}
-            <span className="font-medium italic bg-gradient-to-r from-green-600 to-green-500 bg-clip-text text-transparent dark:from-green-400 dark:to-green-500">
+            {/* Italic glyphs overhang their box and bg-clip-text only paints the
+                box, so pad it or the final letter's tail gets clipped. */}
+            <span className="pe-[0.15em] pb-[0.1em] font-medium italic bg-gradient-to-r from-green-600 to-green-500 bg-clip-text text-transparent dark:from-green-400 dark:to-green-500">
               {t("home.testimonialsAccent")}
             </span>
           </h2>
@@ -104,25 +109,19 @@ export function TestimonialsSection() {
         </div>
 
         {/* Testimonials Carousel */}
-        <div className="fade-in-element opacity-0 translate-y-8 transition-all duration-1000 ease-out relative flex justify-center items-center min-h-[400px] md:min-h-[480px] overflow-hidden">
+        {/* A fixed window the columns scroll inside; without it each column was
+            as tall as all its cards and the section ran to thousands of pixels. */}
+        <div className="fade-in-element opacity-0 translate-y-8 transition-all duration-1000 ease-out relative flex h-[640px] justify-center overflow-hidden md:h-[760px] lg:h-[820px]">
           <div
-            className="flex gap-4 md:gap-6 max-w-6xl px-4"
+            className="flex h-full w-full max-w-6xl gap-4 px-4 md:gap-6"
             style={{
               maskImage: "linear-gradient(to bottom, transparent 0%, black 10%, black 90%, transparent 100%)",
               WebkitMaskImage: "linear-gradient(to bottom, transparent 0%, black 10%, black 90%, transparent 100%)",
             }}
           >
-            <TestimonialsColumn testimonials={testimonials.slice(0, 3)} duration={18} className="flex-1 w-full max-w-xs sm:max-w-sm" />
-            <TestimonialsColumn
-              testimonials={testimonials.slice(2, 5)}
-              duration={14}
-              className="flex-1 hidden md:block max-w-sm"
-            />
-            <TestimonialsColumn
-              testimonials={testimonials.slice(5, 8)}
-              duration={20}
-              className="flex-1 hidden lg:block max-w-sm"
-            />
+            <TestimonialsColumn testimonials={columns[0]} duration={26} className="mx-auto w-full max-w-sm flex-1" />
+            <TestimonialsColumn testimonials={columns[1]} duration={22} className="hidden max-w-sm flex-1 md:block" />
+            <TestimonialsColumn testimonials={columns[2]} duration={30} className="hidden max-w-sm flex-1 lg:block" />
           </div>
         </div>
       </div>

@@ -2,24 +2,17 @@
 
 import { motion } from "motion/react"
 import Link from "next/link"
-import StoryCard from "./StoryCard"
+import StoryPortraitCard from "./StoryPortraitCard"
 import { useGetStoriesQuery } from "@/redux/features/stories/storiesApi"
 import { useLanguage } from "@/components/i18n/LanguageProvider"
 
-const SkeletonCard = () => (
-  <div className="rounded-2xl border border-border overflow-hidden animate-pulse bg-card">
-    <div className="aspect-[16/10] bg-muted" />
-    <div className="p-5 space-y-3">
-      <div className="h-2.5 bg-muted rounded w-2/5" />
-      <div className="h-3 bg-muted rounded w-full" />
-      <div className="h-3 bg-muted rounded w-5/6" />
-      <div className="h-3 bg-muted rounded w-4/6" />
-    </div>
-  </div>
-)
+const SkeletonCard = () => <div className="aspect-[3/4] animate-pulse rounded-2xl bg-muted lg:aspect-[4/5]" />
 
+// Always two rows: four cards two across on phones and tablets, six three
+// across on laptops (15-inch screens run 1280–1536px wide, where four across
+// was cramped), and all eight four across on large monitors.
 const cardVisibility = (index: number) =>
-  index < 4 ? "flex" : index < 6 ? "hidden sm:flex" : "hidden 2xl:flex"
+  index < 4 ? "block" : index < 6 ? "hidden lg:block" : "hidden 3xl:block"
 
 export default function Stories() {
   const { data, isLoading } = useGetStoriesQuery({ limit: 8 })
@@ -48,7 +41,7 @@ export default function Stories() {
           </p>
         </motion.div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-5 sm:gap-6 lg:gap-8">
+        <div className="grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-3 lg:gap-6 3xl:grid-cols-4">
           {isLoading
             ? Array.from({ length: 8 }).map((_, i) => (
                 <div key={i} className={cardVisibility(i)}>
@@ -64,7 +57,7 @@ export default function Stories() {
                   viewport={{ once: true }}
                   className={cardVisibility(index)}
                 >
-                  <StoryCard story={story} />
+                  <StoryPortraitCard story={story} />
                 </motion.div>
               ))}
         </div>

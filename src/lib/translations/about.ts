@@ -4,12 +4,26 @@ import type { Dict } from "../i18n";
 export const ABOUT: Dict = {
   // /about
   "about.title": { EN: "About Us", BN: "আমাদের সম্পর্কে" },
+  "about.badge": { EN: "About Us", BN: "আমাদের সম্পর্কে" },
+  "about.headingLead": { EN: "The people and work behind", BN: "পিছনের মানুষ ও কাজ" },
+  "about.headingAccent": { EN: "Student Square.", BN: "স্টুডেন্ট স্কয়ারের।" },
   "about.intro": {
     EN: "Student Square is a non-profit organization devoted to building an inclusive society where every individual's potential is nurtured and developed, free from discrimination.",
     BN: "স্টুডেন্ট স্কয়ার একটি অলাভজনক সংগঠন, যা এমন একটি অন্তর্ভুক্তিমূলক সমাজ গড়তে নিবেদিত, যেখানে বৈষম্যহীনভাবে প্রত্যেক মানুষের সম্ভাবনা লালিত ও বিকশিত হয়।",
   },
   "about.visionMission": { EN: "Our Vision and Mission", BN: "আমাদের লক্ষ্য ও উদ্দেশ্য" },
+  "about.visionMissionDesc": {
+    EN: "The purpose that guides every programme and partnership.",
+    BN: "প্রতিটি কার্যক্রম ও অংশীদারিত্বের পেছনের উদ্দেশ্য।",
+  },
   "about.explore": { EN: "Explore", BN: "দেখুন" },
+  "about.seeWork": { EN: "See what we do", BN: "আমরা যা করি" },
+  "about.searchPlaceholder": { EN: "Search this page...", BN: "এই পাতায় খুঁজুন..." },
+  "about.showing": { EN: "Showing {shown} of {total}", BN: "{total}টির মধ্যে {shown}টি দেখানো হচ্ছে" },
+  "about.noMatch": { EN: "Nothing matches your search.", BN: "আপনার অনুসন্ধানের সঙ্গে কিছু মেলেনি।" },
+  "about.tryKeyword": { EN: "Try a different keyword.", BN: "অন্য কোনো শব্দ দিয়ে খুঁজে দেখুন।" },
+  "about.sectionNumber": { EN: "Section {n}", BN: "অংশ {n}" },
+  "about.sectionsLabel": { EN: "sections", BN: "টি অংশ" },
   "about.card.whoWeAre": { EN: "Who We Are", BN: "আমরা কে" },
   "about.card.whoWeAreDesc": {
     EN: "Discover the team and values behind Student Square",

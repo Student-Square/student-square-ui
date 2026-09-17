@@ -104,9 +104,11 @@
   --font-heading: var(--font-saira), 'Saira', var(--font-bangla), system-ui, sans-serif;
   --font-mono: var(--font-jetbrains-mono), 'JetBrains Mono', monospace;
   
-  /* Extended container for extra large screens */
-  --breakpoint-3xl: 1920px;
-  --breakpoint-4xl: 2560px;
+  /* Extended container for extra large screens. In rem like Tailwind's own
+     breakpoints: mixed units cannot be ordered, and px ones were emitted before
+     sm…2xl, so every 3xl:/4xl: style was overridden by the smaller ones. */
+  --breakpoint-3xl: 120rem; /* 1920px */
+  --breakpoint-4xl: 160rem; /* 2560px */
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);

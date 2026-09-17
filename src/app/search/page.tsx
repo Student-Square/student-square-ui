@@ -32,7 +32,7 @@ export default function SearchPage() {
 function SearchResultsView() {
   const params = useSearchParams();
   const router = useRouter();
-  const { t, pick } = useLanguage();
+  const { t, pick, tr } = useLanguage();
   const q = (params.get("q") ?? "").trim();
   const [input, setInput] = useState(q);
 
@@ -79,7 +79,7 @@ function SearchResultsView() {
             {t("common.somethingWrong")}
           </p>
         ) : (
-          <Results data={data} q={q} t={t} pick={pick} />
+          <Results data={data} q={q} t={t} pick={pick} tr={tr} />
         )}
       </div>
     </div>
@@ -91,11 +91,13 @@ function Results({
   q,
   t,
   pick,
+  tr,
 }: {
   data?: SearchResults;
   q: string;
   t: (k: string) => string;
   pick: (en: string | null | undefined, bn: string | null | undefined) => string;
+  tr: (en: string | null | undefined) => string;
 }) {
   if (!data || data.total === 0) {
     return (
@@ -133,7 +135,7 @@ function Results({
           <ResultRow
             key={s.slug}
             href={`/blog/real-life-stories/${s.slug}`}
-            title={s.name}
+            title={tr(s.name)}
             snippet={pick(s.summary, s.summaryBn)}
             image={s.coverImage}
           />

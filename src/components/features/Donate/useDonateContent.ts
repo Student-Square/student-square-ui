@@ -57,7 +57,7 @@ export type DonationDetails = {
   zakat?: { noteBn?: string; noteEn?: string; reference?: string };
 };
 
-export function useDonationDetails(): DonationDetails {
-  const { data } = useGetSiteSettingsQuery();
-  return (data as { donation?: DonationDetails } | undefined)?.donation ?? {};
+export function useDonationDetails(): DonationDetails & { isLoading: boolean } {
+  const { data, isLoading } = useGetSiteSettingsQuery();
+  return { ...((data as { donation?: DonationDetails } | undefined)?.donation ?? {}), isLoading };
 }

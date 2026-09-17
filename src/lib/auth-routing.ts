@@ -18,7 +18,7 @@ import type { UserRole } from "@/types/auth";
  * It's one shell for every staff role that isn't counsellor/mentor — each
  * role just sees a different slice of the nav (see admin/layout.tsx NAV).
  * AUTHOR: own blog posts only. MODERATOR: moderation queue. HR_MANAGER:
- * recruitment (placeholder until Phase 7 builds it out).
+ * recruitment. FINANCE_MANAGER: donations, the financial workbook and books.
  */
 export const ADMIN_ROLES: ReadonlySet<UserRole> = new Set<UserRole>([
   "SYSTEM_ADMIN",
@@ -28,6 +28,7 @@ export const ADMIN_ROLES: ReadonlySet<UserRole> = new Set<UserRole>([
   "MODERATOR",
   "AUTHOR",
   "HR_MANAGER",
+  "FINANCE_MANAGER",
 ]);
 
 /**

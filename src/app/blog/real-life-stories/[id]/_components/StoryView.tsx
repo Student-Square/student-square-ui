@@ -29,6 +29,13 @@ import { useGetStoriesQuery } from "@/redux/features/stories/storiesApi";
 import StoryCard from "@/components/sections/Stories/StoryCard";
 import { useLanguage } from "@/components/i18n/LanguageProvider";
 
+/** "Md. Abul Asad" → "Abul", "মো. আবুল আসাদ" → "আবুল". */
+const HONORIFICS = new Set(["Md.", "Md", "Mst.", "Mst", "মো.", "মোসা.", "মোছা."]);
+function givenName(name: string): string {
+  const parts = name.split(" ").filter(Boolean);
+  return parts.find((p) => !HONORIFICS.has(p)) ?? parts[0] ?? name;
+}
+
 function ShareButtons() {
   const { t } = useLanguage();
   return (
@@ -71,7 +78,7 @@ function ShareButtons() {
 // Legacy static story view (numeric IDs)
 // ──────────────────────────────────────────────
 function StaticStoryView({ id }: { id: number }) {
-  const { t, digits } = useLanguage();
+  const { t, digits, tr } = useLanguage();
   const story = storiesData.find((s) => s.id === id);
   if (!story) redirect("/blog/real-life-stories");
 
@@ -104,7 +111,7 @@ function StaticStoryView({ id }: { id: number }) {
                 {t("blog.storiesBadge")}
               </Link>
               <ChevronRight className="h-3 w-3" />
-              <span className="text-foreground line-clamp-1">{story.name}</span>
+              <span className="text-foreground line-clamp-1">{tr(story.name)}</span>
             </motion.div>
 
             <motion.div
@@ -153,21 +160,21 @@ function StaticStoryView({ id }: { id: number }) {
                     className="mt-5 sm:mt-6"
                   >
                     <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-foreground tracking-tight leading-tight">
-                      {story.name}
+                      {tr(story.name)}
                     </h1>
                     <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-muted-foreground">
                       <span className="inline-flex items-center gap-1.5">
                         <GraduationCap className="h-4 w-4 text-emerald-600" />
-                        {story.role}
+                        {tr(story.role)}
                       </span>
                       <span className="inline-flex items-center gap-1.5">
                         <MapPin className="h-4 w-4 text-emerald-600" />
-                        {story.university}
+                        {tr(story.university)}
                       </span>
                     </div>
                     <span className="mt-4 inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
                       <Award className="h-3.5 w-3.5" />
-                      {story.achievement}
+                      {tr(story.achievement)}
                     </span>
                   </motion.div>
                   <a href="#full-story" className="sm:hidden mt-6 inline-flex items-center gap-2 text-sm font-semibold text-emerald-600">
@@ -184,7 +191,7 @@ function StaticStoryView({ id }: { id: number }) {
                   <div className="relative w-full max-w-[280px] sm:max-w-[320px] lg:max-w-none">
                     <div className="absolute inset-0 translate-x-2 translate-y-2 sm:translate-x-3 sm:translate-y-3 rounded-2xl bg-emerald-500/20 dark:bg-emerald-400/15" />
                     <div className="relative aspect-square rounded-2xl overflow-hidden bg-muted border border-border shadow-lg shadow-emerald-500/10">
-                      <img src={story.image} alt={story.name} className="w-full h-full object-cover object-center" />
+                      <img src={story.image} alt={tr(story.name)} className="w-full h-full object-cover object-center" />
                     </div>
                   </div>
                 </motion.div>
@@ -231,7 +238,7 @@ function StaticStoryView({ id }: { id: number }) {
               >
                 <p className="text-[11px] font-bold uppercase tracking-widest text-emerald-700 dark:text-emerald-300 mb-4 flex items-center gap-2">
                   <Award className="h-3.5 w-3.5" />
-                  {t("stories.highlights", { name: story.name.split(" ")[0] })}
+                  {t("stories.highlights", { name: givenName(tr(story.name)) })}
                 </p>
                 <ul className="space-y-3">
                   {story.highlights.map((h, i) => (
@@ -285,15 +292,15 @@ function StaticStoryView({ id }: { id: number }) {
                       className="group flex flex-col h-full bg-card border border-border rounded-2xl overflow-hidden hover:shadow-lg hover:shadow-emerald-500/5 hover:border-emerald-500/40 hover:-translate-y-1 transition-all duration-300"
                     >
                       <div className="aspect-[16/10] overflow-hidden bg-muted relative">
-                        <img src={r.image} alt={r.name} className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500" />
+                        <img src={r.image} alt={tr(r.name)} className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500" />
                         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent" />
                         <div className="absolute bottom-3 left-3 right-3">
-                          <h3 className="text-white text-sm font-bold drop-shadow leading-snug">{r.name}</h3>
-                          <p className="text-white/85 text-[11px]">{r.role}</p>
+                          <h3 className="text-white text-sm font-bold drop-shadow leading-snug">{tr(r.name)}</h3>
+                          <p className="text-white/85 text-[11px]">{tr(r.role)}</p>
                         </div>
                       </div>
                       <div className="p-5 flex flex-col flex-1">
-                        <p className="text-[11px] text-muted-foreground mb-2">{r.university}</p>
+                        <p className="text-[11px] text-muted-foreground mb-2">{tr(r.university)}</p>
                         <p className="text-xs italic text-foreground leading-relaxed line-clamp-2 flex-1">&ldquo;{r.quote}&rdquo;</p>
                         <span className="mt-4 inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-600 group-hover:gap-2.5 transition-all">
                           {t("readMore")} <ArrowUpRight className="h-3.5 w-3.5" />
@@ -316,7 +323,8 @@ function StaticStoryView({ id }: { id: number }) {
 // API story view (slug-based)
 // ──────────────────────────────────────────────
 function ApiStoryView({ story }: { story: ApiStory }) {
-  const { t, pick, num } = useLanguage();
+  const { t, pick, num, tr } = useLanguage();
+  const name = tr(story.name);
   const quote = pick(story.quote, story.quoteBn);
   const body = pick(story.body, story.bodyBn);
   const isHtml = /<[a-z][\s\S]*>/i.test(body);
@@ -351,7 +359,7 @@ function ApiStoryView({ story }: { story: ApiStory }) {
               <ChevronRight className="h-3 w-3" />
               <Link href="/blog/real-life-stories" className="hover:text-emerald-600 transition-colors">{t("blog.storiesBadge")}</Link>
               <ChevronRight className="h-3 w-3" />
-              <span className="text-foreground line-clamp-1">{story.name}</span>
+              <span className="text-foreground line-clamp-1">{name}</span>
             </motion.div>
 
             <motion.div
@@ -397,26 +405,26 @@ function ApiStoryView({ story }: { story: ApiStory }) {
                     className="mt-5 sm:mt-6"
                   >
                     <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-foreground tracking-tight leading-tight">
-                      {story.name}
+                      {name}
                     </h1>
                     <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-muted-foreground">
                       {story.department && (
                         <span className="inline-flex items-center gap-1.5">
                           <GraduationCap className="h-4 w-4 text-emerald-600" />
-                          {story.department}
+                          {tr(story.department)}
                         </span>
                       )}
                       {story.university && (
                         <span className="inline-flex items-center gap-1.5">
                           <MapPin className="h-4 w-4 text-emerald-600" />
-                          {story.university}
+                          {tr(story.university)}
                         </span>
                       )}
                     </div>
                     {story.achievement && (
                       <div className="mt-4 inline-flex items-start gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-xl max-w-sm bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
                         <Award className="h-3.5 w-3.5 mt-0.5 shrink-0" />
-                        <span>{story.achievement}</span>
+                        <span>{tr(story.achievement)}</span>
                       </div>
                     )}
                   </motion.div>
@@ -434,8 +442,10 @@ function ApiStoryView({ story }: { story: ApiStory }) {
                   <div className="relative w-full max-w-[280px] sm:max-w-[320px] lg:max-w-none">
                     <div className="absolute inset-0 translate-x-2 translate-y-2 sm:translate-x-3 sm:translate-y-3 rounded-2xl bg-emerald-500/20 dark:bg-emerald-400/15" />
                     <div className="relative aspect-square rounded-2xl overflow-hidden bg-muted border border-border shadow-lg shadow-emerald-500/10">
+                      {/* The stored alt is a generated slug ("story sajnin
+                          sultana"), and never Bangla — the name reads better. */}
                       {story.coverImage ? (
-                        <img src={story.coverImage.url} alt={story.coverImage.alt ?? story.name} className="w-full h-full object-cover object-center" />
+                        <img src={story.coverImage.url} alt={name} className="w-full h-full object-cover object-center" />
                       ) : (
                         <div className="w-full h-full bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-emerald-950/60 dark:to-emerald-900/40 flex items-center justify-center">
                           <Users className="h-16 w-16 text-emerald-300 dark:text-emerald-700" />
@@ -495,13 +505,13 @@ function ApiStoryView({ story }: { story: ApiStory }) {
                   >
                     <p className="text-[11px] font-bold uppercase tracking-widest text-emerald-700 dark:text-emerald-300 mb-4 flex items-center gap-2">
                       <Award className="h-3.5 w-3.5" />
-                      {t("stories.highlights", { name: story.name.split(" ")[0] })}
+                      {t("stories.highlights", { name: givenName(name) })}
                     </p>
                     <ul className="space-y-3">
                       {story.highlights.map((h, i) => (
                         <li key={i} className="flex items-start gap-3">
                           <span className="mt-1.5 h-1.5 w-1.5 rounded-full bg-emerald-600 flex-shrink-0" />
-                          <p className="text-sm text-foreground leading-relaxed">{h}</p>
+                          <p className="text-sm text-foreground leading-relaxed">{tr(h)}</p>
                         </li>
                       ))}
                     </ul>

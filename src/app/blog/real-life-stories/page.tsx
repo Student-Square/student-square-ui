@@ -49,7 +49,7 @@ export default function RealLifeStoriesPage() {
 }
 
 function RealLifeStoriesContent() {
-  const { t, pick, num } = useLanguage();
+  const { t, pick, num, tr } = useLanguage();
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -233,11 +233,11 @@ function RealLifeStoriesContent() {
                   <div className="mt-6 flex items-center justify-between gap-4 pt-5 border-t border-border">
                     <div className="min-w-0">
                       <p className="text-sm font-bold text-foreground truncate group-hover:text-emerald-600 transition-colors">
-                        {featured.name}
+                        {tr(featured.name)}
                       </p>
                       <p className="text-xs text-muted-foreground truncate">
-                        {featured.department}
-                        {featured.university && ` · ${featured.university}`}
+                        {tr(featured.department)}
+                        {featured.university && ` · ${tr(featured.university)}`}
                       </p>
                     </div>
                     <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-600 group-hover:gap-2.5 transition-all whitespace-nowrap">

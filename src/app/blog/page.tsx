@@ -547,7 +547,7 @@ function BlogPageContent() {
                       )}
                       <div className="min-w-0 flex-1">
                         <p className="text-sm font-bold text-foreground truncate group-hover:text-emerald-600 transition-colors">
-                          {s.name}
+                          {tr(s.name)}
                         </p>
                         <p className="text-[11px] text-muted-foreground truncate flex items-center gap-1">
                           <Quote className="h-2.5 w-2.5" />

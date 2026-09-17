@@ -42,7 +42,7 @@ export const NAV_BN: Record<string, string> = {
   "/about/reports": "বার্ষিক প্রতিবেদন ও আর্থিক তথ্য",
   "/news": "সংবাদ ও গণমাধ্যম",
   "/about/archive": "আর্কাইভ",
-  "/what-we-do": "আমাদের কার্যক্রম",
+  "/what-we-do": "কার্যক্রমসমূহ",
   "/projects": "আমাদের প্রকল্পসমূহ",
   "/what-we-do/student-counselling": "শিক্ষার্থী পরামর্শসেবা",
   "/what-we-do/parent-advocacy": "অভিভাবক সহায়তা",
@@ -114,7 +114,7 @@ const CHROME: Dict = {
   followUs: { EN: "Follow Us", BN: "আমাদের সাথে থাকুন" },
   // Footer link labels
   "footer.about": { EN: "About Us", BN: "আমাদের সম্পর্কে" },
-  "footer.whatWeDo": { EN: "What We Do", BN: "আমাদের কার্যক্রম" },
+  "footer.whatWeDo": { EN: "What We Do", BN: "কার্যক্রমসমূহ" },
   "footer.join": { EN: "Join Us", BN: "যুক্ত হন" },
   "footer.contact": { EN: "Contact", BN: "যোগাযোগ" },
   "footer.blog": { EN: "Blog", BN: "ব্লগ" },
