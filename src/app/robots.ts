@@ -7,8 +7,10 @@ export default function robots(): MetadataRoute.Robots {
     rules: {
       userAgent: "*",
       allow: "/",
+      // Private areas. This keeps them out of search results; it is not access
+      // control — the API's auth() is.
+      disallow: ["/admin", "/dashboard", "/panel", "/api"],
     },
     sitemap: `${baseUrl}/sitemap.xml`,
   };
 }
-

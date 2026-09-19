@@ -62,7 +62,7 @@ export default function ExpandableCards() {
         <div className="p-0 sm:p-1 md:p-2">
           {/* Expandable Cards Row */}
           <motion.div
-            className="flex flex-col gap-4 md:min-h-[520px] md:flex-row md:gap-5 lg:min-h-[580px] xl:min-h-[620px]"
+            className="flex flex-col gap-4 md:min-h-[440px] md:flex-row md:gap-5 lg:min-h-[490px] xl:min-h-[530px]"
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.2 }}
@@ -80,7 +80,7 @@ export default function ExpandableCards() {
                   href={card.href}
                   className={cn(
                     "group relative w-full min-w-0 select-none overflow-hidden rounded-lg transition-[flex] duration-300 ease-[cubic-bezier(0.25,0.46,0.45,0.94)] sm:rounded-xl",
-                    "h-[320px] sm:h-[400px] md:h-auto",
+                    "h-[270px] sm:h-[340px] md:h-auto",
                     isExpanded ? "md:flex-[1.7]" : "md:flex-1"
                   )}
                   style={{ WebkitTapHighlightColor: "transparent" }}

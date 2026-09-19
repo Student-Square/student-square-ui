@@ -204,7 +204,11 @@ const HeroCards = () => {
   const collage = allCards.filter((c: ApiFeatureCard) => c.slot === "main_carousel");
 
   const [currentMainIndex, setCurrentMainIndex] = useState(0);
-  const isMobile = useMediaQuery("(max-width: 639px)");
+  // Three cards up to and including laptops — five panels side by side read as
+  // clutter below ~1920px. The lead panel still rotates through all five, so
+  // every caption gets its turn; the bottom row only appears on a large
+  // monitor (3xl, 1920px), where there is room for it.
+  const isWideScreen = useMediaQuery("(min-width: 1920px)");
 
   // Rotate the lead panel through all five. Declared BEFORE any early returns
   // so the hook order is identical on every render (Rules of Hooks).
@@ -235,7 +239,7 @@ const HeroCards = () => {
           <div className="lg:col-span-1"><SkeletonCard /></div>
           <div className="lg:col-span-1"><SkeletonCard /></div>
         </div>
-        {!isMobile && (
+        {isWideScreen && (
           <div className="mt-3 grid gap-3 sm:mt-4 sm:gap-4 md:mt-5 md:grid-cols-2 md:gap-5 lg:mt-6 lg:gap-6">
             <SkeletonCard />
             <SkeletonCard />
@@ -321,8 +325,8 @@ const HeroCards = () => {
         )}
       </div>
 
-      {/* Bottom row — the remaining collage panels. Hidden on mobile. */}
-      {!isMobile && (blog1 || blog2) && (
+      {/* Bottom row — the remaining collage panels. Large monitors only. */}
+      {isWideScreen && (blog1 || blog2) && (
         <div className="mt-3 grid gap-3 sm:mt-4 sm:gap-4 md:mt-5 md:grid-cols-2 md:gap-5 lg:mt-6 lg:gap-6">
           {blog1 && (
             <FeatureCard

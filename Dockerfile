@@ -35,6 +35,10 @@ RUN apk add --no-cache dumb-init
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV PORT=3000
+# Next's standalone server binds to $HOSTNAME, which Docker sets to the
+# container ID — so it would not listen on 127.0.0.1 and the HEALTHCHECK below
+# would mark a working container unhealthy forever.
+ENV HOSTNAME=0.0.0.0
 
 # `standalone` bundles only the files actually reached, so node_modules is not
 # copied wholesale.

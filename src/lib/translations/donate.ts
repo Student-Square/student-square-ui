@@ -14,6 +14,7 @@ export const DONATE: Dict = {
     EN: "In a world where collective action holds immense power, individual efforts remain invaluable. Your single donation can create ripples of change, transforming lives and building a brighter future.",
     BN: "যে পৃথিবীতে সম্মিলিত উদ্যোগের শক্তি অপরিসীম, সেখানে প্রতিটি ব্যক্তিগত প্রচেষ্টাও অমূল্য। আপনার একটি অনুদান পরিবর্তনের ঢেউ তুলতে পারে—বদলে দিতে পারে জীবন, গড়ে তুলতে পারে উজ্জ্বল ভবিষ্যৎ।",
   },
+  "donate.loading": { EN: "Opening the donation page…", BN: "অনুদানের পাতা খোলা হচ্ছে…" },
   "donate.ourImpact": { EN: "Our Impact", BN: "আমাদের প্রভাব" },
   "donate.formTitle": { EN: "Your Donation Can Change a Life", BN: "আপনার অনুদান একটি জীবন বদলে দিতে পারে" },
   "donate.donateToProject": { EN: "Donate to this project", BN: "এই প্রকল্পে অনুদান দিন" },
