@@ -18,6 +18,8 @@ export type BookFilters = {
   to?: string;
   page?: number;
   limit?: number;
+  sortBy?: string;
+  sortOrder?: "asc" | "desc";
 };
 
 const API_BASE =

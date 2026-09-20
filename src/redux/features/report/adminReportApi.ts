@@ -32,6 +32,18 @@ const adminReportApiSlice = baseApi.injectEndpoints({
       providesTags: ["AdminReports"],
     }),
 
+    /**
+     * A short-lived signed link to the stored PDF, drafts included.
+     *
+     * A lazy query rather than a plain one: it is fetched when someone asks to
+     * look at a report, and the link expires in minutes, so caching it under
+     * the report id would hand back a dead URL on the second open.
+     */
+    adminReportFileLink: build.query<{ url: string }, string>({
+      query: (id) => ({ url: `/admin/reports/${id}/file-link` }),
+      keepUnusedDataFor: 0,
+    }),
+
     adminCreateReport: build.mutation<ApiAdminReport, AdminReportWriteInput & { file: File }>({
       query: ({ file, ...fields }) => ({
         url: "/admin/reports",
@@ -64,6 +76,7 @@ const adminReportApiSlice = baseApi.injectEndpoints({
 
 export const {
   useAdminListReportsQuery,
+  useLazyAdminReportFileLinkQuery,
   useAdminCreateReportMutation,
   useAdminUpdateReportMutation,
   useAdminReplaceReportFileMutation,

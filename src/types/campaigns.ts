@@ -2,6 +2,14 @@
 
 export type CampaignStatus = "ACTIVE" | "PAUSED" | "COMPLETED" | "ARCHIVED";
 
+export type CampaignImage = {
+  /** The join row's id — what the remove endpoint takes, not the asset's. */
+  id: string;
+  caption: string | null;
+  order: number;
+  image: { id: string; url: string; alt: string | null };
+};
+
 export type ApiCampaign = {
   id: string;
   slug: string;
@@ -21,6 +29,8 @@ export type ApiCampaign = {
   videoUrl: string | null;
   vimeoVideoId: string | null;
   coverImage: { id: string; url: string; alt: string | null } | null;
+  /** Extra shots of the work; the cover above is the single card image. */
+  images?: CampaignImage[];
 };
 
 export type ApiCampaignDetail = ApiCampaign & {

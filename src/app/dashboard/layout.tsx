@@ -72,6 +72,15 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     return () => { document.body.style.overflow = original; };
   }, [mobileOpen]);
 
+  // Dashboard shell is English-only (public site language stays separate).
+  useEffect(() => {
+    const previous = document.documentElement.lang;
+    document.documentElement.lang = "en";
+    return () => {
+      document.documentElement.lang = previous;
+    };
+  }, []);
+
   if (status === "idle" || status === "loading") {
     return (
       <main className="min-h-screen flex items-center justify-center bg-background">

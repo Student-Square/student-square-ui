@@ -27,7 +27,10 @@ const csp = [
   "font-src 'self' data:",
   "media-src 'self' blob: https:",
   `connect-src 'self' ${apiOrigin}`.trim(),
-  "frame-src 'self' https://www.youtube.com https://www.youtube-nocookie.com https://player.vimeo.com https://maps.google.com https://www.google.com",
+  // blob: is the report preview — the generated PDF is fetched as a blob and
+  // shown in an iframe, so the browser's own viewer renders it without the
+  // file ever leaving the page.
+  "frame-src 'self' blob: https://www.youtube.com https://www.youtube-nocookie.com https://player.vimeo.com https://maps.google.com https://www.google.com",
   "object-src 'none'",
   "base-uri 'self'",
   "form-action 'self'",

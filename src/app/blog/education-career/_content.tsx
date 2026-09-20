@@ -6,6 +6,7 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import Header from "@/components/common/Header/Header";
 import Footer from "@/components/common/Footer/Footer";
 import Pagination from "@/components/common/Pagination";
+import { PUBLIC_PAGE_SIZE } from "@/lib/pagination";
 import { motion } from "motion/react";
 import { useGetBlogsQuery } from "@/redux/features/blogs/blogsApi";
 import type { ApiBlogListItem } from "@/types/blogs";
@@ -25,7 +26,7 @@ import {
 } from "lucide-react";
 import { useLanguage } from "@/components/i18n/LanguageProvider";
 
-const PAGE_SIZE = 9;
+const PAGE_SIZE = PUBLIC_PAGE_SIZE;
 
 type SubCategory = {
   slug: string;
@@ -459,6 +460,11 @@ export default function EducationCareerContent({ initialCategory }: Props) {
               totalPages={totalPages}
               onPageChange={setPage}
               className="mt-12"
+              labels={{
+                prev: t("common.prev"),
+                next: t("common.next"),
+                pagination: t("common.pagination"),
+              }}
             />
           )}
         </div>

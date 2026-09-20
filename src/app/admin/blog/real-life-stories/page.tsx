@@ -13,8 +13,6 @@ import type { StoryStatus } from "@/types/stories";
 import {
   Archive,
   CheckCircle,
-  ChevronLeft,
-  ChevronRight,
   Globe,
   Loader2,
   Pencil,
@@ -22,6 +20,8 @@ import {
   RotateCcw,
   Search,
 } from "lucide-react";
+import Pagination from "@/components/common/Pagination";
+import { TABLE_PAGE_SIZE } from "@/lib/pagination";
 
 type StatusFilter = StoryStatus | "ALL";
 
@@ -53,7 +53,7 @@ export default function AdminStoriesListPage() {
   const [q, setQ] = useState("");
   const [status, setStatus] = useState<StatusFilter>("ALL");
   const [page, setPage] = useState(1);
-  const limit = 20;
+  const limit = TABLE_PAGE_SIZE;
 
   const { data, isLoading, isError } = useAdminListStoriesQuery({
     page, limit, status,
@@ -220,23 +220,14 @@ export default function AdminStoriesListPage() {
             </table>
           </div>
 
-          <div className="flex flex-wrap items-center justify-between gap-3 mt-4 text-sm">
-            <span className="text-sm text-muted-foreground">
-              {total === 0 ? "0 results" : `${from}–${to} of ${total}`}
-            </span>
-            {totalPages > 1 && (
-              <div className="flex items-center gap-1">
-                <button onClick={() => setPage((p) => p - 1)} disabled={page === 1}
-                  className="inline-flex items-center justify-center w-8 h-8 rounded-md border border-border hover:bg-muted disabled:opacity-30 disabled:cursor-not-allowed transition-colors">
-                  <ChevronLeft className="h-4 w-4" />
-                </button>
-                <button onClick={() => setPage((p) => p + 1)} disabled={page === totalPages}
-                  className="inline-flex items-center justify-center w-8 h-8 rounded-md border border-border hover:bg-muted disabled:opacity-30 disabled:cursor-not-allowed transition-colors">
-                  <ChevronRight className="h-4 w-4" />
-                </button>
-              </div>
-            )}
-          </div>
+          <Pagination
+            page={page}
+            totalPages={totalPages}
+            onPageChange={setPage}
+            total={total}
+            limit={limit}
+            className="mt-4"
+          />
         </>
       )}
     </>

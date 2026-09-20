@@ -2,9 +2,12 @@
 
 import { useState } from "react";
 import {
+  useGetAdminFeedbackCountsQuery,
   useGetAdminFeedbackQuery,
   useReviewFeedbackMutation,
 } from "@/redux/features/comms/commsApi";
+import Pagination from "@/components/common/Pagination";
+import { TABLE_PAGE_SIZE } from "@/lib/pagination";
 import { formatDateTime } from "@/lib/care";
 import type { FeedbackStatus } from "@/types/comms";
 import { Loader2, MessageSquare } from "lucide-react";
@@ -19,9 +22,18 @@ const FILTERS: { label: string; value: FeedbackStatus | "ALL" }[] = [
 
 export default function AdminFeedbackPage() {
   const [status, setStatus] = useState<FeedbackStatus | "ALL">("NEW");
-  const { data, isFetching } = useGetAdminFeedbackQuery(
-    status === "ALL" ? undefined : { status }
-  );
+  const [page, setPage] = useState(1);
+  // The endpoint has always been paginated; this page just never asked for a
+  // page, so anything past the first was silently invisible.
+  const { data, isFetching } = useGetAdminFeedbackQuery({
+    ...(status === "ALL" ? {} : { status }),
+    page: String(page),
+    limit: String(TABLE_PAGE_SIZE),
+  });
+  const { data: counts } = useGetAdminFeedbackCountsQuery();
+
+  const filterCount = (value: FeedbackStatus | "ALL") =>
+    value === "ALL" ? counts?.total : counts?.[value];
 
   return (
     <div className="space-y-6">
@@ -37,14 +49,28 @@ export default function AdminFeedbackPage() {
           <button
             key={f.value}
             type="button"
-            onClick={() => setStatus(f.value)}
-            className={`rounded-full px-3 py-1.5 text-xs font-semibold transition-colors ${
+            onClick={() => {
+              setStatus(f.value);
+              setPage(1);
+            }}
+            className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold transition-colors ${
               status === f.value
                 ? "bg-emerald-600 text-white"
                 : "border border-border text-muted-foreground hover:text-foreground"
             }`}
           >
             {f.label}
+            {filterCount(f.value) != null && (
+              <span
+                className={`min-w-[1.1rem] px-1 rounded-full text-[10px] font-bold tabular-nums ${
+                  status === f.value
+                    ? "bg-white/20 text-white"
+                    : "bg-muted text-foreground"
+                }`}
+              >
+                {filterCount(f.value)}
+              </span>
+            )}
           </button>
         ))}
       </div>
@@ -57,11 +83,20 @@ export default function AdminFeedbackPage() {
           <p className="mt-3 text-sm text-muted-foreground">Nothing here.</p>
         </div>
       ) : (
-        <ul className="space-y-3">
-          {data.data.map((item) => (
-            <FeedbackCard key={item.id} item={item} />
-          ))}
-        </ul>
+        <>
+          <ul className="space-y-3">
+            {data.data.map((item) => (
+              <FeedbackCard key={item.id} item={item} />
+            ))}
+          </ul>
+          <Pagination
+            page={data.meta.page}
+            totalPages={Math.max(1, Math.ceil(data.meta.total / data.meta.limit))}
+            onPageChange={setPage}
+            total={data.meta.total}
+            limit={data.meta.limit}
+          />
+        </>
       )}
     </div>
   );

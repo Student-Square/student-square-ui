@@ -6,6 +6,7 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import Header from "@/components/common/Header/Header";
 import Footer from "@/components/common/Footer/Footer";
 import Pagination from "@/components/common/Pagination";
+import { PUBLIC_PAGE_SIZE } from "@/lib/pagination";
 import { motion } from "motion/react";
 import {
   useGetBlogsQuery,
@@ -27,7 +28,7 @@ import {
 import { useLanguage } from "@/components/i18n/LanguageProvider";
 
 type SortOption = "newest" | "oldest" | "title-asc" | "title-desc";
-const PAGE_SIZE = 6;
+const PAGE_SIZE = PUBLIC_PAGE_SIZE;
 
 /** Dictionary keys for the sort menu. */
 const sortLabels: Record<SortOption, string> = {
@@ -476,6 +477,11 @@ function BlogPageContent() {
               totalPages={totalPages}
               onPageChange={setPage}
               className="mt-12"
+              labels={{
+                prev: t("common.prev"),
+                next: t("common.next"),
+                pagination: t("common.pagination"),
+              }}
             />
           )}
         </div>

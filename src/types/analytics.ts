@@ -23,6 +23,11 @@ export type AnalyticsOverview = {
     pagesPerSession: number;
     weeklyTrend: WeekPoint[];
     tracked: boolean;
+    /** Most-viewed pages in the range, busiest first. */
+    topPages: TopPage[];
+    /** Most-clicked links in the range, busiest first. */
+    topClicks: TopClick[];
+    totalClicks: number;
   };
   engagement: {
     assessmentsTaken: number;
@@ -53,4 +58,16 @@ export type AnalyticsOverview = {
     supportTickets: number | null;
     satisfactionRating: number | null;
   };
+};
+
+export type TopPage = { path: string; views: number; visitors: number };
+
+export type TopClick = {
+  /** Pathname for our own pages; origin + path for other sites. */
+  target: string;
+  external: boolean;
+  clicks: number;
+  visitors: number;
+  /** The link text it was most often clicked under. */
+  label: string | null;
 };

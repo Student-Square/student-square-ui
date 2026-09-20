@@ -8,6 +8,7 @@ import type {
   CampaignChannel,
   CommsVariable,
   Feedback,
+  FeedbackCounts,
   FeedbackKind,
   FeedbackStatus,
   NotificationPreference,
@@ -118,7 +119,10 @@ const commsApi = baseApi.injectEndpoints({
       }
     >({
       query: (body) => ({ url: "/feedback", method: "POST", body }),
-      invalidatesTags: [{ type: "Feedback", id: "MINE" }],
+      invalidatesTags: [
+        { type: "Feedback", id: "MINE" },
+        { type: "Feedback", id: "ADMIN" },
+      ],
     }),
 
     getMyFeedback: build.query<Feedback[], void>({
@@ -128,9 +132,20 @@ const commsApi = baseApi.injectEndpoints({
 
     getAdminFeedback: build.query<
       { meta: { total: number; page: number; limit: number }; data: Feedback[] },
-      { status?: FeedbackStatus; kind?: FeedbackKind; search?: string; page?: string } | void
+      {
+        status?: FeedbackStatus;
+        kind?: FeedbackKind;
+        search?: string;
+        page?: string;
+        limit?: string;
+      } | void
     >({
       query: (args) => ({ url: "/admin/feedback", params: args ?? undefined }),
+      providesTags: [{ type: "Feedback", id: "ADMIN" }],
+    }),
+
+    getAdminFeedbackCounts: build.query<FeedbackCounts, void>({
+      query: () => ({ url: "/admin/feedback/counts" }),
       providesTags: [{ type: "Feedback", id: "ADMIN" }],
     }),
 
@@ -273,6 +288,30 @@ const commsApi = baseApi.injectEndpoints({
       { type: string; channel: "IN_APP" | "EMAIL"; enabled: boolean }
     >({
       query: (body) => ({ url: "/comms/preferences", method: "PATCH", body }),
+      async onQueryStarted({ type, channel, enabled }, { dispatch, queryFulfilled }) {
+        // `commsApi.util`, not `baseApi.util`: the endpoint being patched is
+        // declared in this same `injectEndpoints` call, so asking baseApi to
+        // resolve its name mid-definition collapses the endpoint union to
+        // `never` and the draft to `InfiniteData<never, never>`. The injected
+        // slice below is fully typed by the time this callback ever runs.
+        const patch = dispatch(
+          commsApi.util.updateQueryData(
+            "getNotificationPreferences",
+            undefined,
+            (draft: NotificationPreference[]) => {
+              const row = draft.find((p) => p.type === type);
+              if (!row) return;
+              if (channel === "IN_APP") row.inApp = enabled;
+              else row.email = enabled;
+            }
+          )
+        );
+        try {
+          await queryFulfilled;
+        } catch {
+          patch.undo();
+        }
+      },
       invalidatesTags: [{ type: "Comms", id: "PREFERENCES" }],
     }),
 
@@ -320,7 +359,13 @@ const commsApi = baseApi.injectEndpoints({
 
     // ----- campaigns -----
 
-    getCampaigns: build.query<Campaign[], void>({
+    // Name qualified on purpose. Every slice injects into the one `baseApi`,
+    // so endpoint names share a single global namespace: a plain `getCampaigns`
+    // collided with the donation-fund list in campaignsApi.ts, and RTK Query
+    // silently drops the second definition (it warns, then `continue`s), so
+    // whichever module imported first won. Keep bulk-message endpoints that
+    // share a noun with the donation domain prefixed.
+    getCommsCampaigns: build.query<Campaign[], void>({
       query: () => ({ url: "/admin/comms/campaigns" }),
       providesTags: [{ type: "Comms", id: "CAMPAIGNS" }],
     }),
@@ -460,6 +505,7 @@ export const {
   useSubmitFeedbackMutation,
   useGetMyFeedbackQuery,
   useGetAdminFeedbackQuery,
+  useGetAdminFeedbackCountsQuery,
   useReviewFeedbackMutation,
   useGetResourcesQuery,
   useGetResourceCategoriesQuery,
@@ -479,7 +525,7 @@ export const {
   useGetCommsVariablesQuery,
   useCreateTemplateMutation,
   useUpdateTemplateMutation,
-  useGetCampaignsQuery,
+  useGetCommsCampaignsQuery,
   useGetCampaignQuery,
   usePreviewAudienceMutation,
   useCreateCampaignMutation,

@@ -9,9 +9,12 @@ import {
   useAdminListReportsQuery,
   useAdminReplaceReportFileMutation,
   useAdminUpdateReportMutation,
+  useLazyAdminReportFileLinkQuery,
 } from "@/redux/features/report/adminReportApi";
+import { usePdfPreview } from "@/components/common/PdfPreview";
 import CoverImageUpload from "@/components/editor/CoverImageUpload";
 import Pagination from "@/components/common/Pagination";
+import { CARD_PAGE_SIZE } from "@/lib/pagination";
 import {
   REPORT_MAX_FILE_BYTES,
   REPORT_SECTIONS,
@@ -33,7 +36,7 @@ import {
   Upload,
 } from "lucide-react";
 
-const PAGE_SIZE = 12;
+const PAGE_SIZE = CARD_PAGE_SIZE;
 
 type FormState = {
   title: string;
@@ -110,6 +113,31 @@ export default function AdminReportsPage() {
   const [updateReport, { isLoading: updating }] = useAdminUpdateReportMutation();
   const [replaceFile, { isLoading: replacing }] = useAdminReplaceReportFileMutation();
   const [deleteReport] = useAdminDeleteReportMutation();
+  const [fetchFileLink] = useLazyAdminReportFileLinkQuery();
+  const { openPdfPreview, pdfPreview } = usePdfPreview();
+
+  /**
+   * The uploaded PDF, in a frame.
+   *
+   * The signed link goes to the frame directly rather than being fetched into
+   * a blob: it is already authorised, and fetching it would need the bucket to
+   * allow this origin in CORS, which framing does not.
+   */
+  const previewReport = async (report: ApiAdminReport) => {
+    try {
+      const { url } = await fetchFileLink(report.id).unwrap();
+      openPdfPreview({
+        url,
+        fileName: `${report.slug}.pdf`,
+        title: report.title,
+        subtitle: `${reportCategoryLabel(report.category)} · ${report.year}${
+          report.published ? "" : " · draft"
+        }`,
+      });
+    } catch {
+      toast.error("Could not open the report");
+    }
+  };
   const saving = creating || updating || replacing;
 
   // null = form closed, "new" = creating, a report = editing that report.
@@ -214,6 +242,7 @@ export default function AdminReportsPage() {
 
   return (
     <div className="space-y-6">
+      {pdfPreview}
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
@@ -408,6 +437,9 @@ export default function AdminReportsPage() {
                   {reportCategoryLabel(report.category)} · {report.year} · {formatBytes(report.fileSizeBytes)}
                 </p>
                 <div className="mt-auto flex items-center gap-1.5 pt-3">
+                  <IconButton title="Preview PDF" onClick={() => void previewReport(report)}>
+                    <FileText className="h-4 w-4" />
+                  </IconButton>
                   <IconButton title="Edit" onClick={() => openEdit(report)}>
                     <Pencil className="h-4 w-4" />
                   </IconButton>

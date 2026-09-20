@@ -10,6 +10,7 @@ import {
 } from "@/redux/features/magazine/adminMagazineApi";
 import CoverImageUpload from "@/components/editor/CoverImageUpload";
 import Pagination from "@/components/common/Pagination";
+import { CARD_PAGE_SIZE } from "@/lib/pagination";
 import {
   Download,
   Eye,
@@ -21,7 +22,7 @@ import {
   Upload,
 } from "lucide-react";
 
-const PAGE_SIZE = 12;
+const PAGE_SIZE = CARD_PAGE_SIZE;
 
 function formatBytes(bytes: number | null) {
   if (!bytes) return "—";

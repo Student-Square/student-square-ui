@@ -10,6 +10,7 @@ import {
 } from "@/redux/features/events/adminEventsApi";
 import CoverImageUpload from "@/components/editor/CoverImageUpload";
 import Pagination from "@/components/common/Pagination";
+import { CARD_PAGE_SIZE } from "@/lib/pagination";
 import type { EventMode } from "@/types/events";
 import {
   Calendar,
@@ -28,7 +29,7 @@ const MODE_OPTIONS: Array<{ value: EventMode; label: string }> = [
   { value: "HYBRID", label: "Hybrid" },
 ];
 
-const PAGE_SIZE = 12;
+const PAGE_SIZE = CARD_PAGE_SIZE;
 
 function formatDateTime(iso: string) {
   return new Date(iso).toLocaleString("en-GB", {

@@ -6,7 +6,10 @@ import { useSelector } from "react-redux";
 import { toast } from "sonner";
 import { motion } from "motion/react";
 import { selectCurrentUser } from "@/redux/features/auth/authSlice";
-import { useUpdateProfileMutation, useUploadAvatarMutation } from "@/redux/features/profile/profileApi";
+import MembershipFields, {
+  useMembershipDraft,
+} from "@/components/profile/MembershipFields";
+import { useUpdateMembershipMutation, useUpdateProfileMutation, useUploadAvatarMutation } from "@/redux/features/profile/profileApi";
 import {
   Camera,
   Check,
@@ -23,6 +26,9 @@ export default function AdminProfilePage() {
 
   const [updateProfile, { isLoading: isSaving }] = useUpdateProfileMutation();
   const [uploadAvatar, { isLoading: isUploading }] = useUploadAvatarMutation();
+  const [updateMembership, { isLoading: isSavingMembership }] =
+    useUpdateMembershipMutation();
+  const membership = useMembershipDraft(user);
 
   const avatarInputRef = useRef<HTMLInputElement>(null);
 
@@ -83,6 +89,16 @@ export default function AdminProfilePage() {
         profession: f(profession),
         workplace: f(workplace),
       }).unwrap();
+
+      // One Save, two records: the public profile and the registration
+      // answers. Sequential rather than parallel so a rejected registration
+      // field (a bad phone, missing guardian details) surfaces on its own
+      // instead of racing the profile toast.
+      const membershipPatch = membership.buildPatch();
+      if (Object.keys(membershipPatch).length > 0) {
+        await updateMembership(membershipPatch).unwrap();
+      }
+
       setProfileSaved(true);
       toast.success("Profile saved");
       setTimeout(() => setProfileSaved(false), 2000);
@@ -190,7 +206,9 @@ export default function AdminProfilePage() {
             </span>
             <div>
               <h2 className="text-sm font-bold text-foreground">Personal Information</h2>
-              <p className="text-xs text-muted-foreground">Update your public profile details.</p>
+              <p className="text-xs text-muted-foreground">
+                Your public details and everything you gave us at signup.
+              </p>
             </div>
           </div>
 
@@ -308,12 +326,18 @@ export default function AdminProfilePage() {
               />
             </Field>
 
+            <MembershipFields
+              user={user}
+              draft={membership.draft}
+              set={membership.set}
+            />
+
             <button
               type="submit"
-              disabled={isSaving}
+              disabled={isSaving || isSavingMembership}
               className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-600 text-white text-sm font-semibold hover:bg-emerald-700 transition-colors disabled:opacity-60 shadow-sm"
             >
-              {isSaving
+              {isSaving || isSavingMembership
                 ? <Loader2 className="h-4 w-4 animate-spin" />
                 : profileSaved
                 ? <Check className="h-4 w-4" />

@@ -24,10 +24,14 @@ import {
 /**
  * Per-account MFA enable / disable + short setup guide.
  *
- * Policy (server):
- * - MFA_ENFORCE=true (default): all non-MEMBER roles must enrol; cannot disable
- * - MFA_ENFORCE=false: MFA optional for everyone; anyone can disable
- * - MEMBER: always optional
+ * It says what applies to THIS account and nothing about the platform.
+ *
+ * It used to print the site-wide policy, naming the server setting and, when
+ * enforcement was off, telling every signed-in visitor that no second factor
+ * stood behind any account. That is free reconnaissance: it tells someone
+ * holding one stolen password exactly how far it gets them. Whether a
+ * particular role is compelled to keep MFA on is still shown, because that is
+ * the reader's own constraint and they need it to understand the button.
  */
 export default function MfaSecurityCard() {
   const user = useSelector(selectCurrentUser);
@@ -48,7 +52,6 @@ export default function MfaSecurityCard() {
 
   const enabled = Boolean(user.mfaEnabled);
   const required = Boolean(user.mfaRequired);
-  const enforced = user.mfaEnforced !== false;
   const busy = starting || confirming || disabling || isFetching;
 
   async function startSetup() {
@@ -155,23 +158,12 @@ export default function MfaSecurityCard() {
           <li>Save the recovery codes (shown once).</li>
           <li>At next login, enter email, password, then the 6-digit code.</li>
         </ol>
-        <p className="text-xs text-muted-foreground pt-1">
-          Policy:{" "}
-          {enforced ? (
-            <>
-              MFA is <strong className="text-foreground">required for staff</strong>{" "}
-              (admin, counsellor, mentor, etc.). Members may turn it on or off.
-            </>
-          ) : (
-            <>
-              Platform enforcement is <strong className="text-foreground">off</strong>{" "}
-              (`MFA_ENFORCE=false`) — MFA is optional for everyone.
-            </>
-          )}
-          {required && (
-            <> Your role currently <strong className="text-foreground">must</strong> keep MFA on.</>
-          )}
-        </p>
+        {required && (
+          <p className="text-xs text-muted-foreground pt-1">
+            Your role <strong className="text-foreground">must</strong> keep
+            two-factor authentication on, so it cannot be turned off here.
+          </p>
+        )}
       </div>
 
       {error && (

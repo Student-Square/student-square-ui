@@ -76,6 +76,14 @@ export type FeedbackKind =
 
 export type FeedbackStatus = "NEW" | "REVIEWED" | "ACTIONED" | "DISMISSED";
 
+export type FeedbackCounts = {
+  NEW: number;
+  REVIEWED: number;
+  ACTIONED: number;
+  DISMISSED: number;
+  total: number;
+};
+
 export type Feedback = {
   id: string;
   kind: FeedbackKind;

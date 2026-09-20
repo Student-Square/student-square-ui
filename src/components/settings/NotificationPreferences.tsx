@@ -7,7 +7,9 @@ import {
 } from "@/redux/features/comms/commsApi";
 import { selectUserRole } from "@/redux/features/auth/authSlice";
 import { metaFor, isStaffType, TONE_CLASS } from "@/components/notifications/notificationMeta";
+import { Switch } from "@/components/ui/switch";
 import { Loader2, Lock } from "lucide-react";
+import { toast } from "sonner";
 
 /**
  * Per-type in-app / email switches — FR-18-009.
@@ -18,7 +20,8 @@ import { Loader2, Lock } from "lucide-react";
  */
 export default function NotificationPreferences() {
   const role = useSelector(selectUserRole);
-  const { data: preferences, isLoading } = useGetNotificationPreferencesQuery();
+  const { data: preferences, isLoading, isError, isFetching } =
+    useGetNotificationPreferencesQuery();
   const [setPreference] = useSetNotificationPreferenceMutation();
 
   // `role` is null for a moment while /me resolves — don't flash staff rows.
@@ -28,7 +31,22 @@ export default function NotificationPreferences() {
     ? (preferences ?? []).filter((p) => isStaffType(p.type))
     : [];
 
-  if (isLoading) {
+  const onChange = async (
+    type: string,
+    channel: "IN_APP" | "EMAIL",
+    enabled: boolean
+  ) => {
+    try {
+      await setPreference({ type, channel, enabled }).unwrap();
+    } catch (err) {
+      toast.error(
+        (err as { data?: { message?: string } })?.data?.message ??
+          "Could not update that notification setting"
+      );
+    }
+  };
+
+  if (isLoading && !preferences) {
     return (
       <div className="flex justify-center py-12">
         <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
@@ -36,19 +54,27 @@ export default function NotificationPreferences() {
     );
   }
 
+  if (isError && !preferences) {
+    return (
+      <p className="text-sm text-red-600 py-6">
+        Failed to load notification preferences. Refresh and try again.
+      </p>
+    );
+  }
+
   return (
-    <div className="space-y-6">
+    <div className={`space-y-6 ${isFetching ? "opacity-90" : ""}`}>
       <PreferenceTable
         title="My notifications"
         rows={personal}
-        onChange={(type, channel, enabled) => setPreference({ type, channel, enabled })}
+        onChange={onChange}
       />
       {staffOnly.length > 0 && (
         <PreferenceTable
           title="Staff alerts"
           description="Things that need someone on the team to act."
           rows={staffOnly}
-          onChange={(type, channel, enabled) => setPreference({ type, channel, enabled })}
+          onChange={onChange}
         />
       )}
     </div>
@@ -64,7 +90,11 @@ function PreferenceTable({
   title: string;
   description?: string;
   rows: { type: string; locked: boolean; inApp: boolean; email: boolean }[];
-  onChange: (type: string, channel: "IN_APP" | "EMAIL", enabled: boolean) => void;
+  onChange: (
+    type: string,
+    channel: "IN_APP" | "EMAIL",
+    enabled: boolean
+  ) => void;
 }) {
   if (rows.length === 0) return null;
 
@@ -77,10 +107,10 @@ function PreferenceTable({
         )}
       </div>
 
-      <div className="grid grid-cols-[1fr_auto_auto] gap-3 px-4 py-2 border-b border-border bg-muted/40 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+      <div className="grid grid-cols-[minmax(0,1fr)_4.5rem_4.5rem] gap-4 px-4 py-2 border-b border-border bg-muted/40 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
         <span>Notification</span>
-        <span className="w-12 text-center">In app</span>
-        <span className="w-12 text-center">Email</span>
+        <span className="text-center">In app</span>
+        <span className="text-center">Email</span>
       </div>
 
       {rows.map((row) => {
@@ -88,7 +118,7 @@ function PreferenceTable({
         return (
           <div
             key={row.type}
-            className="grid grid-cols-[1fr_auto_auto] gap-3 items-center px-4 py-3 border-b border-border last:border-0"
+            className="grid grid-cols-[minmax(0,1fr)_4.5rem_4.5rem] gap-4 items-center px-4 py-3 border-b border-border last:border-0"
           >
             <div className="min-w-0 flex items-center gap-2.5">
               <span
@@ -108,57 +138,25 @@ function PreferenceTable({
                 )}
               </p>
             </div>
-            <div className="w-12 flex justify-center">
-              <Toggle
+            <div className="flex justify-center">
+              <Switch
                 checked={row.inApp}
                 disabled={row.locked}
-                label={`${label} in app`}
-                onChange={(v) => onChange(row.type, "IN_APP", v)}
+                aria-label={`${label} in app`}
+                onCheckedChange={(v) => onChange(row.type, "IN_APP", v)}
               />
             </div>
-            <div className="w-12 flex justify-center">
-              <Toggle
+            <div className="flex justify-center">
+              <Switch
                 checked={row.email}
                 disabled={row.locked}
-                label={`${label} by email`}
-                onChange={(v) => onChange(row.type, "EMAIL", v)}
+                aria-label={`${label} by email`}
+                onCheckedChange={(v) => onChange(row.type, "EMAIL", v)}
               />
             </div>
           </div>
         );
       })}
     </section>
-  );
-}
-
-function Toggle({
-  checked,
-  disabled,
-  label,
-  onChange,
-}: {
-  checked: boolean;
-  disabled?: boolean;
-  label: string;
-  onChange: (next: boolean) => void;
-}) {
-  return (
-    <button
-      type="button"
-      role="switch"
-      aria-checked={checked}
-      aria-label={label}
-      disabled={disabled}
-      onClick={() => onChange(!checked)}
-      className={`w-10 h-[1.35rem] rounded-full relative transition-colors ${
-        checked ? "bg-emerald-600" : "bg-muted-foreground/30"
-      } ${disabled ? "opacity-40 cursor-not-allowed" : ""}`}
-    >
-      <span
-        className={`absolute top-0.5 h-[1.05rem] w-[1.05rem] rounded-full bg-white shadow transition-transform ${
-          checked ? "translate-x-[1.35rem]" : "translate-x-0.5"
-        }`}
-      />
-    </button>
   );
 }

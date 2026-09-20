@@ -3,6 +3,7 @@
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import Header from "@/components/common/Header/Header";
+import { HERO_TOP_SCRIM } from "@/components/common/Header/navbarHeight";
 import Footer from "@/components/common/Footer/Footer";
 import { motion } from "motion/react";
 import {
@@ -33,8 +34,10 @@ export default function ProjectDetailPage() {
   if (isLoading) {
     return (
       <main className="min-h-screen">
-        <Header />
-        <div className="mt-12 sm:mt-14 lg:mt-16 h-[40vh] min-h-[240px] w-full animate-pulse bg-muted" />
+        <Header overDarkHero />
+        <div className="relative left-1/2 w-screen -translate-x-1/2">
+          <div className="h-[30vh] sm:h-[40vh] md:h-[50vh] lg:h-[60vh] xl:h-[70vh] min-h-[200px] max-h-[700px] w-full animate-pulse bg-muted" />
+        </div>
         <section className="bg-background py-12 lg:py-16">
           <div className="mx-auto max-w-3xl px-6 sm:px-10 lg:px-8 space-y-4">
             <div className="h-4 w-1/3 animate-pulse rounded bg-muted" />
@@ -81,27 +84,30 @@ export default function ProjectDetailPage() {
 
   return (
     <main className="min-h-screen">
-      <Header />
+      <Header overDarkHero />
 
-      {/* Hero */}
-      <section className="relative mt-12 sm:mt-14 lg:mt-16 h-[40vh] min-h-[240px] w-full overflow-hidden bg-muted">
-        {project.coverImage && (
-          <img
-            src={project.coverImage.url}
-            alt={project.coverImage.alt ?? title}
-            className="absolute inset-0 h-full w-full object-cover"
-          />
-        )}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/35 to-black/10" />
-        <div className="absolute bottom-0 left-0 px-6 pb-8 sm:px-10 lg:px-16 max-w-3xl">
-          <motion.h1
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white leading-snug"
-          >
-            {title}
-          </motion.h1>
+      {/* Full-bleed cover — runs to the top under the transparent navbar */}
+      <section className="relative left-1/2 w-screen -translate-x-1/2">
+        <div className="relative h-[30vh] sm:h-[40vh] md:h-[50vh] lg:h-[60vh] xl:h-[70vh] min-h-[200px] max-h-[700px] overflow-hidden bg-muted">
+          {project.coverImage && (
+            <img
+              src={project.coverImage.url}
+              alt={project.coverImage.alt ?? title}
+              className="absolute inset-0 h-full w-full object-cover"
+            />
+          )}
+          <div className={HERO_TOP_SCRIM} />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/35 to-black/10" />
+          <div className="absolute bottom-0 left-0 px-6 pb-8 sm:px-10 lg:px-16 max-w-3xl">
+            <motion.h1
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6 }}
+              className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white leading-snug"
+            >
+              {title}
+            </motion.h1>
+          </div>
         </div>
       </section>
 

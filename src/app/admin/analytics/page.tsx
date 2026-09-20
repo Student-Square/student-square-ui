@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useGetAnalyticsOverviewQuery } from "@/redux/features/analytics/analyticsApi";
-import type { WeekPoint } from "@/types/analytics";
+import type { TopClick, TopPage, WeekPoint } from "@/types/analytics";
 import {
   Area,
   AreaChart,
@@ -14,10 +14,12 @@ import {
 import {
   BarChart3,
   BookOpen,
+  ExternalLink,
   Globe,
   GraduationCap,
   Loader2,
   MessageSquareText,
+  MousePointerClick,
   TrendingUp,
   Users,
 } from "lucide-react";
@@ -112,6 +114,38 @@ export default function AdminAnalyticsPage() {
             <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
               <Breakdown title="Traffic source" data={data.traffic.trafficSource} />
               <Breakdown title="Device" data={data.traffic.deviceBreakdown} />
+            </div>
+          </Section>
+
+          {/* 2b. What visitors open and click */}
+          <Section icon={<MousePointerClick className="h-4 w-4" />} title="Most Visited Pages & Most Clicked Links">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <RankedList
+                title="Most visited pages"
+                unit="view"
+                empty="No page views in this range yet."
+                rows={data.traffic.topPages.map((p: TopPage) => ({
+                  key: p.path,
+                  primary: p.path,
+                  href: p.path,
+                  count: p.views,
+                  visitors: p.visitors,
+                }))}
+              />
+              <RankedList
+                title={`Most clicked links${data.traffic.totalClicks ? ` · ${data.traffic.totalClicks} click${data.traffic.totalClicks === 1 ? "" : "s"}` : ""}`}
+                unit="click"
+                empty="No link clicks recorded yet — tracking starts from this release."
+                rows={data.traffic.topClicks.map((c: TopClick) => ({
+                  key: c.target,
+                  primary: c.label || c.target,
+                  secondary: c.label ? c.target : undefined,
+                  href: c.target,
+                  external: c.external,
+                  count: c.clicks,
+                  visitors: c.visitors,
+                }))}
+              />
             </div>
           </Section>
 
@@ -304,6 +338,79 @@ function Breakdown({ title, data }: { title: string; data: Record<string, number
             </div>
           ))}
       </div>
+    </div>
+  );
+}
+
+type RankedRow = {
+  key: string;
+  primary: string;
+  secondary?: string;
+  href: string;
+  external?: boolean;
+  count: number;
+  visitors: number;
+};
+
+/** Top-N list with a bar scaled to the leader, so the gap between #1 and #5 reads at a glance. */
+function RankedList({
+  title,
+  unit,
+  empty,
+  rows,
+}: {
+  title: string;
+  unit: string;
+  empty: string;
+  rows: RankedRow[];
+}) {
+  const max = rows[0]?.count ?? 0;
+
+  return (
+    <div className="min-w-0">
+      <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-2">{title}</p>
+      {rows.length === 0 ? (
+        <p className="text-xs text-muted-foreground">{empty}</p>
+      ) : (
+        <ol className="space-y-2.5">
+          {rows.map((r, i) => (
+            <li key={r.key} className="text-xs">
+              <div className="flex items-baseline gap-2">
+                <span className="w-4 shrink-0 text-right font-semibold text-muted-foreground tabular-nums">{i + 1}</span>
+                <a
+                  href={r.href}
+                  target={r.external ? "_blank" : undefined}
+                  rel={r.external ? "noopener noreferrer" : undefined}
+                  title={r.secondary ? `${r.primary} — ${r.secondary}` : r.primary}
+                  className="min-w-0 flex-1 truncate font-medium text-foreground hover:text-emerald-600 hover:underline"
+                >
+                  {r.primary}
+                  {r.external && <ExternalLink className="inline h-3 w-3 ml-1 -mt-0.5 text-muted-foreground" />}
+                </a>
+                <span className="shrink-0 font-semibold text-foreground tabular-nums">
+                  {r.count.toLocaleString()} <span className="font-normal text-muted-foreground">{unit}{r.count === 1 ? "" : "s"}</span>
+                </span>
+              </div>
+              {r.secondary && (
+                <p className="ml-6 truncate font-mono text-[10px] text-muted-foreground" title={r.secondary}>
+                  {r.secondary}
+                </p>
+              )}
+              <div className="ml-6 mt-1 flex items-center gap-2">
+                <div className="flex-1 h-1.5 rounded-full bg-muted overflow-hidden">
+                  <div
+                    className="h-full bg-emerald-500 rounded-full"
+                    style={{ width: `${max > 0 ? (r.count / max) * 100 : 0}%` }}
+                  />
+                </div>
+                <span className="shrink-0 text-[10px] text-muted-foreground tabular-nums">
+                  {r.visitors.toLocaleString()} visitor{r.visitors === 1 ? "" : "s"}
+                </span>
+              </div>
+            </li>
+          ))}
+        </ol>
+      )}
     </div>
   );
 }

@@ -1,10 +1,19 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import Image from "next/image";
+import { useParams, useRouter } from "next/navigation";
+import { toast } from "sonner";
 import {
+  Archive,
   ArrowLeft,
+  CheckCircle2,
+  ExternalLink,
+  ImageOff,
   Loader2,
+  Pencil,
+  Power,
   Users,
   HandCoins,
   TrendingUp,
@@ -16,6 +25,14 @@ import {
   Target,
 } from "lucide-react";
 import { useGetProjectStatsQuery } from "@/redux/features/donations/adminDonationsApi";
+import {
+  useActivateCampaignMutation,
+  useArchiveCampaignMutation,
+  useCompleteCampaignMutation,
+  useGetAdminCampaignQuery,
+} from "@/redux/features/campaigns/adminCampaignsApi";
+import ProjectModal from "@/app/admin/projects/ProjectModal";
+import type { CampaignStatus } from "@/types/campaigns";
 import type { DonationStatus } from "@/types/donations";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8080/api/v1";
@@ -33,10 +50,66 @@ const statusStyle: Record<DonationStatus, string> = {
   REFUNDED: "bg-muted text-muted-foreground",
 };
 
+/** Same badge colours as the projects list, so a status reads alike on both. */
+const campaignStatusStyle: Record<CampaignStatus, string> = {
+  ACTIVE: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300",
+  PAUSED: "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300",
+  COMPLETED: "bg-sky-100 text-sky-700 dark:bg-sky-900/30 dark:text-sky-300",
+  ARCHIVED: "bg-muted text-muted-foreground",
+};
+
 export default function ProjectDonationDetailsPage() {
   const params = useParams<{ campaignId: string }>();
   const campaignId = params.campaignId;
+  const router = useRouter();
   const { data, isLoading, isError } = useGetProjectStatsQuery(campaignId, { pollingInterval: 60_000 });
+
+  /**
+   * The record itself, alongside the stats.
+   *
+   * The stats payload carries a copy of the project, but it is tagged
+   * `AdminDonations` — activating or archiving invalidates `AdminCampaigns`,
+   * so the copy would sit stale until the 60s poll. This query is the one
+   * those mutations refresh, and it is also the only source of the cover
+   * image, which the stats endpoint does not select.
+   */
+  const { data: detail } = useGetAdminCampaignQuery(campaignId);
+  const [activate] = useActivateCampaignMutation();
+  const [complete] = useCompleteCampaignMutation();
+  const [archive] = useArchiveCampaignMutation();
+  const [editing, setEditing] = useState(false);
+
+  const onActivate = async () => {
+    try {
+      await activate(campaignId).unwrap();
+      toast.success("Project activated");
+    } catch {
+      /* baseApi toasts the failure */
+    }
+  };
+
+  const onComplete = async (title: string) => {
+    if (!confirm(`Mark "${title}" complete? It stops taking gifts but stays visible.`)) return;
+    try {
+      await complete(campaignId).unwrap();
+      toast.success("Project marked complete");
+    } catch {}
+  };
+
+  const onArchive = async (title: string) => {
+    // Archive, not delete — gifts already recorded against it must keep a home.
+    if (
+      !confirm(
+        `Archive "${title}"? It is hidden from the public site; donations already recorded are kept.`
+      )
+    )
+      return;
+    try {
+      await archive(campaignId).unwrap();
+      toast.success("Project archived");
+      router.push("/admin/projects");
+    } catch {}
+  };
 
   if (isLoading)
     return (
@@ -56,21 +129,48 @@ export default function ProjectDonationDetailsPage() {
   const trendMax = Math.max(1, ...trend.map((t) => t.total));
   const methodMax = Math.max(1, ...perMethod.map((m) => m.total));
 
+  // The record where it is authoritative, the stats copy until it arrives.
+  const title = detail?.title ?? campaign.title;
+  const summary = detail?.summary ?? campaign.summary;
+  const slug = detail?.slug ?? campaign.slug;
+  const startDate = detail?.startDate ?? campaign.startDate;
+  const endDate = detail?.endDate ?? campaign.endDate;
+  const status = (detail?.status ?? campaign.status) as CampaignStatus;
+  const cover = detail?.coverImage;
+
   return (
     <div className="space-y-6 max-w-6xl 2xl:max-w-none">
       <BackLink />
 
+      {editing && <ProjectModal campaignId={campaignId} onClose={() => setEditing(false)} />}
+
       {/* Header */}
       <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight text-foreground">{campaign.title}</h1>
-          <p className="mt-1 max-w-2xl text-sm text-muted-foreground">{campaign.summary}</p>
-          <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-            <span className={`rounded-full px-2 py-0.5 font-bold ${campaign.status === "ACTIVE" ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300" : "bg-muted text-muted-foreground"}`}>
-              {campaign.status}
-            </span>
-            {campaign.startDate && <span>Opens {fmtDate(campaign.startDate)}</span>}
-            {campaign.endDate && <span>· Closes {fmtDate(campaign.endDate)}</span>}
+        <div className="flex min-w-0 flex-wrap items-start gap-4">
+          <span className="relative flex h-20 w-32 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-border bg-muted">
+            {cover?.url ? (
+              <Image
+                src={cover.url}
+                alt={cover.alt ?? ""}
+                fill
+                sizes="128px"
+                className="object-cover"
+              />
+            ) : (
+              <ImageOff className="h-5 w-5 text-muted-foreground" />
+            )}
+          </span>
+          <div className="min-w-0">
+            <h1 className="text-2xl font-bold tracking-tight text-foreground">{title}</h1>
+            <p className="mt-1 max-w-2xl text-sm text-muted-foreground">{summary}</p>
+            <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+              <span className={`rounded-full px-2 py-0.5 font-bold ${campaignStatusStyle[status]}`}>
+                {status}
+              </span>
+              {typeof detail?.order === "number" && <span>#{detail.order}</span>}
+              {startDate && <span>Opens {fmtDate(startDate)}</span>}
+              {endDate && <span>· Closes {fmtDate(endDate)}</span>}
+            </div>
           </div>
         </div>
         <Link
@@ -79,6 +179,57 @@ export default function ProjectDonationDetailsPage() {
         >
           <Clock className="h-4 w-4 text-amber-600" /> See payment attempts
         </Link>
+      </div>
+
+      {/* Project actions — these used to be six buttons in every list row. */}
+      <div className="flex flex-wrap items-center gap-2 rounded-xl border border-border bg-card p-3">
+        <button
+          onClick={() => setEditing(true)}
+          className="inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-2 text-sm font-semibold text-foreground transition-colors hover:bg-muted"
+        >
+          <Pencil className="h-4 w-4 text-sky-600" /> Edit
+        </button>
+        <Link
+          href={`/projects/${slug}`}
+          target="_blank"
+          className="inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-2 text-sm font-semibold text-muted-foreground transition-colors hover:text-foreground"
+        >
+          <ExternalLink className="h-4 w-4" /> View public page
+        </Link>
+
+        <div className="ml-auto flex flex-wrap items-center gap-2">
+          {/* Activate only. Deactivating was removed: Complete and Archive
+              already cover "stop taking gifts", and each says why. It stays
+              available on an archived project, which is the way back from one
+              archived by mistake. */}
+          {status !== "ACTIVE" && (
+            <button
+              onClick={onActivate}
+              className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-600 px-3 py-2 text-sm font-semibold text-white transition-colors hover:bg-emerald-700"
+            >
+              <Power className="h-4 w-4" /> Activate
+            </button>
+          )}
+          {status !== "COMPLETED" && status !== "ARCHIVED" && (
+            <button
+              onClick={() => onComplete(title)}
+              title="Goal reached or the appeal is over"
+              className="inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-2 text-sm font-semibold text-muted-foreground transition-colors hover:text-foreground"
+            >
+              <CheckCircle2 className="h-4 w-4" /> Complete
+            </button>
+          )}
+          {status !== "ARCHIVED" && (
+            <button
+              onClick={() => onArchive(title)}
+              title="Hide from the public site"
+              aria-label={`Archive ${title}`}
+              className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-border text-muted-foreground transition-colors hover:border-red-300 hover:text-red-600"
+            >
+              <Archive className="h-4 w-4" />
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Goal progress */}
@@ -220,8 +371,9 @@ export default function ProjectDonationDetailsPage() {
 
 function BackLink() {
   return (
-    <Link href="/admin/donation" className="inline-flex items-center gap-1.5 text-sm font-semibold text-muted-foreground hover:text-foreground">
-      <ArrowLeft className="h-4 w-4" /> Back to donations
+    // The projects list is the only page that links here, so it is where back goes.
+    <Link href="/admin/projects" className="inline-flex items-center gap-1.5 text-sm font-semibold text-muted-foreground hover:text-foreground">
+      <ArrowLeft className="h-4 w-4" /> Back to projects
     </Link>
   );
 }

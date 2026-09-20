@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import {
   useCreateCampaignMutation,
-  useGetCampaignsQuery,
+  useGetCommsCampaignsQuery,
 } from "@/redux/features/comms/commsApi";
 import { formatDateTime } from "@/lib/care";
 import type { CampaignChannel, CampaignState } from "@/types/comms";
@@ -27,7 +27,7 @@ export const STATE_STYLE: Record<CampaignState, string> = {
 };
 
 export default function AdminCampaignsPage() {
-  const { data: campaigns, isLoading } = useGetCampaignsQuery();
+  const { data: campaigns, isLoading } = useGetCommsCampaignsQuery();
   const [createCampaign, { isLoading: creating }] = useCreateCampaignMutation();
   const [name, setName] = useState("");
   const [channel, setChannel] = useState<CampaignChannel>("EMAIL");

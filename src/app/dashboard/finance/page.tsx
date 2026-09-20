@@ -7,6 +7,7 @@ import { useSelector } from "react-redux";
 import { toast } from "sonner";
 import {
   Download,
+  Eye,
   FileText,
   Loader2,
   Pencil,
@@ -24,6 +25,9 @@ import {
   useListMyFinanceQuery,
   useUpdateFinanceEntryMutation,
 } from "@/redux/features/finance/financeApi";
+import { usePdfPreview } from "@/components/common/PdfPreview";
+import Pagination from "@/components/common/Pagination";
+import { TABLE_PAGE_SIZE } from "@/lib/pagination";
 import { formatMoney } from "@/lib/money";
 import { financeBasePath } from "@/lib/finance-paths";
 import type {
@@ -98,12 +102,17 @@ const isExpense = (row: FinanceEntry) => {
 export default function DashboardFinancePage() {
   const user = useSelector(selectCurrentUser);
   const basePath = financeBasePath(usePathname());
-  const { data, isLoading } = useListMyFinanceQuery({ limit: 200 });
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState<number>(TABLE_PAGE_SIZE);
+  const { data, isLoading } = useListMyFinanceQuery({ page, limit });
+  // Newest rows (page 1) carry current balances even when browsing later pages.
+  const { data: headData } = useListMyFinanceQuery({ page: 1, limit: 50 });
   const { data: invoices = [], isLoading: invoicesLoading } =
     useListInvoicesQuery();
   const [updateEntry, { isLoading: updating }] = useUpdateFinanceEntryMutation();
   const [deleteEntry] = useDeleteFinanceEntryMutation();
   const [createInvoice, { isLoading: invoicing }] = useCreateInvoiceMutation();
+  const { openPdfPreview, pdfPreview, pdfPreviewLoading } = usePdfPreview();
 
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<FinanceEntry | null>(null);
@@ -112,18 +121,22 @@ export default function DashboardFinancePage() {
   const [selected, setSelected] = useState<Set<string>>(new Set());
 
   const rows = data?.data ?? [];
+  const total = data?.total ?? 0;
+  const totalPages = data?.totalPages ?? 1;
+  const pageLimit = data?.limit ?? limit;
 
   // One balance per currency. Rows arrive newest-first, so the first row seen
   // for a currency carries that currency's current balance. They are shown
   // side by side and never added together — a combined figure would not be
   // money in any of them.
   const latestBalances = useMemo(() => {
+    const source = headData?.data ?? rows;
     const seen = new Map<string, string>();
-    for (const row of rows) {
+    for (const row of source) {
       if (!seen.has(row.currency)) seen.set(row.currency, row.balance);
     }
     return [...seen].sort(([a], [b]) => a.localeCompare(b));
-  }, [rows]);
+  }, [headData?.data, rows]);
 
   const selectableIds = useMemo(
     () =>
@@ -242,10 +255,7 @@ export default function DashboardFinancePage() {
       }).unwrap();
       setSelected(new Set());
       toast.success(`Invoice ${invoice.number} created`);
-      await downloadFinanceExport(
-        `/finance/invoices/${invoice.id}/pdf`,
-        `${invoice.number}.pdf`
-      );
+      await downloadInvoice(invoice.id, invoice.number);
     } catch (e) {
       toast.error(
         (e as { data?: { message?: string } })?.data?.message ??
@@ -255,13 +265,16 @@ export default function DashboardFinancePage() {
   };
 
   const downloadInvoice = (invoiceId: string, number: string) =>
-    downloadFinanceExport(
-      `/finance/invoices/${invoiceId}/pdf`,
-      `${number}.pdf`
-    ).catch(() => toast.error("Invoice download failed"));
+    openPdfPreview({
+      path: `/finance/invoices/${invoiceId}/pdf`,
+      fileName: `${number}.pdf`,
+      title: "Invoice",
+      subtitle: number,
+    });
 
   return (
     <div>
+      {pdfPreview}
       <div className="flex flex-wrap items-end justify-between gap-3 mb-6">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Financial Work Book</h1>
@@ -274,8 +287,8 @@ export default function DashboardFinancePage() {
           </p>
           <p className="mt-1 text-xs text-muted-foreground max-w-xl">
             Add money-in and expense lines separately, then select several
-            expenses (e.g. book, pen, tuition) and create one downloadable
-            invoice.
+            expenses (e.g. book, pen, tuition) and create one invoice to
+            preview, then download.
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -284,10 +297,17 @@ export default function DashboardFinancePage() {
               key={format}
               type="button"
               onClick={() =>
-                downloadFinanceExport(
-                  financeExportPath("mine", format),
-                  `financial-workbook.${format}`
-                ).catch(() => toast.error("Download failed"))
+                format === "pdf"
+                  ? openPdfPreview({
+                      path: financeExportPath("mine", "pdf"),
+                      fileName: "financial-workbook.pdf",
+                      title: "Financial work book",
+                      subtitle: user?.fullName ?? undefined,
+                    })
+                  : downloadFinanceExport(
+                      financeExportPath("mine", format),
+                      `financial-workbook.${format}`
+                    ).catch(() => toast.error("Download failed"))
               }
               className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-border text-sm font-semibold hover:bg-muted"
             >
@@ -415,7 +435,8 @@ export default function DashboardFinancePage() {
                       {row.invoiceId ? (
                         <button
                           type="button"
-                          className="text-emerald-700 hover:underline dark:text-emerald-400"
+                          disabled={pdfPreviewLoading}
+                          className="inline-flex items-center gap-1 text-emerald-700 hover:underline dark:text-emerald-400 disabled:opacity-50"
                           onClick={() =>
                             void downloadInvoice(
                               row.invoiceId!,
@@ -423,7 +444,12 @@ export default function DashboardFinancePage() {
                             )
                           }
                         >
-                          PDF
+                          {pdfPreviewLoading ? (
+                            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                          ) : (
+                            <Eye className="h-3.5 w-3.5" />
+                          )}
+                          View
                         </button>
                       ) : canSelect ? (
                         <span className="text-muted-foreground">—</span>
@@ -456,6 +482,19 @@ export default function DashboardFinancePage() {
           </table>
         </div>
       </div>
+
+      <Pagination
+        page={page}
+        totalPages={totalPages}
+        total={total}
+        limit={pageLimit}
+        onPageChange={setPage}
+        onLimitChange={(next) => {
+          setLimit(next);
+          setPage(1);
+        }}
+        className="mt-4"
+      />
 
       <section className="mt-8">
         <h2 className="text-sm font-bold uppercase tracking-widest text-muted-foreground mb-3">
@@ -507,10 +546,16 @@ export default function DashboardFinancePage() {
                   <td className="px-3 py-3 text-right">
                     <button
                       type="button"
+                      disabled={pdfPreviewLoading}
                       onClick={() => void downloadInvoice(inv.id, inv.number)}
-                      className="inline-flex items-center gap-1.5 rounded-lg border border-border px-2.5 py-1.5 text-xs font-semibold hover:bg-muted"
+                      className="inline-flex items-center gap-1.5 rounded-lg border border-border px-2.5 py-1.5 text-xs font-semibold hover:bg-muted disabled:opacity-50"
                     >
-                      <Download className="h-3.5 w-3.5" /> PDF
+                      {pdfPreviewLoading ? (
+                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                      ) : (
+                        <Eye className="h-3.5 w-3.5" />
+                      )}
+                      View
                     </button>
                   </td>
                 </tr>

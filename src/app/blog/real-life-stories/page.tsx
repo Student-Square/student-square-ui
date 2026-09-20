@@ -9,8 +9,6 @@ import { motion } from "motion/react";
 import { useGetStoriesQuery } from "@/redux/features/stories/storiesApi";
 import {
   ArrowUpRight,
-  ChevronLeft,
-  ChevronRight,
   ChevronRight as Crumb,
   Loader2,
   Quote,
@@ -19,11 +17,13 @@ import {
   Users,
   X,
 } from "lucide-react";
+import Pagination from "@/components/common/Pagination";
+import { PUBLIC_PAGE_SIZE } from "@/lib/pagination";
 import StoryCard from "@/components/sections/Stories/StoryCard";
 import { useLanguage } from "@/components/i18n/LanguageProvider";
 
 type SortOption = "default" | "name-asc" | "name-desc";
-const PAGE_SIZE = 6;
+const PAGE_SIZE = PUBLIC_PAGE_SIZE;
 
 /** Dictionary keys for the sort menu. */
 const sortLabels: Record<SortOption, string> = {
@@ -362,47 +362,18 @@ function RealLifeStoriesContent() {
 
           {/* Pagination */}
           {!isBusy && totalPages > 1 && (
-            <nav
-              aria-label={t("common.pagination")}
-              className="mt-12 flex items-center justify-center gap-1.5 flex-wrap"
-            >
-              <button
-                onClick={() => setPage((p) => Math.max(1, p - 1))}
-                disabled={page === 1}
-                className="inline-flex items-center gap-1 px-3 py-2 rounded-lg border border-border bg-card text-xs font-semibold text-foreground hover:border-emerald-500/60 hover:text-emerald-600 disabled:opacity-40 transition-colors"
-              >
-                <ChevronLeft className="h-3.5 w-3.5" />
-                <span className="hidden sm:inline">{t("common.prev")}</span>
-              </button>
-
-              {pageNumbers.map((p, idx) =>
-                p === "ellipsis" ? (
-                  <span key={`e-${idx}`} className="px-2 text-xs text-muted-foreground">…</span>
-                ) : (
-                  <button
-                    key={p}
-                    onClick={() => setPage(p)}
-                    aria-current={page === p ? "page" : undefined}
-                    className={`min-w-[36px] px-3 py-2 rounded-lg text-xs font-semibold border transition-colors ${
-                      page === p
-                        ? "bg-emerald-600 border-emerald-600 text-white shadow-sm shadow-emerald-600/30"
-                        : "bg-card border-border text-foreground hover:border-emerald-500/60 hover:text-emerald-600"
-                    }`}
-                  >
-                    {num(p, false)}
-                  </button>
-                )
-              )}
-
-              <button
-                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                disabled={page === totalPages}
-                className="inline-flex items-center gap-1 px-3 py-2 rounded-lg border border-border bg-card text-xs font-semibold text-foreground hover:border-emerald-500/60 hover:text-emerald-600 disabled:opacity-40 transition-colors"
-              >
-                <span className="hidden sm:inline">{t("common.next")}</span>
-                <ChevronRight className="h-3.5 w-3.5" />
-              </button>
-            </nav>
+            <Pagination
+              page={page}
+              totalPages={totalPages}
+              onPageChange={setPage}
+              className="mt-12"
+              labels={{
+                prev: t("common.prev"),
+                next: t("common.next"),
+                pagination: t("common.pagination"),
+              }}
+              formatNumber={(n) => num(n, false)}
+            />
           )}
         </div>
       </section>

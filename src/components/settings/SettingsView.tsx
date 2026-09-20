@@ -16,11 +16,24 @@ import { Bell, ShieldCheck } from "lucide-react";
  * Suspense boundary needed for it.
  */
 export default function SettingsView() {
-  const [tab, setTab] = useState("security");
+  const [tab, setTab] = useState(() =>
+    typeof window !== "undefined" && window.location.hash === "#notifications"
+      ? "notifications"
+      : "security"
+  );
 
   useEffect(() => {
     if (window.location.hash === "#notifications") setTab("notifications");
   }, []);
+
+  const onTabChange = (next: string) => {
+    setTab(next);
+    if (next === "notifications") {
+      window.history.replaceState(null, "", `${window.location.pathname}#notifications`);
+    } else if (window.location.hash) {
+      window.history.replaceState(null, "", window.location.pathname);
+    }
+  };
 
   return (
     <div className="space-y-6 max-w-3xl">
@@ -31,7 +44,7 @@ export default function SettingsView() {
         </p>
       </div>
 
-      <Tabs value={tab} onValueChange={setTab} className="gap-6">
+      <Tabs value={tab} onValueChange={onTabChange} className="gap-6">
         <TabsList className="h-10 p-1">
           <TabsTrigger value="security" className="px-4">
             <ShieldCheck className="h-4 w-4" />

@@ -24,7 +24,7 @@ import {
   ExternalLink,
   FileCode2,
   FileText,
-  FlagTriangleRight,
+  FolderKanban,
   HandCoins,
   Home,
   LayoutGrid,
@@ -34,6 +34,7 @@ import {
   Menu,
   MessageSquareText,
   Newspaper,
+  ScrollText,
   Settings,
   ShieldCheck,
   ToggleLeft,
@@ -44,6 +45,7 @@ import {
 } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { ADMIN_ROLES } from "@/lib/auth-routing";
+import { useGetAdminFeedbackCountsQuery } from "@/redux/features/comms/commsApi";
 import type { UserRole } from "@/types/auth";
 
 /**
@@ -109,17 +111,21 @@ const NAV: NavEntry[] = [
     ],
   },
 
-  { kind: "section", label: "Moderation", roles: MOD_ROLES },
-  { kind: "item", href: "/admin/moderation", label: "Moderation Queue", icon: <FlagTriangleRight className="h-4 w-4" />, roles: MOD_ROLES },
+  // Moderation Queue hidden for now — restore when member story submit is live.
+  // { kind: "section", label: "Moderation", roles: MOD_ROLES },
+  // { kind: "item", href: "/admin/moderation", label: "Moderation Queue", icon: <FlagTriangleRight className="h-4 w-4" />, roles: MOD_ROLES },
 
   { kind: "section", label: "Management", roles: [...EDIT_ROLES, "FINANCE_MANAGER"] },
   { kind: "item", href: "/admin/donation", label: "Donation", icon: <HandCoins className="h-4 w-4" />, roles: FINANCE_ROLES },
+  // TOP_ROLES, not FINANCE_ROLES: the page exists to create and edit, and the
+  // campaign write routes are ADMIN_ONLY on the server. A finance manager
+  // would see the buttons and get a 403 from every one of them.
+  { kind: "item", href: "/admin/projects", label: "Projects", icon: <FolderKanban className="h-4 w-4" />, roles: TOP_ROLES },
   { kind: "item", href: "/admin/operations", label: "All DOB", icon: <BookOpen className="h-4 w-4" />, roles: EDIT_ROLES },
   { kind: "item", href: "/admin/finance", label: "All FWB", icon: <Wallet className="h-4 w-4" />, roles: FINANCE_ROLES },
-  { kind: "item", href: "/admin/books", label: "All Books", icon: <Library className="h-4 w-4" />, roles: FINANCE_ROLES },
   { kind: "item", href: "/admin/team", label: "Team", icon: <ShieldCheck className="h-4 w-4" />, roles: EDIT_ROLES },
   { kind: "item", href: "/admin/resources", label: "Resources", icon: <Library className="h-4 w-4" />, roles: EDIT_ROLES },
-  { kind: "item", href: "/admin/feedback", label: "Feedback", icon: <MessageSquareText className="h-4 w-4" />, roles: EDIT_ROLES },
+  { kind: "item", href: "/admin/feedback", label: "Feedback", icon: <MessageSquareText className="h-4 w-4" />, roles: [...EDIT_ROLES, "MODERATOR"] },
   { kind: "item", href: "/admin/analytics", label: "Analytics", icon: <BarChart3 className="h-4 w-4" />, roles: EDIT_ROLES },
   { kind: "item", href: "/admin/assessments", label: "Assessments", icon: <ClipboardList className="h-4 w-4" />, roles: TOP_ROLES },
   { kind: "item", href: "/admin/users", label: "Users", icon: <Users className="h-4 w-4" />, roles: TOP_ROLES },
@@ -132,7 +138,8 @@ const NAV: NavEntry[] = [
   { kind: "item", href: "/admin/recruitment", label: "Candidates", icon: <Briefcase className="h-4 w-4" />, roles: HR_ROLES },
 
   { kind: "section", label: "System", roles: SYSTEM_ONLY },
-  { kind: "item", href: "/admin/system", label: "Feature Switches", icon: <ToggleLeft className="h-4 w-4" />, roles: SYSTEM_ONLY },
+  { kind: "item", href: "/admin/system", label: "Feature Switches", icon: <ToggleLeft className="h-4 w-4" />, exact: true, roles: SYSTEM_ONLY },
+  { kind: "item", href: "/admin/system/audit", label: "Audit Log", icon: <ScrollText className="h-4 w-4" />, roles: SYSTEM_ONLY },
 
   { kind: "section", label: "My Account" },
   {
@@ -187,6 +194,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const role = useSelector(selectUserRole);
   const [logout] = useLogoutMutation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const canSeeFeedbackCounts = !!role && MOD_ROLES.includes(role);
+  const { data: feedbackCounts } = useGetAdminFeedbackCountsQuery(undefined, {
+    skip: status !== "authenticated" || !canSeeFeedbackCounts,
+  });
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -211,6 +222,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   }
 
   const navItems = navForRole(role);
+  const feedbackBadge =
+    canSeeFeedbackCounts && feedbackCounts && feedbackCounts.NEW > 0
+      ? feedbackCounts.NEW
+      : undefined;
 
   return (
     <main className="min-h-screen bg-background flex">
@@ -232,7 +247,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
         {/* Navigation */}
         <nav className="flex-1 p-3 space-y-1 text-sm overflow-y-auto">
-          <NavList items={navItems} />
+          <NavList items={navItems} badges={{ "/admin/feedback": feedbackBadge }} />
         </nav>
 
         {/* Bottom profile widget */}
@@ -292,7 +307,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
                 {/* Mobile Menu Content */}
                 <nav className="flex-1 overflow-y-auto p-3 space-y-1 text-sm">
-                  <NavList items={navItems} onNavigate={() => setMobileMenuOpen(false)} />
+                  <NavList
+                    items={navItems}
+                    badges={{ "/admin/feedback": feedbackBadge }}
+                    onNavigate={() => setMobileMenuOpen(false)}
+                  />
                 </nav>
 
                 {/* Mobile Menu Footer */}
@@ -425,7 +444,15 @@ function SidebarProfile({
   );
 }
 
-function NavList({ items, onNavigate }: { items: NavEntry[]; onNavigate?: () => void }) {
+function NavList({
+  items,
+  badges,
+  onNavigate,
+}: {
+  items: NavEntry[];
+  badges?: Partial<Record<string, number | undefined>>;
+  onNavigate?: () => void;
+}) {
   return (
     <>
       {items.map((entry, i) => {
@@ -450,6 +477,7 @@ function NavList({ items, onNavigate }: { items: NavEntry[]; onNavigate?: () => 
             label={entry.label}
             icon={entry.icon}
             exact={entry.exact}
+            badge={badges?.[entry.href]}
             onNavigate={onNavigate}
           />
         );
@@ -471,16 +499,19 @@ function NavItem({
   label,
   icon,
   exact = false,
+  badge,
   onNavigate,
 }: {
   href: string;
   label: string;
   icon: React.ReactNode;
   exact?: boolean;
+  badge?: number;
   onNavigate?: () => void;
 }) {
   const pathname = usePathname();
   const active = exact ? pathname === href : pathname === href || pathname.startsWith(href + "/");
+  const badgeLabel = badge != null && badge > 0 ? (badge > 99 ? "99+" : String(badge)) : null;
   return (
     <Link
       href={href}
@@ -492,7 +523,18 @@ function NavItem({
       }`}
     >
       {icon}
-      <span className="font-medium">{label}</span>
+      <span className="font-medium flex-1">{label}</span>
+      {badgeLabel && (
+        <span
+          className={`min-w-[1.25rem] h-5 px-1.5 rounded-full text-[10px] font-bold leading-5 text-center tabular-nums ${
+            active
+              ? "bg-white/20 text-white"
+              : "bg-emerald-600 text-white"
+          }`}
+        >
+          {badgeLabel}
+        </span>
+      )}
     </Link>
   );
 }

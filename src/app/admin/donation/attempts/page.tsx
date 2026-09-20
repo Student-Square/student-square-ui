@@ -9,14 +9,14 @@ import {
   Loader2,
   Search,
   ShieldCheck,
-  ChevronLeft,
-  ChevronRight,
   Users2,
   CheckCircle2,
   Clock,
   XCircle,
   Ban,
 } from "lucide-react";
+import Pagination from "@/components/common/Pagination";
+import { TABLE_PAGE_SIZE } from "@/lib/pagination";
 import {
   useGetAttemptsSummaryQuery,
   useGetAdminDonationsQuery,
@@ -25,7 +25,7 @@ import {
 import { useGetAdminCampaignsQuery } from "@/redux/features/campaigns/adminCampaignsApi";
 import type { AdminDonation, DonationStatus } from "@/types/donations";
 
-const PAGE_SIZE = 15;
+const PAGE_SIZE = TABLE_PAGE_SIZE;
 const ALL_ATTEMPTS = "PENDING,FAILED,CANCELLED";
 const bdt = (n: number) => `৳${n.toLocaleString()}`;
 const fmtDateTime = (iso: string) =>
@@ -191,14 +191,19 @@ export default function PaymentAttemptsPage() {
           </table>
         </div>
 
-        <div className="flex items-center justify-between border-t border-border px-4 py-3 text-sm">
-          <span className="flex items-center gap-2 text-muted-foreground">
-            {isFetching && <Loader2 className="h-3 w-3 animate-spin" />} {total} total · page {page} of {totalPages}
-          </span>
-          <div className="flex gap-1">
-            <button onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page === 1} className="rounded-md p-1.5 hover:bg-muted disabled:opacity-30"><ChevronLeft className="h-4 w-4" /></button>
-            <button onClick={() => setPage((p) => Math.min(totalPages, p + 1))} disabled={page === totalPages} className="rounded-md p-1.5 hover:bg-muted disabled:opacity-30"><ChevronRight className="h-4 w-4" /></button>
-          </div>
+        <div className="border-t border-border px-4 py-3">
+          {isFetching && (
+            <span className="mb-2 flex items-center gap-2 text-xs text-muted-foreground">
+              <Loader2 className="h-3 w-3 animate-spin" /> Refreshing…
+            </span>
+          )}
+          <Pagination
+            page={page}
+            totalPages={totalPages}
+            onPageChange={setPage}
+            total={total}
+            limit={PAGE_SIZE}
+          />
         </div>
       </div>
     </div>

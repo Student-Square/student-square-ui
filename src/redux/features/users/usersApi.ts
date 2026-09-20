@@ -1,6 +1,7 @@
 import { baseApi } from "@/redux/api/baseApi";
 import type {
   AdminUser,
+  AdminUserDetail,
   AdminCreateUserInput,
   AdminUpdateUserInput,
   AdminUserListParams,
@@ -20,7 +21,7 @@ const usersApiSlice = baseApi.injectEndpoints({
           : [{ type: "AdminUsers" as const, id: "LIST" }],
     }),
 
-    adminGetUser: build.query<AdminUser, string>({
+    adminGetUser: build.query<AdminUserDetail, string>({
       query: (id) => `/admin/users/${encodeURIComponent(id)}`,
       providesTags: (_r, _e, id) => [{ type: "AdminUsers" as const, id }],
     }),

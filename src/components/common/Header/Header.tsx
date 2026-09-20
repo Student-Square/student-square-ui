@@ -15,7 +15,21 @@ import { useLanguage } from "@/components/i18n/LanguageProvider";
 
 const ADMIN_ROLES = new Set(["SYSTEM_ADMIN", "SUPER_ADMIN", "ADMIN", "EDITOR", "MODERATOR", "FINANCE_MANAGER"]);
 
-const Header = () => {
+/** Routes whose first viewport is a dark full-bleed hero under the transparent navbar. */
+const DARK_HERO_PATHS: RegExp[] = [
+  /^\/projects\/[^/]+$/,
+  /^\/what-we-do\/[^/]+$/,
+  /^\/news(\/[^/]+)?$/,
+  /^\/about\/(who-we-are|mission-vision|reports|archive)$/,
+  /^\/contact$/,
+];
+
+type HeaderProps = {
+  /** Light nav text while transparent over a dark full-bleed hero (black top scrim). */
+  overDarkHero?: boolean;
+};
+
+const Header = ({ overDarkHero = false }: HeaderProps) => {
   const [navbarOpen, setNavbarOpen] = useState(false);
   const [sticky, setSticky] = useState(false);
   const [openIndex, setOpenIndex] = useState(-1);
@@ -171,12 +185,27 @@ const Header = () => {
   };
 
   const currentTheme = mounted ? resolvedTheme : "light";
+  // Only the font/icon color flips over a dark hero — scrim stays as-is.
+  const darkHeroPage =
+    overDarkHero || DARK_HERO_PATHS.some((re) => re.test(pathname));
+  const onDark = darkHeroPage && !sticky;
+  const navIdle = onDark
+    ? "text-white hover:text-white"
+    : "text-muted-foreground hover:text-foreground";
+  const navActive = onDark ? "text-white" : "text-primary";
+  const iconBtn = onDark
+    ? "border-white/40 bg-transparent text-white hover:bg-white/15 hover:text-white"
+    : "border-border/50 bg-transparent text-muted-foreground hover:bg-accent/20 hover:text-foreground";
+  const langBtn = onDark
+    ? "text-white hover:text-white"
+    : "text-muted-foreground hover:text-foreground";
 
   return (
     <header
+      data-over-dark-hero={onDark ? "true" : undefined}
       className={`fixed top-0 left-0 z-50 w-full transition-all duration-500 ease-out ${
         sticky
-          ? "bg-background/80 backdrop-blur-xl shadow-sm border-b border-border/50"
+          ? "bg-background/80 backdrop-blur-xl shadow-sm"
           : "bg-transparent"
       }`}
     >
@@ -194,7 +223,7 @@ const Header = () => {
                 alt={t("common.logoAlt")}
                 width={160}
                 height={44}
-                className="h-8 w-auto sm:h-10 lg:h-11 2xl:h-14 3xl:h-16 4xl:h-20"
+                className="h-8 w-auto sm:h-10 lg:h-11 2xl:h-14 3xl:h-[60px]"
                 priority
               />
             </motion.div>
@@ -207,10 +236,8 @@ const Header = () => {
                 {!menuItem.submenu ? (
                   <Link
                     href={menuItem.path || "/"}
-                    className={`group relative px-4 py-2 font-medium uppercase tracking-wide xl:whitespace-nowrap transition-colors text-[16px] font-oswald 2xl:text-lg 2xl:px-5 3xl:text-xl 3xl:px-6 4xl:text-2xl 4xl:px-8 ${
-                      pathname === menuItem.path
-                        ? "text-primary"
-                        : "text-muted-foreground hover:text-foreground"
+                    className={`group relative px-4 py-2 font-medium uppercase tracking-wide xl:whitespace-nowrap transition-colors text-[16px] font-oswald 2xl:text-lg 2xl:px-5 3xl:text-lg 3xl:px-5 ${
+                      pathname === menuItem.path ? navActive : navIdle
                     }`}
                   >
                     {nav(menuItem.path, menuItem.title)}
@@ -228,10 +255,8 @@ const Header = () => {
                     {menuItem.path ? (
                       <Link
                         href={menuItem.path}
-                        className={`flex items-center gap-1.5 px-4 py-2 font-medium uppercase tracking-wide xl:whitespace-nowrap transition-colors text-[16px] font-oswald 2xl:text-lg 2xl:px-5 3xl:text-xl 3xl:px-6 4xl:text-2xl 4xl:px-8 ${
-                          pathname.startsWith(menuItem.path)
-                            ? "text-primary"
-                            : "text-muted-foreground hover:text-foreground"
+                        className={`flex items-center gap-1.5 px-4 py-2 font-medium uppercase tracking-wide xl:whitespace-nowrap transition-colors text-[16px] font-oswald 2xl:text-lg 2xl:px-5 3xl:text-lg 3xl:px-5 ${
+                          pathname.startsWith(menuItem.path) ? navActive : navIdle
                         }`}
                       >
                         {nav(menuItem.path, menuItem.title)}
@@ -244,7 +269,7 @@ const Header = () => {
                     ) : (
                     <button
                       type="button"
-                      className={`flex items-center gap-1.5 px-4 py-2 font-medium uppercase tracking-wide xl:whitespace-nowrap text-muted-foreground transition-colors hover:text-foreground text-[16px] font-oswald 2xl:text-lg 2xl:px-5 3xl:text-xl 3xl:px-6 4xl:text-2xl 4xl:px-8`}
+                      className={`flex items-center gap-1.5 px-4 py-2 font-medium uppercase tracking-wide xl:whitespace-nowrap transition-colors text-[16px] font-oswald 2xl:text-lg 2xl:px-5 3xl:text-lg 3xl:px-5 ${navIdle}`}
                     >
                       {nav(menuItem.path, menuItem.title)}
                       <ChevronDown
@@ -364,7 +389,7 @@ const Header = () => {
                 onClick={() => setSearchOpen((v) => !v)}
                 aria-label={t("search")}
                 aria-expanded={searchOpen}
-                className="flex h-9 w-9 items-center justify-center rounded-lg border border-border/50 bg-transparent text-muted-foreground transition-colors hover:bg-accent/20 hover:text-foreground sm:h-10 sm:w-10 sm:rounded-xl 2xl:h-12 2xl:w-12 3xl:h-14 3xl:w-14 4xl:h-16 4xl:w-16"
+                className={`flex h-9 w-9 items-center justify-center rounded-lg border transition-colors sm:h-10 sm:w-10 sm:rounded-xl 2xl:h-12 2xl:w-12 3xl:h-12 3xl:w-12 ${iconBtn}`}
               >
                 <Search className="h-4 w-4" />
               </motion.button>
@@ -406,7 +431,7 @@ const Header = () => {
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={toggleTheme}
-                className="flex h-9 w-9 items-center justify-center rounded-lg border border-border/50 bg-transparent text-muted-foreground transition-colors hover:bg-accent/20 hover:text-foreground sm:h-10 sm:w-10 sm:rounded-xl 2xl:h-12 2xl:w-12 3xl:h-14 3xl:w-14 4xl:h-16 4xl:w-16"
+                className={`flex h-9 w-9 items-center justify-center rounded-lg border transition-colors sm:h-10 sm:w-10 sm:rounded-xl 2xl:h-12 2xl:w-12 3xl:h-12 3xl:w-12 ${iconBtn}`}
                 aria-label={currentTheme === "dark" ? t("switchToLight") : t("switchToDark")}
               >
                 <AnimatePresence mode="wait">
@@ -443,7 +468,7 @@ const Header = () => {
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
                 onClick={() => setLanguageMenuOpen((v) => !v)}
-                className="flex h-9 items-center gap-1 rounded-lg px-2.5 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground sm:h-10 sm:px-3"
+                className={`flex h-9 items-center gap-1 rounded-lg px-2.5 text-sm font-medium transition-colors sm:h-10 sm:px-3 ${langBtn}`}
                 aria-label={t("language")}
               >
                 <Languages className="h-3.5 w-3.5" />
@@ -575,7 +600,11 @@ const Header = () => {
             ) : (
               <Link
                 href="/login"
-                className="hidden h-8 items-center whitespace-nowrap rounded-full border-2 border-emerald-500/70 px-3 text-xs font-semibold text-emerald-600 transition-all duration-300 hover:bg-emerald-500/15 hover:border-emerald-500 dark:text-emerald-400 dark:hover:bg-emerald-500/20 sm:inline-flex sm:h-9 sm:px-4 sm:text-sm"
+                className={`hidden h-8 items-center whitespace-nowrap rounded-full border-2 px-3 text-xs font-semibold transition-all duration-300 sm:inline-flex sm:h-9 sm:px-4 sm:text-sm ${
+                  onDark
+                    ? "border-white/80 text-white hover:bg-white/15 hover:border-white"
+                    : "border-emerald-500/70 text-emerald-600 hover:bg-emerald-500/15 hover:border-emerald-500 dark:text-emerald-400 dark:hover:bg-emerald-500/20"
+                }`}
               >
                 {t("login")}
               </Link>
@@ -632,7 +661,11 @@ const Header = () => {
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               onClick={() => setNavbarOpen(!navbarOpen)}
-              className="relative z-50 flex h-9 w-9 items-center justify-center rounded-lg border border-border/50 bg-background/50 text-foreground sm:h-10 sm:w-10 sm:rounded-xl lg:hidden"
+              className={`relative z-50 flex h-9 w-9 items-center justify-center rounded-lg border sm:h-10 sm:w-10 sm:rounded-xl lg:hidden ${
+                onDark
+                  ? "border-white/35 bg-white/10 text-white"
+                  : "border-border/50 bg-background/50 text-foreground"
+              }`}
               aria-label={t("toggleMenu")}
             >
               <AnimatePresence mode="wait">
@@ -663,11 +696,39 @@ const Header = () => {
         </div>
       </div>
       {pathname === "/" && (
-        <div className="pointer-events-none absolute bottom-0 left-0 h-[2px] w-full bg-transparent">
+        <div
+          className="pointer-events-none absolute inset-x-0 bottom-0 overflow-visible"
+          aria-hidden
+        >
           <div
-            className="h-full bg-black dark:bg-gray-400 transition-[width] duration-150 ease-out"
-            style={{ width: `${scrollProgress}%` }}
-          />
+            className="absolute bottom-0 left-0 h-[2px] origin-left will-change-transform"
+            style={{
+              width: "100%",
+              transform: `scaleX(${scrollProgress / 100})`,
+              transition: "transform 140ms cubic-bezier(0.22, 1, 0.36, 1)",
+            }}
+          >
+            <div className="h-full w-full bg-gradient-to-r from-emerald-700 via-emerald-400 to-lime-300 dark:from-emerald-500 dark:via-emerald-300 dark:to-lime-200" />
+          </div>
+          <div
+            className="absolute -bottom-[1px] left-0 h-[5px] origin-left blur-[7px] will-change-transform"
+            style={{
+              width: "100%",
+              transform: `scaleX(${scrollProgress / 100})`,
+              transition: "transform 140ms cubic-bezier(0.22, 1, 0.36, 1)",
+            }}
+          >
+            <div className="h-full w-full bg-gradient-to-r from-emerald-500/0 via-emerald-400/50 to-lime-300/90" />
+          </div>
+          {scrollProgress > 1 && (
+            <span
+              className="absolute bottom-0 h-[2px] w-10 -translate-x-full rounded-full bg-gradient-to-r from-transparent via-white/70 to-white dark:via-lime-100/80 dark:to-white"
+              style={{
+                left: `${scrollProgress}%`,
+                transition: "left 140ms cubic-bezier(0.22, 1, 0.36, 1)",
+              }}
+            />
+          )}
         </div>
       )}
 

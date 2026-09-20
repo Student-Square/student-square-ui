@@ -184,3 +184,52 @@ export type AttemptsSummary = {
   refunded: StatusBucket;
   conversion: number;
 };
+
+/* ── Donation report (/admin/reports/donations) ───────────────────────────── */
+
+export type ReportGranularity = "daily" | "weekly" | "monthly" | "yearly";
+
+/** Blocks the exported document can carry; empty means all of them. */
+export type ReportSection = "summary" | "period" | "project" | "status";
+
+export type DonationReportFilters = {
+  from: string;
+  to: string;
+  granularity: ReportGranularity;
+  /** A campaign id, or "OTHER" for gifts not tied to a project. */
+  campaignId?: string;
+  /** Comma-separated statuses; empty means every status. */
+  status?: string;
+  /** Comma-separated sections for the export; empty means the whole report. */
+  sections?: string;
+};
+
+/**
+ * Every amount here is a fixed-scale **string** (FR-13-009) — format it with
+ * `lib/money.ts` and never call Number() on one. The older DonationSummary
+ * above still carries numbers; this endpoint does not.
+ */
+export type DonationReport = {
+  range: {
+    from: string;
+    to: string;
+    granularity: ReportGranularity;
+    campaignId: string | null;
+    statuses: string[];
+  };
+  currency: string;
+  totals: { total: string; count: number; average: string; donors: number };
+  /** Gifts in any currency other than the base one, never added into the totals. */
+  otherCurrencies: { currency: string; count: number; total: string }[];
+  byPeriod: { period: string; label: string; count: number; total: string }[];
+  byProject: {
+    campaignId: string | null;
+    title: string;
+    count: number;
+    total: string;
+    goalAmount: string | null;
+    raisedAmount: string | null;
+  }[];
+  /** Always every status for the range — it is what the status filter hides. */
+  byStatus: { status: DonationStatus; count: number; total: string }[];
+};

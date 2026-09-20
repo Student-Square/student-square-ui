@@ -67,7 +67,7 @@ export default function MissionVisionPage() {
 
   return (
     <main className="min-h-screen">
-      <Header />
+      <Header overDarkHero />
 
       {/* Hero */}
       <PageHero

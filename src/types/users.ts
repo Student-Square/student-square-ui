@@ -17,6 +17,10 @@ export type AdminUser = {
     bio: string | null;
     phone?: string | null;
   } | null;
+  /**
+   * The list ships this seven-field summary. The detail endpoint returns the
+   * whole questionnaire instead — see `AdminUserDetail`.
+   */
   memberProfile?: {
     homeDistrict: string;
     occupationStatus: string;
@@ -26,6 +30,57 @@ export type AdminUser = {
     disabilityStatus: string;
     completedAt: string;
   } | null;
+};
+
+/**
+ * One user, opened from the list.
+ *
+ * Carries every registration answer, including the C3 columns the list
+ * deliberately withholds, plus the guardian details that live on the account
+ * rather than the questionnaire (FR-01-013).
+ */
+export type AdminUserDetail = Omit<AdminUser, "memberProfile"> & {
+  fullNameBn?: string | null;
+  preferredLocale?: string;
+  isMinor?: boolean;
+  guardianName?: string | null;
+  guardianPhone?: string | null;
+  guardianConsentAt?: string | null;
+  memberProfile?: AdminMemberProfile | null;
+};
+
+export type AdminMemberProfile = {
+  phone: string;
+  address: string;
+  ageBand: string;
+  gender: string;
+  homeDistrict: string;
+
+  studyLevel: string;
+  institutionType: string;
+  institutionTypeOther: string | null;
+  institutionName: string;
+  fieldOfStudy: string;
+  subjectDepartment: string;
+  subjectFeeling: string;
+  subjectFeelingWhy: string | null;
+  facedSubjectConfusion: boolean;
+  regretsSubject: boolean | null;
+  regretsSubjectWhy: string | null;
+
+  occupationStatus: string;
+  employmentSector: string | null;
+  businessType: string | null;
+  jobseekerDuration: string | null;
+
+  disabilityStatus: string;
+  disabilityNote: string | null;
+  hasInstitutionalRelatives: boolean | null;
+  relativeIndustry: string | null;
+  familyMonthlyIncomeBand: string | null;
+  parentEducationLevel: string | null;
+
+  completedAt: string;
 };
 
 export type AdminCreateUserInput = {

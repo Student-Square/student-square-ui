@@ -81,8 +81,12 @@ export default function CountryDetailMap({ countrySlug, config }: Props) {
 
       {/* Legend */}
       <div className="px-4 pb-3 space-y-1">
+        {/* Was the literal string "DIST_NAME" — the GeoJSON property this map
+            reads names by, printed straight into the legend. It labels the
+            places below, and it was wrong for the UK and India configs, which
+            key on NAME_2 and NAME_1. */}
         <div className="flex items-center gap-1 text-xs text-muted-foreground font-medium">
-          <span>DIST_NAME</span>
+          <span>Where we work</span>
         </div>
         <div className="flex flex-wrap gap-3">
           {config.highlights.map((h) => (

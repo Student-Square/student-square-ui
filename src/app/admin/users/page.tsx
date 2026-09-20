@@ -14,12 +14,11 @@ import { selectCurrentUser } from "@/redux/features/auth/authSlice";
 import type { UserRole, UserStatus } from "@/types/auth";
 import type { AdminUserListParams, AdminUserSortKey } from "@/types/users";
 import { HOME_DISTRICTS, OCCUPATION_STATUSES } from "@/lib/registration";
+import { canSeeRole } from "@/lib/roleRank";
 import {
   ArrowDown,
   ArrowUp,
   ArrowUpDown,
-  ChevronLeft,
-  ChevronRight,
   Loader2,
   Pencil,
   Plus,
@@ -27,6 +26,8 @@ import {
   UserCheck,
   UserX,
 } from "lucide-react";
+import Pagination from "@/components/common/Pagination";
+import { TABLE_PAGE_SIZE } from "@/lib/pagination";
 
 const ROLE_OPTIONS: Array<{ value: UserRole | "ALL"; label: string }> = [
   { value: "ALL", label: "All roles" },
@@ -97,7 +98,7 @@ function AdminUsersContent() {
   const [sortBy, setSortBy] = useState<AdminUserSortKey>("createdAt");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
   const [page, setPage] = useState(1);
-  const [limit, setLimit] = useState(10);
+  const [limit, setLimit] = useState<number>(TABLE_PAGE_SIZE);
 
   const isMemberView = role === "MEMBER";
 
@@ -178,7 +179,7 @@ function AdminUsersContent() {
           onChange={(e) => { setRole(e.target.value as UserRole | "ALL"); setPage(1); }}
           className="text-sm rounded-lg border border-border bg-background px-2.5 py-1.5 focus:outline-none focus:ring-2 focus:ring-emerald-500/30"
         >
-          {ROLE_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+          {ROLE_OPTIONS.filter((o) => o.value === "ALL" || canSeeRole(me?.role, o.value)).map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
         </select>
         <select
           value={status}
@@ -405,99 +406,3 @@ function SortableHeader({
   );
 }
 
-/* ── Pagination helpers ── */
-
-function getPageRange(current: number, total: number): Array<number | "..."> {
-  if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);
-  const pages: Array<number | "..."> = [1];
-  if (current > 3) pages.push("...");
-  const start = Math.max(2, current - 1);
-  const end = Math.min(total - 1, current + 1);
-  for (let i = start; i <= end; i++) pages.push(i);
-  if (current < total - 2) pages.push("...");
-  pages.push(total);
-  return pages;
-}
-
-function Pagination({
-  page,
-  totalPages,
-  total,
-  limit,
-  onPageChange,
-  onLimitChange,
-}: {
-  page: number;
-  totalPages: number;
-  total: number;
-  limit: number;
-  onPageChange: (p: number) => void;
-  onLimitChange: (l: number) => void;
-}) {
-  const from = (page - 1) * limit + 1;
-  const to = Math.min(page * limit, total);
-
-  return (
-    <div className="flex flex-wrap items-center justify-between gap-3 mt-4 text-sm">
-      {/* Left: count + per-page */}
-      <div className="flex items-center gap-3 text-muted-foreground">
-        <span>
-          {total === 0 ? "0 results" : `${from}–${to} of ${total}`}
-        </span>
-        <label className="flex items-center gap-1.5">
-          <span className="text-xs">Per page</span>
-          <select
-            value={limit}
-            onChange={(e) => onLimitChange(Number(e.target.value))}
-            className="text-xs rounded-md border border-border bg-background px-1.5 py-1 focus:outline-none focus:ring-2 focus:ring-emerald-500/30"
-          >
-            {[10, 20, 50].map((n) => (
-              <option key={n} value={n}>{n}</option>
-            ))}
-          </select>
-        </label>
-      </div>
-
-      {/* Right: page buttons */}
-      {totalPages > 1 && (
-        <div className="flex items-center gap-1">
-          <button
-            onClick={() => onPageChange(page - 1)}
-            disabled={page === 1}
-            className="inline-flex items-center justify-center w-8 h-8 rounded-md border border-border hover:bg-muted disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-          >
-            <ChevronLeft className="h-4 w-4" />
-          </button>
-
-          {getPageRange(page, totalPages).map((p, i) =>
-            p === "..." ? (
-              <span key={`ellipsis-${i}`} className="w-8 text-center text-muted-foreground select-none">
-                …
-              </span>
-            ) : (
-              <button
-                key={p}
-                onClick={() => onPageChange(p)}
-                className={`inline-flex items-center justify-center w-8 h-8 rounded-md border text-sm font-medium transition-colors ${
-                  p === page
-                    ? "bg-emerald-600 text-white border-emerald-600"
-                    : "border-border hover:bg-muted text-foreground"
-                }`}
-              >
-                {p}
-              </button>
-            )
-          )}
-
-          <button
-            onClick={() => onPageChange(page + 1)}
-            disabled={page === totalPages}
-            className="inline-flex items-center justify-center w-8 h-8 rounded-md border border-border hover:bg-muted disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-          >
-            <ChevronRight className="h-4 w-4" />
-          </button>
-        </div>
-      )}
-    </div>
-  );
-}

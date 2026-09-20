@@ -7,7 +7,11 @@ export function timeAgo(iso: string, now: number = Date.now()) {
   if (mins < 60) return `${mins}m`;
   if (mins < 1440) return `${Math.floor(mins / 60)}h`;
   if (mins < 10080) return `${Math.floor(mins / 1440)}d`;
-  return new Date(iso).toLocaleDateString();
+  return new Date(iso).toLocaleDateString("en-GB", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
 }
 
 /**

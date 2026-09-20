@@ -14,8 +14,6 @@ import {
   ArrowDown,
   ArrowUp,
   ArrowUpDown,
-  ChevronLeft,
-  ChevronRight,
   Globe,
   Loader2,
   Pencil,
@@ -24,6 +22,8 @@ import {
   Search,
   Star,
 } from "lucide-react";
+import Pagination from "@/components/common/Pagination";
+import { TABLE_PAGE_SIZE } from "@/lib/pagination";
 
 type StatusFilter = "ALL" | "DRAFT" | "PUBLISHED" | "ARCHIVED";
 
@@ -57,7 +57,7 @@ export default function AdminBlogListPage() {
   const [updatedTo, setUpdatedTo] = useState("");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
   const [page, setPage] = useState(1);
-  const limit = 20;
+  const limit = TABLE_PAGE_SIZE;
 
   const hasDateFilter = updatedFrom || updatedTo;
 
@@ -302,60 +302,17 @@ export default function AdminBlogListPage() {
           </div>
 
           {/* Pagination */}
-          <div className="flex flex-wrap items-center justify-between gap-3 mt-4 text-sm">
-            <span className="text-sm text-muted-foreground">
-              {total === 0 ? "0 results" : `${from}–${to} of ${total}`}
-            </span>
-            {totalPages > 1 && (
-              <div className="flex items-center gap-1">
-                <button
-                  onClick={() => setPage((p) => p - 1)}
-                  disabled={page === 1}
-                  className="inline-flex items-center justify-center w-8 h-8 rounded-md border border-border hover:bg-muted disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-                >
-                  <ChevronLeft className="h-4 w-4" />
-                </button>
-                {getPageRange(page, totalPages).map((p, i) =>
-                  p === "..." ? (
-                    <span key={`e-${i}`} className="w-8 text-center text-muted-foreground select-none">…</span>
-                  ) : (
-                    <button
-                      key={p}
-                      onClick={() => setPage(p)}
-                      className={`inline-flex items-center justify-center w-8 h-8 rounded-md border text-sm font-medium transition-colors ${
-                        p === page
-                          ? "bg-emerald-600 text-white border-emerald-600"
-                          : "border-border hover:bg-muted text-foreground"
-                      }`}
-                    >
-                      {p}
-                    </button>
-                  )
-                )}
-                <button
-                  onClick={() => setPage((p) => p + 1)}
-                  disabled={page === totalPages}
-                  className="inline-flex items-center justify-center w-8 h-8 rounded-md border border-border hover:bg-muted disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-                >
-                  <ChevronRight className="h-4 w-4" />
-                </button>
-              </div>
-            )}
-          </div>
+          <Pagination
+            page={page}
+            totalPages={totalPages}
+            onPageChange={setPage}
+            total={total}
+            limit={limit}
+            className="mt-4"
+          />
         </>
       )}
     </>
   );
 }
 
-function getPageRange(current: number, total: number): Array<number | "..."> {
-  if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);
-  const pages: Array<number | "..."> = [1];
-  if (current > 3) pages.push("...");
-  const start = Math.max(2, current - 1);
-  const end = Math.min(total - 1, current + 1);
-  for (let i = start; i <= end; i++) pages.push(i);
-  if (current < total - 2) pages.push("...");
-  pages.push(total);
-  return pages;
-}

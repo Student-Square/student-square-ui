@@ -11,6 +11,7 @@ import { fadeInWhileInView } from "@/lib/motion";
 import { useGetBoardGroupsQuery, useGetEditablePageQuery } from "@/redux/features/content/contentApi";
 import type { ApiBoardAssignment } from "@/types/content";
 import { BriefcaseBusiness, ChevronLeft, ChevronRight, Lightbulb, Loader2, ShieldCheck, Users, type LucideIcon } from "lucide-react";
+import Pagination from "@/components/common/Pagination";
 import { useLanguage } from "@/components/i18n/LanguageProvider";
 
 const PLACEHOLDER_AVATAR = "/images/student-square-school-session.jpg";
@@ -99,70 +100,6 @@ function MemberCard({
   );
 }
 
-function Pagination({
-  page,
-  total,
-  perPage,
-  onChange,
-}: {
-  page: number;
-  total: number;
-  perPage: number;
-  onChange: (p: number) => void;
-}) {
-  const { t, num } = useLanguage();
-  const totalPages = Math.ceil(total / perPage);
-  if (totalPages <= 1) return null;
-
-  const pages: (number | "…")[] = [];
-  for (let i = 1; i <= totalPages; i++) {
-    if (i === 1 || i === totalPages || Math.abs(i - page) <= 1) {
-      pages.push(i);
-    } else if (pages[pages.length - 1] !== "…") {
-      pages.push("…");
-    }
-  }
-
-  return (
-    <div className="flex items-center justify-center gap-1 mt-10 flex-wrap">
-      <button
-        onClick={() => onChange(Math.max(1, page - 1))}
-        disabled={page === 1}
-        className="p-1.5 rounded-md hover:bg-muted disabled:opacity-30 transition-colors"
-        aria-label={t("common.previousPage")}
-      >
-        <ChevronLeft className="h-4 w-4" />
-      </button>
-      {pages.map((p, i) =>
-        p === "…" ? (
-          <span key={`ellipsis-${i}`} className="px-2 text-muted-foreground select-none">
-            …
-          </span>
-        ) : (
-          <button
-            key={p}
-            onClick={() => onChange(p as number)}
-            className={`w-8 h-8 rounded-md text-sm font-medium transition-colors ${
-              p === page
-                ? "bg-emerald-600 text-white"
-                : "hover:bg-muted text-foreground"
-            }`}
-          >
-            {num(p as number, false)}
-          </button>
-        )
-      )}
-      <button
-        onClick={() => onChange(Math.min(totalPages, page + 1))}
-        disabled={page === totalPages}
-        className="p-1.5 rounded-md hover:bg-muted disabled:opacity-30 transition-colors"
-        aria-label={t("common.nextPage")}
-      >
-        <ChevronRight className="h-4 w-4" />
-      </button>
-    </div>
-  );
-}
 
 function PaginatedSection({
   section,
@@ -175,6 +112,7 @@ function PaginatedSection({
   perPage: number;
   variant?: "board" | "grid";
 }) {
+  const { t, num } = useLanguage();
   const [page, setPage] = useState(1);
   const start = (page - 1) * perPage;
   const visible = members.slice(start, start + perPage);
@@ -196,12 +134,18 @@ function PaginatedSection({
       </div>
       <Pagination
         page={page}
-        total={members.length}
-        perPage={perPage}
-        onChange={(p) => {
+        totalPages={Math.ceil(members.length / perPage)}
+        onPageChange={(p) => {
           setPage(p);
           window.scrollBy({ top: -400, behavior: "smooth" });
         }}
+        className="mt-10"
+        labels={{
+          prev: t("common.prev"),
+          next: t("common.next"),
+          pagination: t("common.pagination"),
+        }}
+        formatNumber={(n) => num(n, false)}
       />
     </motion.div>
   );
@@ -219,7 +163,7 @@ export default function WhoWeArePage() {
 
   return (
     <main className="min-h-screen">
-      <Header />
+      <Header overDarkHero />
 
       {/* Hero */}
       <PageHero imageSrc={bannerUrl} imageAlt={heroTitle} title={heroTitle} />

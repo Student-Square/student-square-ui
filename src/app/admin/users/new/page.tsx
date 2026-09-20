@@ -4,7 +4,10 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { toast } from "sonner";
+import { useSelector } from "react-redux";
 import { useAdminCreateUserMutation } from "@/redux/features/users/usersApi";
+import { selectUserRole } from "@/redux/features/auth/authSlice";
+import { canSeeRole } from "@/lib/roleRank";
 import type { UserRole } from "@/types/auth";
 import { ArrowLeft, Copy, Loader2 } from "lucide-react";
 
@@ -28,6 +31,7 @@ export default function AdminNewUserPage() {
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const callerRole = useSelector(selectUserRole) as UserRole;
   const [role, setRole] = useState<UserRole>("MEMBER");
   const [created, setCreated] = useState<{ id: string; fullName: string; email: string; temporaryPassword: string } | null>(null);
 
@@ -129,7 +133,7 @@ export default function AdminNewUserPage() {
             onChange={(e) => setRole(e.target.value as UserRole)}
             className="form-input"
           >
-            {ROLE_OPTIONS.map((o) => (
+            {ROLE_OPTIONS.filter((o) => canSeeRole(callerRole, o.value)).map((o) => (
               <option key={o.value} value={o.value}>{o.label}</option>
             ))}
           </select>

@@ -32,7 +32,7 @@ export default function NewsDetailPage() {
 
   return (
     <main className="min-h-screen">
-      <Header />
+      <Header overDarkHero />
 
       {/* Hero */}
       <section className="relative h-[40vh] min-h-[240px] w-full overflow-hidden">

@@ -37,7 +37,7 @@ export default function ServicePage() {
 
   return (
     <main className="min-h-screen bg-background">
-      <Header />
+      <Header overDarkHero />
 
       <article className="relative">
         {/* Full-bleed cover image. Runs to the top of the page with the

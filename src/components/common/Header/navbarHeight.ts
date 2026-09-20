@@ -9,13 +9,16 @@
  * They had already drifted: the offset stopped at `lg` while the header kept
  * growing at `2xl` and above, so on wide screens the page banner tucked up
  * underneath the navbar.
+ *
+ * 3xl (1920px, typical 21–24" monitor) stays at 80px. Logo and nav type
+ * scale up inside that height instead of growing the bar itself.
  */
 
 /** Applied to the header's inner row — the element that sets its real height. */
-export const NAVBAR_HEIGHT = "h-12 sm:h-14 lg:h-16 2xl:h-20 3xl:h-24 4xl:h-28";
+export const NAVBAR_HEIGHT = "h-12 sm:h-14 lg:h-16 2xl:h-20 3xl:h-20";
 
 /** Applied to whatever a page renders first, to clear the fixed header. */
-export const NAVBAR_OFFSET = "mt-12 sm:mt-14 lg:mt-16 2xl:mt-20 3xl:mt-24 4xl:mt-28";
+export const NAVBAR_OFFSET = "mt-12 sm:mt-14 lg:mt-16 2xl:mt-20 3xl:mt-20";
 
 /**
  * Padding equivalent of NAVBAR_OFFSET.
@@ -24,7 +27,7 @@ export const NAVBAR_OFFSET = "mt-12 sm:mt-14 lg:mt-16 2xl:mt-20 3xl:mt-24 4xl:mt
  * behind the transparent navbar while only its *content* clears the header.
  * NAVBAR_OFFSET moves the background down too, which leaves a bare strip.
  */
-export const NAVBAR_PAD_TOP = "pt-12 sm:pt-14 lg:pt-16 2xl:pt-20 3xl:pt-24 4xl:pt-28";
+export const NAVBAR_PAD_TOP = "pt-12 sm:pt-14 lg:pt-16 2xl:pt-20 3xl:pt-20";
 
 /**
  * Scrim for a full-bleed hero that runs underneath the transparent navbar.

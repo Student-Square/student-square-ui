@@ -11,6 +11,7 @@ import { shellBase } from "@/lib/auth-routing";
 import { Bell, CheckCheck, Loader2, Settings } from "lucide-react";
 import NotificationRow, { useOpenNotification } from "./NotificationRow";
 import { dayGroup } from "./notificationMeta";
+import Pagination from "@/components/common/Pagination";
 
 /**
  * The notifications page for every shell — /dashboard, /panel and /admin all
@@ -20,16 +21,22 @@ import { dayGroup } from "./notificationMeta";
 export default function NotificationsView() {
   const base = shellBase(usePathname());
   const [tab, setTab] = useState<"all" | "unread">("all");
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(20);
   const { data, isLoading, isError } = useGetNotificationsQuery({
-    page: 1,
-    limit: 50,
+    page,
+    limit,
     ...(tab === "unread" ? { unreadOnly: true } : {}),
   });
-  const [markAll, { isLoading: markingAll }] = useMarkAllNotificationsReadMutation();
+  const [markAll, { isLoading: markingAll }] =
+    useMarkAllNotificationsReadMutation();
   const open = useOpenNotification();
 
   const items = data?.data ?? [];
   const unread = data?.meta?.unreadCount ?? 0;
+  const total = data?.meta?.total ?? 0;
+  const pageLimit = data?.meta?.limit ?? limit;
+  const totalPages = Math.max(1, Math.ceil(total / pageLimit) || 1);
 
   // Groups in arrival order — the list is already newest-first from the server.
   const groups: { label: string; items: typeof items }[] = [];
@@ -80,7 +87,10 @@ export default function NotificationsView() {
           <button
             key={t}
             type="button"
-            onClick={() => setTab(t)}
+            onClick={() => {
+              setTab(t);
+              setPage(1);
+            }}
             className={`rounded-lg px-4 py-1.5 text-xs font-semibold capitalize transition-colors ${
               tab === t
                 ? "bg-emerald-600 text-white shadow-sm"
@@ -103,7 +113,7 @@ export default function NotificationsView() {
         <div className="rounded-2xl border border-border bg-card p-8 text-center text-sm text-muted-foreground">
           Could not load notifications. Try again later.
         </div>
-      ) : items.length === 0 ? (
+      ) : items.length === 0 && total === 0 ? (
         <div className="rounded-2xl border border-border bg-card p-10 text-center">
           <Bell className="h-8 w-8 mx-auto text-muted-foreground/50 mb-3" />
           <p className="text-sm font-semibold text-foreground">
@@ -127,6 +137,19 @@ export default function NotificationsView() {
               </div>
             </section>
           ))}
+
+          <Pagination
+            page={data?.meta?.page ?? page}
+            totalPages={totalPages}
+            total={total}
+            limit={pageLimit}
+            onPageChange={setPage}
+            onLimitChange={(next) => {
+              setLimit(next);
+              setPage(1);
+            }}
+            className="mt-2"
+          />
         </div>
       )}
     </div>

@@ -24,6 +24,9 @@ import {
   useListMyOperationsQuery,
   useUpdateOperationMutation,
 } from "@/redux/features/operations/operationsApi";
+import { usePdfPreview } from "@/components/common/PdfPreview";
+import Pagination from "@/components/common/Pagination";
+import { TABLE_PAGE_SIZE } from "@/lib/pagination";
 import type {
   OperationEntry,
   OperationEntryInput,
@@ -45,22 +48,22 @@ function formatRange(startsAt: string, endsAt: string) {
   const end = new Date(endsAt);
   if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) return "—";
   const sameDay = start.toDateString() === end.toDateString();
-  const day = start.toLocaleDateString(undefined, {
+  const day = start.toLocaleDateString("en-GB", {
     day: "numeric",
     month: "short",
     year: "numeric",
   });
-  const t1 = start.toLocaleTimeString(undefined, {
+  const t1 = start.toLocaleTimeString("en-GB", {
     hour: "2-digit",
     minute: "2-digit",
   });
-  const t2 = end.toLocaleTimeString(undefined, {
+  const t2 = end.toLocaleTimeString("en-GB", {
     hour: "2-digit",
     minute: "2-digit",
   });
   if (sameDay) return { day, time: `${t1} – ${t2}` };
   return {
-    day: `${day} → ${end.toLocaleDateString(undefined, {
+    day: `${day} → ${end.toLocaleDateString("en-GB", {
       day: "numeric",
       month: "short",
     })}`,
@@ -91,7 +94,10 @@ function emptyForm(): OperationEntryInput & {
 
 export default function DashboardOperationsPage() {
   const user = useSelector(selectCurrentUser);
-  const { data, isLoading } = useListMyOperationsQuery({ limit: 100 });
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState<number>(TABLE_PAGE_SIZE);
+  const { data, isLoading } = useListMyOperationsQuery({ page, limit });
+  const { openPdfPreview, pdfPreview } = usePdfPreview();
   const [createEntry, { isLoading: creating }] = useCreateOperationMutation();
   const [updateEntry, { isLoading: updating }] = useUpdateOperationMutation();
   const [deleteEntry] = useDeleteOperationMutation();
@@ -109,6 +115,10 @@ export default function DashboardOperationsPage() {
   const [listQuery, setListQuery] = useState("");
 
   const rows = data?.data ?? [];
+  const total = data?.total ?? 0;
+  const totalPages = data?.totalPages ?? 1;
+  const pageLimit = data?.limit ?? limit;
+
   const filteredRows = useMemo(() => {
     const q = listQuery.trim().toLowerCase();
     if (!q) return rows;
@@ -252,6 +262,7 @@ export default function DashboardOperationsPage() {
 
   return (
     <div>
+      {pdfPreview}
       <div className="flex flex-wrap items-end justify-between gap-3 mb-6">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">
@@ -282,10 +293,12 @@ export default function DashboardOperationsPage() {
           <button
             type="button"
             onClick={() =>
-              downloadOperationExport(
-                "/operations/mine/export.pdf",
-                "daily-operation-book.pdf"
-              ).catch(() => toast.error("PDF download failed"))
+              openPdfPreview({
+                path: "/operations/mine/export.pdf",
+                fileName: "daily-operation-book.pdf",
+                title: "Daily operation book",
+                subtitle: user?.fullName ?? undefined,
+              })
             }
             className="inline-flex items-center gap-2 px-3 py-2 rounded-xl border border-border text-sm font-semibold hover:bg-muted"
           >
@@ -307,7 +320,10 @@ export default function DashboardOperationsPage() {
           className="w-full pl-9 pr-3 py-2.5 text-sm rounded-xl border border-border bg-background"
           placeholder="Search tasks…"
           value={listQuery}
-          onChange={(e) => setListQuery(e.target.value)}
+          onChange={(e) => {
+            setListQuery(e.target.value);
+            setPage(1);
+          }}
         />
       </div>
 
@@ -416,6 +432,19 @@ export default function DashboardOperationsPage() {
           })}
         </ul>
       )}
+
+      <Pagination
+        page={page}
+        totalPages={totalPages}
+        total={total}
+        limit={pageLimit}
+        onPageChange={setPage}
+        onLimitChange={(next) => {
+          setLimit(next);
+          setPage(1);
+        }}
+        className="mt-4"
+      />
 
       {open && (
         <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 p-4">

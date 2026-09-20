@@ -8,7 +8,6 @@ import {
   BarChart3,
   Briefcase,
   FileText,
-  FlagTriangleRight,
   HandCoins,
   LayoutGrid,
   Newspaper,
@@ -76,14 +75,6 @@ const QUICK_LINKS: Array<{
     desc: "Users, traffic, engagement & content",
     bg: "bg-cyan-50 dark:bg-cyan-900/20",
     roles: EDIT_ROLES,
-  },
-  {
-    href: "/admin/moderation",
-    icon: <FlagTriangleRight className="h-5 w-5 text-orange-600" />,
-    label: "Moderation Queue",
-    desc: "Review pending stories & comments",
-    bg: "bg-orange-50 dark:bg-orange-900/20",
-    roles: ["SYSTEM_ADMIN", "SUPER_ADMIN", "ADMIN", "MODERATOR"],
   },
   {
     href: "/admin/recruitment",

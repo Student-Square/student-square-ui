@@ -25,6 +25,24 @@ function getOrCreateSessionId(): string {
   }
 }
 
+/** Staff and member shells — not public traffic, so never tracked. */
+const INTERNAL_AREA = /^\/(admin|panel|dashboard)(\/|$)/;
+
+/**
+ * sendBeacon survives the page unloading, which a click on a link usually
+ * causes; fetch with keepalive is the fallback.
+ */
+function send(url: string, payload: Record<string, unknown>) {
+  const body = JSON.stringify(payload);
+  if (navigator.sendBeacon) {
+    navigator.sendBeacon(url, new Blob([body], { type: "application/json" }));
+  } else {
+    fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body, keepalive: true }).catch(
+      () => {}
+    );
+  }
+}
+
 /**
  * Fires a first-party pageview beacon on every route change, for the
  * Website Analytics dashboard (traffic + blog view counts). No cookies, no
@@ -39,23 +57,50 @@ export default function AnalyticsTracker() {
     // Never track the admin/panel/dashboard shells — internal staff and
     // member usage would otherwise inflate "visitor" counts meant to
     // measure public site traffic.
-    if (/^\/(admin|panel|dashboard)(\/|$)/.test(pathname)) return;
+    if (INTERNAL_AREA.test(pathname)) return;
 
-    const body = JSON.stringify({
+    send(`${API_BASE_URL}/analytics/track`, {
       path: pathname,
       referrer: document.referrer || undefined,
       sessionId: getOrCreateSessionId(),
     });
-
-    const url = `${API_BASE_URL}/analytics/track`;
-    if (navigator.sendBeacon) {
-      navigator.sendBeacon(url, new Blob([body], { type: "application/json" }));
-    } else {
-      fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body, keepalive: true }).catch(
-        () => {}
-      );
-    }
   }, [pathname]);
+
+  // Link clicks, for "Most clicked links". One delegated listener instead of
+  // wiring every <a>: it sees links rendered later too. Capture phase, so a
+  // handler that stops propagation cannot hide the click.
+  useEffect(() => {
+    const onClick = (e: MouseEvent) => {
+      const from = window.location.pathname;
+      if (INTERNAL_AREA.test(from)) return;
+
+      const link = (e.target as Element | null)?.closest?.("a[href]");
+      if (!(link instanceof HTMLAnchorElement)) return;
+      const href = link.getAttribute("href");
+      if (!href || href.startsWith("#")) return;
+
+      // Absolute URL, minus query and fragment — the server strips them too,
+      // but they need not leave the browser at all.
+      const target = href.startsWith("mailto:") || href.startsWith("tel:")
+        ? href.split(/[?#]/)[0]
+        : `${link.origin}${link.pathname}`;
+
+      const label = (link.getAttribute("aria-label") || link.textContent || "")
+        .replace(/\s+/g, " ")
+        .trim()
+        .slice(0, 80);
+
+      send(`${API_BASE_URL}/analytics/click`, {
+        target,
+        fromPath: from,
+        ...(label ? { label } : {}),
+        sessionId: getOrCreateSessionId(),
+      });
+    };
+
+    document.addEventListener("click", onClick, { capture: true });
+    return () => document.removeEventListener("click", onClick, { capture: true });
+  }, []);
 
   return null;
 }

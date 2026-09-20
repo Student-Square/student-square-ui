@@ -1,6 +1,8 @@
 import { baseApi } from "../../api/baseApi";
 import type {
   AdminDonation,
+  DonationReport,
+  DonationReportFilters,
   AttemptsSummary,
   DonationSummary,
   ManualDonationBody,
@@ -63,6 +65,12 @@ const adminDonationsApi = baseApi.injectEndpoints({
       invalidatesTags: ["AdminDonations", "Campaigns", "AdminCampaigns"],
     }),
 
+    /** Giving over a date range, bucketed by period and cut by project and status. */
+    getDonationReport: build.query<DonationReport, DonationReportFilters>({
+      query: (params) => ({ url: "/admin/donations/report", params }),
+      providesTags: ["AdminDonations"],
+    }),
+
     /** Re-check every pending SSLCommerz donation with the gateway, now. */
     reconcileDonations: build.mutation<
       { checked: number; paid: number; expired: number },
@@ -79,6 +87,7 @@ export const {
   useGetDonationSummaryQuery,
   useGetAttemptsSummaryQuery,
   useGetProjectStatsQuery,
+  useGetDonationReportQuery,
   useCreateManualDonationMutation,
   useConfirmDonationMutation,
   useVerifyDonationMutation,
