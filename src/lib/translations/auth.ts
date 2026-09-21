@@ -185,6 +185,7 @@ export const AUTH: Dict = {
   "login.backToCredentials": { EN: "Back to email / password", BN: "ইমেইল / পাসওয়ার্ডে ফিরে যান" },
   "login.copyCodes": { EN: "Copy recovery codes", BN: "রিকভারি কোড কপি করুন" },
   "login.continueVerify": { EN: "Continue to verification", BN: "যাচাইয়ের ধাপে যান" },
+  "login.continueSignedIn": { EN: "I've saved them — continue", BN: "সংরক্ষণ করেছি — এগিয়ে যান" },
   "login.signingInAs": { EN: "Signing in as {email}", BN: "{email} হিসেবে সাইন ইন করছেন" },
   "login.recoveryLabel": { EN: "Recovery code", BN: "রিকভারি কোড" },
   "login.verifyContinue": { EN: "Verify and continue", BN: "যাচাই করে এগিয়ে যান" },

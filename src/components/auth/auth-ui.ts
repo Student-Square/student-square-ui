@@ -6,6 +6,14 @@ export const authInputClass =
 export const authLoginInputClass =
   "w-full rounded-xl border border-gray-200 bg-[#fafcfb] px-4 py-3.5 text-sm text-gray-900 placeholder:text-gray-400 transition-all focus:border-emerald-500 focus:bg-white focus:outline-none focus:ring-4 focus:ring-emerald-500/10";
 
+/**
+ * One-time-code fields (authenticator + recovery). Colours are stated rather
+ * than inherited: these sit on the light-pinned auth card, so they must not
+ * follow the page theme.
+ */
+export const authCodeInputClass =
+  "w-full rounded-lg border border-border bg-background py-2.5 pl-9 pr-3 font-mono text-sm text-gray-900 placeholder:text-gray-400 transition-colors focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20";
+
 export const authButtonClass =
   "w-full rounded-full bg-gradient-to-r from-[#b8ddb3] via-[#aed9a8] to-[#9ccc9a] px-5 py-3.5 text-sm font-bold tracking-wide text-gray-900 shadow-md shadow-emerald-700/15 transition-all hover:from-[#a8d4a3] hover:to-[#8bc34a] hover:shadow-lg hover:shadow-emerald-700/20 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-60 disabled:active:scale-100 dark:from-emerald-600 dark:via-emerald-600 dark:to-emerald-700 dark:text-white dark:shadow-emerald-950/30";
 

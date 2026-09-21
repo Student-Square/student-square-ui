@@ -13,23 +13,23 @@ export default function OurProjects() {
       <div className="container relative z-10 w-full max-w-7xl mx-auto 2xl:max-w-[1600px] 3xl:max-w-[1800px] 4xl:max-w-[2000px]">
         {/* Header Section */}
         <motion.div
-          className="text-center mb-8 sm:mb-10 md:mb-12"
+          className="text-center mb-6 sm:mb-10 md:mb-12"
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8 }}
           viewport={{ once: true }}
         >
-          <h2 className="font-heading text-3xl sm:text-4xl md:text-4xl lg:text-5xl xl:text-6xl font-bold tracking-[0.02em] text-balance text-foreground mb-4 sm:mb-6 leading-tight">
+          <h2 className="font-heading text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold tracking-[0.02em] text-balance text-foreground mb-3 sm:mb-6 leading-tight">
             {t("home.projectsTitle")}
           </h2>
-          <p className="text-sm sm:text-sm md:text-base text-muted-foreground max-w-3xl mx-auto font-light leading-relaxed px-2 sm:px-4">
+          <p className="text-[0.8125rem] sm:text-sm md:text-base text-muted-foreground max-w-3xl mx-auto font-light leading-relaxed px-0 sm:px-4">
             {t("home.projectsDescription")}
           </p>
         </motion.div>
 
         {/* Project Carousel */}
         <motion.div
-          className="relative left-1/2 mb-8 w-screen -translate-x-1/2 sm:mb-10 md:mb-12"
+          className="relative left-1/2 mb-8 w-screen -translate-x-1/2 px-4 sm:mb-10 sm:px-6 md:mb-12 lg:px-0"
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.2 }}

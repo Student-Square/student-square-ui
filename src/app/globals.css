@@ -88,6 +88,12 @@
 
 .auth-fixed-theme {
   color-scheme: light;
+  /* The auth pages are pinned to the light palette, but `color` still came
+     from <body>, which in dark mode is near-white. Anything inside here
+     without its own text colour — the MFA code inputs and their placeholders,
+     the secret and recovery-code blocks, the copy buttons — was then white on
+     white. Re-anchor the inherited colour to this block's own foreground. */
+  color: var(--foreground);
   --background: oklch(0.99 0 0);
   --foreground: oklch(0.15 0.01 260);
   --card: oklch(1 0 0);

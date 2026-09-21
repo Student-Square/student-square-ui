@@ -213,13 +213,13 @@ const ProjectCarousel = ({ projects: projectsProp }: ProjectCarouselProps) => {
   if (isLoading && projects.length === 0) {
     return (
       <div className="w-full">
-        <div className="flex flex-col gap-1 overflow-hidden rounded-md lg:h-[520px] lg:flex-row">
+        <div className="flex flex-col gap-2 overflow-hidden rounded-md lg:h-[520px] lg:flex-row lg:gap-1">
           {[0, 1, 2, 3].map((i) => (
             <div
               key={i}
               className={cn(
                 "animate-pulse rounded-md bg-muted lg:min-h-0 lg:basis-0",
-                i === 0 ? "h-[340px] sm:h-[420px] lg:h-auto lg:flex-[3]" : "h-[82px] sm:h-[104px] lg:h-auto lg:flex-1"
+                i === 0 ? "h-[300px] sm:h-[420px] lg:h-auto lg:flex-[3]" : "h-[96px] sm:h-[104px] lg:h-auto lg:flex-1"
               )}
             />
           ))}
@@ -233,7 +233,7 @@ const ProjectCarousel = ({ projects: projectsProp }: ProjectCarouselProps) => {
   return (
     <div className="relative w-full">
       <motion.div
-        className="flex flex-col gap-1 overflow-hidden rounded-md lg:h-[520px] lg:flex-row"
+        className="flex flex-col gap-2 overflow-hidden rounded-md lg:h-[520px] lg:flex-row lg:gap-1"
         initial={{ opacity: 0, y: 14 }}
         whileInView={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.55 }}
@@ -258,8 +258,8 @@ const ProjectCarousel = ({ projects: projectsProp }: ProjectCarouselProps) => {
               className={cn(
                 "group relative overflow-hidden rounded-md border border-white/20 transition-[height,flex] duration-500 ease-out lg:min-h-0 lg:basis-0",
                 isActive
-                  ? "h-[340px] sm:h-[420px] lg:h-auto lg:flex-[3]"
-                  : "h-[82px] sm:h-[104px] lg:h-auto lg:flex-1"
+                  ? "h-[300px] sm:h-[420px] lg:h-auto lg:flex-[3]"
+                  : "h-[96px] sm:h-[104px] lg:h-auto lg:flex-1"
               )}
             >
               {hasVimeoVideo ? (
@@ -330,7 +330,11 @@ const ProjectCarousel = ({ projects: projectsProp }: ProjectCarouselProps) => {
                     <h3
                       className={cn(
                         "font-heading font-semibold text-white transition-all duration-300 [text-shadow:0_1px_10px_rgba(0,0,0,0.55)]",
-                        isActive ? "text-xl sm:text-2xl lg:text-2xl" : "text-lg sm:text-xl lg:text-xl"
+                        isActive
+                          ? "text-lg sm:text-2xl lg:text-2xl"
+                          // Two lines max: a long title used to push the expand
+                          // button out of a collapsed card on narrow screens.
+                          : "line-clamp-2 text-base sm:text-xl lg:text-xl"
                       )}
                     >
                       {title}
@@ -353,8 +357,10 @@ const ProjectCarousel = ({ projects: projectsProp }: ProjectCarouselProps) => {
 
                   <p
                     className={cn(
-                      "mt-3 max-w-3xl text-white/90 transition-all duration-300",
-                      isActive ? "max-h-28 opacity-100 text-sm sm:text-base" : "max-h-0 opacity-0"
+                      "mt-2 max-w-3xl overflow-hidden text-white/90 transition-all duration-300 sm:mt-3",
+                      isActive
+                        ? "max-h-20 opacity-100 text-[0.8125rem] sm:max-h-28 sm:text-base"
+                        : "max-h-0 opacity-0"
                     )}
                   >
                     {summary}
@@ -362,7 +368,7 @@ const ProjectCarousel = ({ projects: projectsProp }: ProjectCarouselProps) => {
                 </div>
 
                 {isActive && (
-                  <div className="mt-6 flex items-center justify-between gap-3">
+                  <div className="mt-4 flex items-center justify-between gap-3 sm:mt-6">
                     <div className="flex flex-wrap items-center gap-3">
                       <Link
                         href={detailHref}

@@ -32,6 +32,11 @@ type MfaEnrolResult = {
 
 type MfaConfirmResult = {
   recoveryCodes: string[];
+  /**
+   * Present only when enrolment ran as part of a login — the server signs the
+   * account in there and then, so no second code is asked for.
+   */
+  accessToken?: string;
 };
 
 type ChangePasswordInput = { oldPassword: string; newPassword: string };

@@ -20,6 +20,7 @@ import AuthShell from "@/components/auth/AuthShell";
 import OtpQrCode from "@/components/auth/OtpQrCode";
 import {
   authButtonClass,
+  authCodeInputClass,
   authHeadingClass,
   authLoginButtonClass,
   authLoginInputClass,
@@ -82,15 +83,21 @@ function LoginForm() {
   const [mfaSecret, setMfaSecret] = useState<string | null>(null);
   const [otpauthUrl, setOtpauthUrl] = useState<string | null>(null);
   const [recoveryCodes, setRecoveryCodes] = useState<string[]>([]);
+  const [enrolSignedIn, setEnrolSignedIn] = useState(false);
+  const [codesAcknowledged, setCodesAcknowledged] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
 
   const busy = loginLoading || enrolLoading || confirmLoading;
 
   useEffect(() => {
+    // Enrolment signs the account in, but these recovery codes are shown
+    // exactly once — redirecting out from under them would lose them for
+    // good. The step's own button acknowledges them and releases this.
+    if (step === "recovery" && !codesAcknowledged) return;
     if (isAuthenticated && user) {
       router.replace(pickPostLoginDestination(user.role, next));
     }
-  }, [isAuthenticated, user, next, router]);
+  }, [isAuthenticated, user, next, router, step, codesAcknowledged]);
 
   function errMessage(err: unknown, fallback: string) {
     const data = (
@@ -210,6 +217,7 @@ function LoginForm() {
         code: mfaCode.trim(),
       }).unwrap();
       setRecoveryCodes(confirmed.recoveryCodes ?? []);
+      setEnrolSignedIn(Boolean(confirmed.accessToken));
       setStep("recovery");
       toast.success(t("login.toastEnabled"));
     } catch (err) {
@@ -219,6 +227,14 @@ function LoginForm() {
 
   async function handleContinueAfterRecovery() {
     setFormError(null);
+    // Enrolment that ran inside a login already returned a session: password
+    // plus authenticator were both proven, so go straight in. The redirect
+    // effect picks the destination as soon as /me has landed.
+    if (enrolSignedIn) {
+      setCodesAcknowledged(true);
+      return;
+    }
+    // Enrolment from an existing session issues no new one: still owed a code.
     setMfaCode("");
     setUseRecovery(false);
     setStep("mfa");
@@ -405,7 +421,7 @@ function LoginForm() {
                       setMfaCode(e.target.value.replace(/\D/g, "").slice(0, 6))
                     }
                     placeholder="123456"
-                    className="w-full pl-9 pr-3 py-2.5 text-sm tracking-[0.3em] font-mono rounded-lg bg-background border border-border focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 transition-colors"
+                    className={`${authCodeInputClass} tracking-[0.3em]`}
                   />
                 </div>
               </label>
@@ -462,7 +478,7 @@ function LoginForm() {
                 onClick={handleContinueAfterRecovery}
                 className={authButtonClass}
               >
-                {t("login.continueVerify")}
+                {t(enrolSignedIn ? "login.continueSignedIn" : "login.continueVerify")}
               </button>
             </div>
           )}
@@ -490,7 +506,7 @@ function LoginForm() {
                         setMfaCode(e.target.value.replace(/\D/g, "").slice(0, 6))
                       }
                       placeholder="123456"
-                      className="w-full pl-9 pr-3 py-2.5 text-sm tracking-[0.3em] font-mono rounded-lg bg-background border border-border focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 transition-colors"
+                      className={`${authCodeInputClass} tracking-[0.3em]`}
                     />
                   </div>
                 </label>
@@ -507,7 +523,7 @@ function LoginForm() {
                       value={recoveryCode}
                       onChange={(e) => setRecoveryCode(e.target.value)}
                       placeholder="XXXXX-XXXXX"
-                      className="w-full pl-9 pr-3 py-2.5 text-sm font-mono rounded-lg bg-background border border-border focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 transition-colors"
+                      className={authCodeInputClass}
                     />
                   </div>
                 </label>
