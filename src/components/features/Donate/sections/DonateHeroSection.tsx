@@ -2,6 +2,7 @@
 
 import { useRef, useState } from "react";
 import type { InputHTMLAttributes } from "react";
+import Link from "next/link";
 import { useSelector } from "react-redux";
 import { toast } from "sonner";
 import { CreditCard, EyeOff, HandHeart, Heart, Loader2, Lock, Mail, Phone, Sparkles, User } from "lucide-react";
@@ -71,6 +72,7 @@ export default function DonateHeroSection({
   const [donorPhone, setDonorPhone] = useState("");
   const [donorEmail, setDonorEmail] = useState(user?.email ?? "");
   const [isAnonymous, setIsAnonymous] = useState(false);
+  const [acceptedPolicies, setAcceptedPolicies] = useState(false);
   const [paying, setPaying] = useState(false);
   const idempotency = useRef<{ body: string; key: string } | null>(null);
 
@@ -93,6 +95,7 @@ export default function DonateHeroSection({
     // Required for a named gift: it is what the confirmation SMS is sent to.
     if (!isAnonymous && !donorPhone.trim())
       return toast.error(t("donate.err.phone"));
+    if (!acceptedPolicies) return toast.error(t("donate.err.policies"));
 
     const body: CreateDonationBody = {
       amount: String(currentAmt),
@@ -381,11 +384,35 @@ export default function DonateHeroSection({
                 )}
               </div>
 
+              <label className="flex items-start gap-3 text-xs leading-relaxed text-muted-foreground">
+                <input
+                  type="checkbox"
+                  checked={acceptedPolicies}
+                  onChange={(e) => setAcceptedPolicies(e.target.checked)}
+                  className="mt-0.5 h-4 w-4 shrink-0 accent-emerald-600"
+                />
+                <span>
+                  {t("donate.policyAgree")}{" "}
+                  <Link href="/terms" target="_blank" rel="noopener noreferrer" className="font-medium text-emerald-700 underline dark:text-emerald-400">
+                    {t("footer.terms")}
+                  </Link>
+                  {", "}
+                  <Link href="/privacy" target="_blank" rel="noopener noreferrer" className="font-medium text-emerald-700 underline dark:text-emerald-400">
+                    {t("footer.privacy")}
+                  </Link>{" "}
+                  {t("donate.policyAnd")}{" "}
+                  <Link href="/refund" target="_blank" rel="noopener noreferrer" className="font-medium text-emerald-700 underline dark:text-emerald-400">
+                    {t("footer.refund")}
+                  </Link>
+                  .
+                </span>
+              </label>
+
               <div className="space-y-2.5">
                 <button
                   type="button"
                   onClick={() => void handleDonate()}
-                  disabled={busy}
+                  disabled={busy || !acceptedPolicies}
                   className="flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 text-base font-bold text-white shadow-lg shadow-emerald-600/30 transition-all hover:from-emerald-600 hover:to-emerald-700 hover:shadow-xl active:scale-[0.99] disabled:opacity-60"
                 >
                   {busy ? (

@@ -123,10 +123,15 @@ const CHROME: Dict = {
   "footer.news": { EN: "News & Press", BN: "সংবাদ ও গণমাধ্যম" },
   "footer.privacy": { EN: "Privacy Policy", BN: "গোপনীয়তা নীতি" },
   "footer.terms": { EN: "Terms of Use", BN: "ব্যবহারের শর্তাবলী" },
+  "footer.refund": { EN: "Return and Refund Policy", BN: "রিটার্ন ও রিফান্ড নীতি" },
+  "footer.team": { EN: "Management", BN: "ব্যবস্থাপনা" },
   "footer.sitemap": { EN: "Sitemap", BN: "সাইটম্যাপ" },
   "footer.tagline": { EN: "Empowering students through counselling, career development, and community service.", BN: "কাউন্সেলিং, ক্যারিয়ার উন্নয়ন ও কমিউনিটি সেবার মাধ্যমে শিক্ষার্থীদের এগিয়ে নিচ্ছি।" },
   "footer.rights": { EN: "Student Square. All rights reserved.", BN: "স্টুডেন্ট স্কয়ার। সর্বস্বত্ব সংরক্ষিত।" },
-  "footer.registration": { EN: "Registered under the Societies Registration Act, 1860, Bangladesh", BN: "সোসাইটিজ রেজিস্ট্রেশন অ্যাক্ট, ১৮৬০ (বাংলাদেশ) অনুযায়ী নিবন্ধিত" },
+  "footer.registration": {
+    EN: "Registered under the Societies Registration Act, 1860, Bangladesh. Registration No. RAJS-589/2026",
+    BN: "সোসাইটিজ রেজিস্ট্রেশন অ্যাক্ট, ১৮৬০ (বাংলাদেশ) অনুযায়ী নিবন্ধিত। নিবন্ধন নম্বর: RAJS-589/2026",
+  },
   "footer.email": { EN: "Email", BN: "ইমেইল" },
   // Home page
   "home.heroUnavailableTitle": { EN: "Featured content will be back shortly.", BN: "ফিচার করা কনটেন্ট শিগগিরই ফিরে আসবে।" },

@@ -11,7 +11,7 @@ export const siteConfig = {
   description:
     "A youth-led platform that provides counselling, advocacy, and community programs to help students and families thrive.",
   url: process.env.NEXT_PUBLIC_SITE_URL ?? "https://studentsquare.org",
-  ogImage: "/og-image.png",
+  ogImage: "/opengraph-image",
   contact: {
     // Displayed with the country code, dialled in E.164 — a number without
     // +880 cannot be click-to-called from outside Bangladesh.
@@ -30,7 +30,8 @@ export const siteConfig = {
     instagram: "https://www.instagram.com/studentsquarebd",
   },
   legal: {
-    registration: "Registered under the Societies Registration Act, 1860, Bangladesh",
+    registration:
+      "Registered under the Societies Registration Act, 1860, Bangladesh. Registration No. RAJS-589/2026",
   },
 } as const;
 

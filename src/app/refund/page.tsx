@@ -2,24 +2,20 @@ import type { Metadata } from "next";
 import Header from "@/components/common/Header/Header";
 import Footer from "@/components/common/Footer/Footer";
 import { NAVBAR_PAD_TOP } from "@/components/common/Header/navbarHeight";
-import PrivacyContent from "./_components/PrivacyContent";
+import RefundContent from "./_components/RefundContent";
 
 export const metadata: Metadata = {
-  title: "Privacy Notice | Student Square",
+  title: "Return and Refund Policy | Student Square",
   description:
-    "What Student Square collects, why, who can see it, and how long we keep it.",
+    "Refunds are completed within 7 to 10 working days.",
 };
 
-/**
- * The Privacy Notice registration links to. The body, including the FR-11-004
- * Super Admin disclosure, is in PrivacyContent.
- */
-export default function PrivacyPage() {
+export default function RefundPage() {
   return (
     <div className="min-h-screen bg-background">
       <Header />
       <div className={NAVBAR_PAD_TOP}>
-        <PrivacyContent />
+        <RefundContent />
       </div>
       <Footer />
     </div>

@@ -16,6 +16,7 @@ export default function Footer() {
     // were dropped rather than pointed somewhere they don't belong.
     quickLinks: [
       { key: "footer.about", href: "/about" },
+      { key: "footer.team", href: "/about/who-we-are" },
       { key: "footer.whatWeDo", href: "/what-we-do" },
       { key: "footer.join", href: "/auth/register" },
       { key: "footer.contact", href: "/contact" },
@@ -27,8 +28,9 @@ export default function Footer() {
       { key: "footer.news", href: "/news" },
     ],
     legal: [
-      { key: "footer.privacy", href: "/privacy" },
       { key: "footer.terms", href: "/terms" },
+      { key: "footer.refund", href: "/refund" },
+      { key: "footer.privacy", href: "/privacy" },
       { key: "footer.sitemap", href: "/sitemap.xml" },
     ],
   }
@@ -199,6 +201,17 @@ export default function Footer() {
                   <span>{siteConfig.contact.email}</span>
                 </a>
               </li>
+              <li className="flex items-start gap-3 text-sm text-muted-foreground">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="flex-shrink-0 mt-0.5" aria-hidden>
+                  <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" />
+                  <circle cx="12" cy="10" r="3" />
+                </svg>
+                <span>
+                  {t("contact.addressLine1")}
+                  <br />
+                  {t("contact.addressLine2")}
+                </span>
+              </li>
             </ul>
           </motion.div>
         </div>
@@ -229,6 +242,16 @@ export default function Footer() {
             </div>
           </div>
         </motion.div>
+
+        <div className="flex justify-center pt-8 sm:pt-10">
+          <Image
+            src="/images/sslcommerz-pay.png"
+            alt="SSLCOMMERZ"
+            width={480}
+            height={56}
+            className="h-12 w-auto max-w-full"
+          />
+        </div>
 
         {/* Bottom Section */}
         <div className="pt-8 sm:pt-10 grid grid-cols-1 sm:grid-cols-3 items-center gap-5 sm:gap-4">

@@ -58,6 +58,15 @@ export const DONATE: Dict = {
   "donate.err.name": { EN: "Please enter your name.", BN: "অনুগ্রহ করে আপনার নাম লিখুন।" },
   "donate.err.email": { EN: "Please enter your email.", BN: "অনুগ্রহ করে আপনার ইমেইল লিখুন।" },
   "donate.err.phone": { EN: "Please enter your phone number.", BN: "অনুগ্রহ করে আপনার ফোন নম্বর লিখুন।" },
+  "donate.policyAgree": {
+    EN: "I have read and agree to the",
+    BN: "আমি পড়েছি এবং সম্মত আছি:",
+  },
+  "donate.policyAnd": { EN: "and", BN: "এবং" },
+  "donate.err.policies": {
+    EN: "Please accept the Terms of Use, Privacy Policy, and Return and Refund Policy to continue.",
+    BN: "এগোতে ব্যবহারের শর্তাবলী, গোপনীয়তা নীতি এবং রিটার্ন ও রিফান্ড নীতিতে সম্মতি দিন।",
+  },
   "donate.err.payment": { EN: "Could not start payment. Please try again.", BN: "পেমেন্ট শুরু করা যায়নি। অনুগ্রহ করে আবার চেষ্টা করুন।" },
 
   // Preset amounts: what each one funds (one-time, shown under the buttons)
