@@ -30,6 +30,7 @@ export default function Footer() {
     legal: [
       { key: "footer.terms", href: "/terms" },
       { key: "footer.refund", href: "/refund" },
+      { key: "footer.delivery", href: "/delivery" },
       { key: "footer.privacy", href: "/privacy" },
       { key: "footer.sitemap", href: "/sitemap.xml" },
     ],

@@ -124,6 +124,7 @@ const CHROME: Dict = {
   "footer.privacy": { EN: "Privacy Policy", BN: "গোপনীয়তা নীতি" },
   "footer.terms": { EN: "Terms of Use", BN: "ব্যবহারের শর্তাবলী" },
   "footer.refund": { EN: "Return and Refund Policy", BN: "রিটার্ন ও রিফান্ড নীতি" },
+  "footer.delivery": { EN: "Delivery Policy", BN: "ডেলিভারি নীতি" },
   "footer.team": { EN: "Management", BN: "ব্যবস্থাপনা" },
   "footer.sitemap": { EN: "Sitemap", BN: "সাইটম্যাপ" },
   "footer.tagline": { EN: "Empowering students through counselling, career development, and community service.", BN: "কাউন্সেলিং, ক্যারিয়ার উন্নয়ন ও কমিউনিটি সেবার মাধ্যমে শিক্ষার্থীদের এগিয়ে নিচ্ছি।" },
