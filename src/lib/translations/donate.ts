@@ -26,6 +26,13 @@ export const DONATE: Dict = {
     BN: "যাকাত, সদকা, বা কোনো নির্দিষ্ট প্রকল্পের বাইরের অনুদান।",
   },
   "donate.changeProject": { EN: "Change project", BN: "প্রকল্প বদলান" },
+  "donate.chooseProject": { EN: "Choose a project", BN: "একটি প্রকল্প বেছে নিন" },
+  "donate.selectFirst": { EN: "Please choose a project to donate", BN: "অনুদানের জন্য একটি প্রকল্প বেছে নিন" },
+  "donate.browseProjects": { EN: "Choose project", BN: "প্রকল্প বাছুন" },
+  "donate.chooseProjectHint": {
+    EN: "Select where your gift should go. You will then enter the amount and pay.",
+    BN: "অনুদান কোথায় যাবে তা বেছে নিন। এরপর পরিমাণ লিখে পেমেন্ট করবেন।",
+  },
   "donate.projectNotFound": { EN: "That project is not open for donations.", BN: "এই প্রকল্পে এখন অনুদান নেওয়া হচ্ছে না।" },
   "donate.backToProjects": { EN: "Back to projects", BN: "প্রকল্পে ফিরে যান" },
   "donate.whereGoes": { EN: "Where your gift goes", BN: "আপনার অনুদান কোথায় যাবে" },
@@ -49,6 +56,10 @@ export const DONATE: Dict = {
   "donate.sslNote": {
     EN: "You will be taken to SSLCommerz to complete your payment securely.",
     BN: "নিরাপদে পেমেন্ট সম্পন্ন করতে আপনাকে SSLCommerz-এ নিয়ে যাওয়া হবে।",
+  },
+  "donate.err.choose": {
+    EN: "Please choose a project first.",
+    BN: "আগে একটি প্রকল্প বেছে নিন।",
   },
   "donate.err.target": {
     EN: "The project could not be loaded. Please go back and choose it again.",

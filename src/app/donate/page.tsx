@@ -1,17 +1,10 @@
-import { redirect } from "next/navigation";
-import { serverGet } from "@/lib/serverApi";
-import type { ApiCampaign } from "@/types/campaigns";
+import DonateExperience from "@/components/features/Donate/DonateExperience";
 
 /**
- * /donate has no page of its own. It opens the donate page of the first active
- * project, whose project list lets the donor switch; with no active project,
- * or the API unreachable, it opens the general fund, which needs none.
- *
- * Read fresh every time: a cached list could keep sending donors to a project
- * that has just closed.
+ * /donate starts with no project chosen. The donor picks a project (or the
+ * general fund) and only then reaches the payment form for that choice.
+ * A direct /donate/[slug] link still opens that project already selected.
  */
-export default async function DonatePage() {
-  const campaigns = await serverGet<ApiCampaign[]>("/campaigns?status=ACTIVE", { revalidate: 0 });
-  const first = [...(campaigns ?? [])].sort((a, b) => a.order - b.order)[0];
-  redirect(first ? `/donate/${first.slug}` : "/donate/general");
+export default function DonatePage() {
+  return <DonateExperience />;
 }

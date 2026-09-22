@@ -4,10 +4,9 @@ import { Loader2 } from "lucide-react";
 import { useLanguage } from "@/components/i18n/LanguageProvider";
 
 /**
- * /donate fetches the active projects on the server before redirecting to one,
- * and the layout renders the header and footer around whatever is in between.
+ * The layout renders the header and footer around whatever is in between.
  * Without this the gap was empty, so the footer sat directly under the header
- * until the redirect landed. Holding a screen's height keeps it off-screen.
+ * while the page loaded. Holding a screen's height keeps it off-screen.
  */
 export default function DonateLoading() {
   const { t } = useLanguage();

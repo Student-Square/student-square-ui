@@ -29,7 +29,14 @@ type ProjectItem = {
  * donor switches project: each photo reveals a donate button on hover (always
  * shown on touch screens), and the project the page is for is marked.
  */
-export default function DonateProjectsSection({ selectedSlug }: { selectedSlug: string }) {
+export default function DonateProjectsSection({
+  selectedSlug,
+  onSelect,
+}: {
+  /** Given on /donate: the tile picks the project in place, with no page load. */
+  selectedSlug: string;
+  onSelect?: (slug: string) => void;
+}) {
   const { data: campaigns } = useGetCampaignsQuery({ status: "ACTIVE" });
   const { t, pick, tr } = useLanguage();
 
@@ -52,7 +59,12 @@ export default function DonateProjectsSection({ selectedSlug }: { selectedSlug: 
 
         <ul className="mt-10 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {projects.map((project) => (
-            <ProjectTile key={project.slug} project={project} selected={project.slug === selectedSlug} />
+            <ProjectTile
+              key={project.slug}
+              project={project}
+              selected={project.slug === selectedSlug}
+              onSelect={onSelect}
+            />
           ))}
           <ProjectTile
             project={{
@@ -62,6 +74,7 @@ export default function DonateProjectsSection({ selectedSlug }: { selectedSlug: 
               description: t("donate.generalBody"),
             }}
             selected={selectedSlug === "general"}
+            onSelect={onSelect}
             general
           />
         </ul>
@@ -73,15 +86,18 @@ export default function DonateProjectsSection({ selectedSlug }: { selectedSlug: 
 function ProjectTile({
   project,
   selected,
+  onSelect,
   general = false,
 }: {
   project: ProjectItem;
   selected: boolean;
+  onSelect?: (slug: string) => void;
   general?: boolean;
 }) {
   const { t } = useLanguage();
-  // The page is already this project's; its button returns to the form.
-  const href = selected ? "#donate-main" : `/donate/${project.slug}`;
+  // Already selected, or selectable in place: the button only scrolls back up
+  // to the form. Otherwise it opens that project's own donate page.
+  const href = selected || onSelect ? "#donate-main" : `/donate/${project.slug}`;
 
   return (
     <li
@@ -115,6 +131,16 @@ function ProjectTile({
         <div className="absolute inset-0 flex items-end justify-center bg-gradient-to-t from-black/70 via-black/25 to-transparent p-4 transition-opacity duration-300 lg:opacity-0 lg:group-focus-within:opacity-100 lg:group-hover:opacity-100">
           <Link
             href={href}
+            onClick={
+              onSelect &&
+              ((event) => {
+                // The parent does the scrolling, so the hash never lands in the
+                // address bar next to the project's own URL.
+                event.preventDefault();
+                if (!selected) onSelect(project.slug);
+                else document.getElementById("donate-main")?.scrollIntoView({ behavior: "smooth" });
+              })
+            }
             className="inline-flex items-center gap-2 rounded-full bg-emerald-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg transition-all duration-300 hover:bg-emerald-700 lg:translate-y-3 lg:group-focus-within:translate-y-0 lg:group-hover:translate-y-0"
           >
             <Heart className="h-4 w-4" />

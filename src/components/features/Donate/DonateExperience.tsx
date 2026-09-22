@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { ArrowLeft, HeartOff } from "lucide-react";
 import { closestAmountKey, impacts } from "./constants";
@@ -19,13 +19,66 @@ import { useGetCampaignsQuery } from "@/redux/features/campaigns/campaignsApi";
 export const GENERAL_FUND_SLUG = "general";
 
 /**
- * The amount-and-pay page for what the donor picked on /donate: one active
- * project, or the general fund.
+ * The donate page. With no slug (/donate) nothing is selected and the donor
+ * must choose a project before paying. A slug is one active project, or the
+ * general fund.
  */
-export default function DonateExperience({ slug }: { slug: string }) {
+export default function DonateExperience({ slug }: { slug?: string }) {
   const { data: campaigns, isLoading: campaignsLoading } = useGetCampaignsQuery({ status: "ACTIVE" });
-  const isGeneral = slug === GENERAL_FUND_SLUG;
-  const campaign = isGeneral ? undefined : campaigns?.find((c) => c.slug === slug);
+  // On /donate the choice lives here, so picking a project opens the form in
+  // place rather than loading a second page. /donate/[slug] is already a
+  // choice, so that route stays fixed to its own project.
+  const [picked, setPicked] = useState("");
+  const target = slug ?? picked;
+  const unselected = !target;
+  const isGeneral = target === GENERAL_FUND_SLUG;
+  const campaign = isGeneral || unselected ? undefined : campaigns?.find((c) => c.slug === target);
+  // The address bar still names the project, so the page can be shared or
+  // refreshed — but written straight to history rather than pushed through the
+  // router, which would remount the page and throw away a half-filled form.
+  const syncUrl = (next: string) => {
+    window.history.pushState(null, "", next ? `/donate/${next}` : "/donate");
+  };
+
+  // The projects grid moves as the choice changes, so the scroll has to wait
+  // for the render that moved it — hence a request here and the effect below,
+  // rather than scrolling straight from the click.
+  const [scrollTo, setScrollTo] = useState<"projects" | "donate-main" | "">("");
+  useEffect(() => {
+    if (!scrollTo) return;
+    document.getElementById(scrollTo)?.scrollIntoView({ behavior: "smooth" });
+    setScrollTo("");
+  }, [scrollTo]);
+
+  const chooseProject = (next: string) => {
+    setPicked(next);
+    syncUrl(next);
+    // Back up to the form, which is what the choice just opened.
+    setScrollTo("donate-main");
+  };
+
+  // Only the in-page choice can be undone here; /donate/[slug] goes back to
+  // /donate for that, since its project is the route itself. Undoing it returns
+  // the donor to the grid they chose from.
+  const clearProject = slug
+    ? undefined
+    : () => {
+        setPicked("");
+        syncUrl("");
+        setScrollTo("projects");
+      };
+
+  // Back and forward walk those rewritten URLs, so the choice has to follow the
+  // address bar or the two drift apart.
+  useEffect(() => {
+    if (slug) return;
+    const onPopState = () => {
+      const match = /^\/donate\/([^/]+)/.exec(window.location.pathname);
+      setPicked(match ? decodeURIComponent(match[1]) : "");
+    };
+    window.addEventListener("popstate", onPopState);
+    return () => window.removeEventListener("popstate", onPopState);
+  }, [slug]);
 
   const [currentAmt, setCurrentAmt] = useState<number>(500);
   const [heroCustomValue, setHeroCustomValue] = useState("");
@@ -54,8 +107,8 @@ export default function DonateExperience({ slug }: { slug: string }) {
   };
 
   // Only once the list has actually arrived: a failed request is not proof
-  // that the project is closed.
-  if (!isGeneral && campaigns && !campaign) return <ProjectNotFound />;
+  // that the project is closed. /donate itself has no project to miss.
+  if (!unselected && !isGeneral && campaigns && !campaign) return <ProjectNotFound />;
 
   return (
     <main className="min-h-screen bg-background">
@@ -64,8 +117,11 @@ export default function DonateExperience({ slug }: { slug: string }) {
           under the form they explain. */}
       <DonateHeroSection
         campaign={campaign}
+        unselected={unselected}
         isGeneral={isGeneral}
-        campaignLoading={!isGeneral && campaignsLoading}
+        campaignLoading={!unselected && !isGeneral && campaignsLoading}
+        onClearProject={clearProject}
+        onBrowseProjects={() => setScrollTo("projects")}
         currentAmt={currentAmt}
         heroCustomValue={heroCustomValue}
         heroImpact={heroImpact}
@@ -74,7 +130,9 @@ export default function DonateExperience({ slug }: { slug: string }) {
       />
       <DonateWaysToGiveSection />
       <DonateJoinSection />
-      <DonateProjectsSection selectedSlug={slug} />
+      {/* One place in the order, chosen or not, so /donate and a project's own
+          page are the same page with the same sections. */}
+      <DonateProjectsSection selectedSlug={target} onSelect={slug ? undefined : chooseProject} />
       <DonateUtilizationSection
         openAccordionIndex={openAccordionIndex}
         onToggleAccordion={handleToggleAccordion}

@@ -28,8 +28,6 @@ export default function Footer() {
       { key: "footer.news", href: "/news" },
     ],
     information: [
-      { key: "footer.about", href: "/about" },
-      { key: "footer.contact", href: "/contact" },
       { key: "footer.terms", href: "/terms" },
       { key: "footer.refund", href: "/refund" },
       { key: "footer.delivery", href: "/delivery" },
@@ -109,9 +107,10 @@ export default function Footer() {
     <footer className="relative border-t border-emerald-500/20 dark:border-emerald-500/10 bg-emerald-500/3 backdrop-blur-sm">
       <div className="container px-4 sm:px-6 md:px-8 py-12 sm:py-16 md:py-20 w-full max-w-7xl mx-auto 2xl:max-w-[1600px] 3xl:max-w-[1800px] 4xl:max-w-[2000px]">
         {/* Main Footer Content */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-8 sm:gap-10 mb-12 sm:mb-16">
-          {/* Branding Column */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-[minmax(34%,2fr)_1fr_1fr_1fr] gap-8 sm:gap-10 mb-12 sm:mb-16">
+          {/* Branding Column — at least 30% of the footer container on desktop */}
           <motion.div
+            className="min-w-0 sm:col-span-2 lg:col-span-1"
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
@@ -129,6 +128,36 @@ export default function Footer() {
             <p className="text-sm text-muted-foreground leading-relaxed mb-6">
               {t("footer.tagline")}
             </p>
+            <ul className="space-y-4 mb-6">
+              <li>
+                <a href={siteConfig.contact.phoneTel} className="flex items-start gap-3 text-sm text-muted-foreground hover:text-emerald-600 transition-colors">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="flex-shrink-0 mt-0.5">
+                    <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
+                  </svg>
+                  <span>{siteConfig.contact.phoneDisplay}</span>
+                </a>
+              </li>
+              <li>
+                <a href={`mailto:${siteConfig.contact.email}`} className="flex items-start gap-3 text-sm text-muted-foreground hover:text-emerald-600 transition-colors">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="flex-shrink-0 mt-0.5">
+                    <rect x="2" y="4" width="20" height="16" rx="2" />
+                    <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
+                  </svg>
+                  <span>{siteConfig.contact.email}</span>
+                </a>
+              </li>
+              <li className="flex items-start gap-3 text-sm text-muted-foreground">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="flex-shrink-0 mt-0.5" aria-hidden>
+                  <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" />
+                  <circle cx="12" cy="10" r="3" />
+                </svg>
+                <span>
+                  {t("contact.addressLine1")}
+                  <br />
+                  {t("contact.addressLine2")}
+                </span>
+              </li>
+            </ul>
             <Link
               href="/donate"
               className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white text-sm font-semibold rounded-lg transition-all duration-300 shadow-lg hover:shadow-xl"
@@ -156,13 +185,6 @@ export default function Footer() {
                 </li>
               ))}
             </ul>
-            <Image
-              src="/images/sslcommerz-pay.png"
-              alt="Verified by SSLCOMMERZ"
-              width={280}
-              height={40}
-              className="mt-6 h-8 w-auto max-w-full"
-            />
           </motion.div>
 
           {/* Quick Links */}
@@ -203,45 +225,6 @@ export default function Footer() {
             </ul>
           </motion.div>
 
-          {/* Contact Info */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.15 }}
-            viewport={{ once: true }}
-          >
-            <h3 className="text-sm font-bold uppercase tracking-wider text-foreground mb-6">{t("contact")}</h3>
-            <ul className="space-y-4">
-              <li>
-                <a href={siteConfig.contact.phoneTel} className="flex items-start gap-3 text-sm text-muted-foreground hover:text-emerald-600 transition-colors group">
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="flex-shrink-0 mt-0.5">
-                    <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
-                  </svg>
-                  <span>{siteConfig.contact.phoneDisplay}</span>
-                </a>
-              </li>
-              <li>
-                <a href={`mailto:${siteConfig.contact.email}`} className="flex items-start gap-3 text-sm text-muted-foreground hover:text-emerald-600 transition-colors group">
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="flex-shrink-0 mt-0.5">
-                    <rect x="2" y="4" width="20" height="16" rx="2" />
-                    <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
-                  </svg>
-                  <span>{siteConfig.contact.email}</span>
-                </a>
-              </li>
-              <li className="flex items-start gap-3 text-sm text-muted-foreground">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="flex-shrink-0 mt-0.5" aria-hidden>
-                  <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" />
-                  <circle cx="12" cy="10" r="3" />
-                </svg>
-                <span>
-                  {t("contact.addressLine1")}
-                  <br />
-                  {t("contact.addressLine2")}
-                </span>
-              </li>
-            </ul>
-          </motion.div>
         </div>
 
         {/* Social Links */}
@@ -271,13 +254,20 @@ export default function Footer() {
           </div>
         </motion.div>
 
-        <div className="pt-8 sm:pt-10 flex flex-col items-center gap-4 sm:flex-row sm:justify-between">
-          <div className="text-xs sm:text-sm text-muted-foreground">
-            <span className="whitespace-nowrap">© {year} {t("footer.rights")}</span>
-          </div>
-          <div className="text-center text-xs sm:text-sm text-muted-foreground sm:text-right">
-            <span>{lang === "BN" ? t("footer.registration") : siteConfig.legal.registration}</span>
-          </div>
+        <div className="pt-8 sm:pt-10 flex flex-col items-center gap-4">
+          <Image
+            src="/images/sslcommerz-pay.png"
+            alt="Verified by SSLCOMMERZ"
+            width={280}
+            height={40}
+            className="h-8 w-auto max-w-full"
+          />
+          <p className="text-center text-xs sm:text-sm text-muted-foreground">
+            {lang === "BN" ? t("footer.registration") : siteConfig.legal.registration}
+          </p>
+          <p className="text-xs sm:text-sm text-muted-foreground">
+            © {year} {t("footer.rights")}
+          </p>
         </div>
       </div>
     </footer>

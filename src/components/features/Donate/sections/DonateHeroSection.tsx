@@ -24,6 +24,9 @@ const MIN_AMOUNT = 10;
 const inputClass =
   "h-11 w-full rounded-xl border border-border bg-background px-3.5 text-sm text-foreground outline-none transition-colors placeholder:text-muted-foreground focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20";
 
+const changeProjectClass =
+  "shrink-0 rounded-full border border-white/30 bg-white/15 px-3 py-1.5 text-xs font-semibold text-white backdrop-blur-sm transition-colors hover:bg-white/25";
+
 /** Methods SSLCommerz offers, shown under the button so donors know before leaving. */
 const PAYMENT_LOGOS = [
   { src: "/images/bkash-logo.webp", alt: "bKash" },
@@ -37,10 +40,16 @@ const PAYMENT_LOGOS = [
 const GENERAL_FUND_PURPOSE = "General fund";
 
 interface DonateHeroSectionProps {
-  /** The project chosen on /donate; undefined for the general fund or while loading. */
+  /** The project chosen on /donate; undefined for the general fund, while loading, or before a choice. */
   campaign?: ApiCampaign;
+  /** /donate itself: no project yet, so payment stays closed. */
+  unselected: boolean;
   isGeneral: boolean;
   campaignLoading: boolean;
+  /** Given on /donate, where the choice can be undone without leaving the page. */
+  onClearProject?: () => void;
+  /** Sends the donor down to the project grid, which is where a project is picked. */
+  onBrowseProjects: () => void;
   currentAmt: number;
   heroCustomValue: string;
   heroImpact: ImpactEntry;
@@ -50,8 +59,11 @@ interface DonateHeroSectionProps {
 
 export default function DonateHeroSection({
   campaign,
+  unselected,
   isGeneral,
   campaignLoading,
+  onClearProject,
+  onBrowseProjects,
   currentAmt,
   heroCustomValue,
   heroImpact,
@@ -77,14 +89,20 @@ export default function DonateHeroSection({
   const idempotency = useRef<{ body: string; key: string } | null>(null);
 
   const busy = paying || isLoading;
-  const targetTitle = isGeneral
-    ? t("donate.generalTitle")
-    : campaign
-      ? pick(campaign.title, campaign.titleBn)
-      : "";
+  const targetTitle = unselected
+    ? t("donate.selectFirst")
+    : isGeneral
+      ? t("donate.generalTitle")
+      : campaign
+        ? pick(campaign.title, campaign.titleBn)
+        : "";
   const cover = campaign?.coverImage?.url;
 
   const handleDonate = async () => {
+    if (unselected) {
+      toast.error(t("donate.err.choose"));
+      return onBrowseProjects();
+    }
     if (!isGeneral && !campaign) return toast.error(t("donate.err.target"));
     if (currentAmt < MIN_AMOUNT)
       return toast.error(t("donate.err.min", { min: MIN_AMOUNT }));
@@ -223,13 +241,12 @@ export default function DonateHeroSection({
 
           {/* Right: the donation form */}
           <div className="self-start overflow-hidden rounded-3xl border border-border bg-card shadow-2xl shadow-emerald-900/10">
-            {/* The project this page is for, as a photo banner. Changing it
-                means picking another in the list below, which opens that
-                project's page, so the page and the gift can never disagree. */}
+            {/* The project this gift is for. /donate starts blank; choosing one
+                opens that project's page, so the page and the gift agree. */}
             <div className="relative h-44 overflow-hidden bg-gradient-to-br from-emerald-500 to-teal-600 sm:h-52">
               {campaignLoading ? (
                 <div className="absolute inset-0 animate-pulse bg-muted" />
-              ) : cover ? (
+              ) : cover && !unselected ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={cover} alt="" className="absolute inset-0 h-full w-full object-cover" />
               ) : (
@@ -245,19 +262,31 @@ export default function DonateHeroSection({
                     {campaignLoading ? t("donate.loadingProjects") : targetTitle}
                   </p>
                 </div>
-                <a
-                  href="#projects"
-                  className="shrink-0 rounded-full border border-white/30 bg-white/15 px-3 py-1.5 text-xs font-semibold text-white backdrop-blur-sm transition-colors hover:bg-white/25"
-                >
-                  {t("donate.changeProject")}
-                </a>
+                {unselected ? (
+                  // Nothing picked yet: the only thing to do here is go and pick.
+                  <button type="button" onClick={onBrowseProjects} className={changeProjectClass}>
+                    {t("donate.browseProjects")}
+                  </button>
+                ) : onClearProject ? (
+                  // On /donate the choice is undone in place; a /donate/[slug]
+                  // page has to go back to /donate to be unmade.
+                  <button type="button" onClick={onClearProject} className={changeProjectClass}>
+                    {t("donate.changeProject")}
+                  </button>
+                ) : (
+                  <Link href="/donate" className={changeProjectClass}>
+                    {t("donate.changeProject")}
+                  </Link>
+                )}
               </div>
             </div>
 
             <div className="space-y-4 p-5">
-              <h2 className="text-lg font-bold tracking-tight text-foreground">{t("donate.formTitle")}</h2>
+              <h2 className="text-lg font-bold tracking-tight text-foreground">
+                {t("donate.formTitle")}
+              </h2>
 
-              {isGeneral && (
+              {!unselected && isGeneral && (
                 <div>
                   <label htmlFor="donate-purpose" className="mb-2 block text-sm font-semibold text-foreground">
                     {t("donate.projectOrPurpose")}
