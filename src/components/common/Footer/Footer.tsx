@@ -27,7 +27,9 @@ export default function Footer() {
       { key: "footer.events", href: "/blog/events" },
       { key: "footer.news", href: "/news" },
     ],
-    legal: [
+    information: [
+      { key: "footer.about", href: "/about" },
+      { key: "footer.contact", href: "/contact" },
       { key: "footer.terms", href: "/terms" },
       { key: "footer.refund", href: "/refund" },
       { key: "footer.delivery", href: "/delivery" },
@@ -107,7 +109,7 @@ export default function Footer() {
     <footer className="relative border-t border-emerald-500/20 dark:border-emerald-500/10 bg-emerald-500/3 backdrop-blur-sm">
       <div className="container px-4 sm:px-6 md:px-8 py-12 sm:py-16 md:py-20 w-full max-w-7xl mx-auto 2xl:max-w-[1600px] 3xl:max-w-[1800px] 4xl:max-w-[2000px]">
         {/* Main Footer Content */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 sm:gap-10 mb-12 sm:mb-16">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-8 sm:gap-10 mb-12 sm:mb-16">
           {/* Branding Column */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -136,6 +138,31 @@ export default function Footer() {
               </svg>
               {t("donate")}
             </Link>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.05 }}
+            viewport={{ once: true }}
+          >
+            <h3 className="text-sm font-bold uppercase tracking-wider text-foreground mb-6">{t("footer.information")}</h3>
+            <ul className="space-y-3">
+              {links.information.map((link) => (
+                <li key={link.key}>
+                  <Link href={link.href} className="text-sm text-muted-foreground hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors">
+                    {t(link.key)}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+            <Image
+              src="/images/sslcommerz-pay.png"
+              alt="Verified by SSLCOMMERZ"
+              width={280}
+              height={40}
+              className="mt-6 h-8 w-auto max-w-full"
+            />
           </motion.div>
 
           {/* Quick Links */}
@@ -244,30 +271,12 @@ export default function Footer() {
           </div>
         </motion.div>
 
-        <div className="flex justify-center pt-8 sm:pt-10">
-          <Image
-            src="/images/sslcommerz-pay.png"
-            alt="SSLCOMMERZ"
-            width={480}
-            height={56}
-            className="h-12 w-auto max-w-full"
-          />
-        </div>
-
-        {/* Bottom Section */}
-        <div className="pt-8 sm:pt-10 grid grid-cols-1 sm:grid-cols-3 items-center gap-5 sm:gap-4">
-          <div className="flex flex-nowrap items-center justify-center sm:justify-start text-xs sm:text-sm text-muted-foreground">
+        <div className="pt-8 sm:pt-10 flex flex-col items-center gap-4 sm:flex-row sm:justify-between">
+          <div className="text-xs sm:text-sm text-muted-foreground">
             <span className="whitespace-nowrap">© {year} {t("footer.rights")}</span>
           </div>
-          <div className="flex items-center justify-center text-center text-xs sm:text-sm text-muted-foreground">
+          <div className="text-center text-xs sm:text-sm text-muted-foreground sm:text-right">
             <span>{lang === "BN" ? t("footer.registration") : siteConfig.legal.registration}</span>
-          </div>
-          <div className="flex flex-wrap items-center justify-center sm:justify-end gap-6 text-xs">
-            {links.legal.map((link) => (
-              <Link key={link.key} href={link.href} className="text-muted-foreground hover:text-emerald-600 transition-colors">
-                {t(link.key)}
-              </Link>
-            ))}
           </div>
         </div>
       </div>

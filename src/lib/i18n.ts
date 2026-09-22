@@ -109,6 +109,7 @@ const CHROME: Dict = {
   events: { EN: "Events", BN: "ইভেন্টসমূহ" },
   // Footer section headings
   quickLinks: { EN: "Quick Links", BN: "গুরুত্বপূর্ণ লিংক" },
+  "footer.information": { EN: "Information", BN: "তথ্য" },
   resources: { EN: "Resources", BN: "রিসোর্সসমূহ" },
   contact: { EN: "Contact", BN: "যোগাযোগ" },
   followUs: { EN: "Follow Us", BN: "আমাদের সাথে থাকুন" },
