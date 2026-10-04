@@ -256,11 +256,11 @@ export default function Footer() {
 
         <div className="pt-8 sm:pt-10 flex flex-col items-center gap-4">
           <Image
-            src="/images/sslcommerz-pay.png"
-            alt="Verified by SSLCOMMERZ"
-            width={280}
-            height={40}
-            className="h-8 w-auto max-w-full"
+            src="/images/sslcommerz-banner.png"
+            alt="Pay with SSLCOMMERZ"
+            width={5235}
+            height={586}
+            className="h-auto w-full max-w-5xl"
           />
           <p className="text-center text-xs sm:text-sm text-muted-foreground">
             {lang === "BN" ? t("footer.registration") : siteConfig.legal.registration}
