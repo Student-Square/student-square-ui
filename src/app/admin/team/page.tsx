@@ -15,11 +15,13 @@ import {
   useAdminUpdatePersonMutation,
   useAdminDeletePersonMutation,
 } from "@/redux/features/content/contentApi";
+import { useAdminUploadMediaMutation } from "@/redux/features/blogs/adminBlogsApi";
 import type { ApiBoardAssignment, ApiPerson, BoardCategory } from "@/types/content";
 import {
   BriefcaseBusiness,
   Check,
   GripVertical,
+  Image as ImageIcon,
   Lightbulb,
   Loader2,
   Pencil,
@@ -27,6 +29,7 @@ import {
   Search,
   ShieldCheck,
   Trash2,
+  Upload,
   UserPlus,
   Users,
   X,
@@ -89,16 +92,31 @@ export default function TeamPage() {
   const [debouncedQ, setDebouncedQ] = useState("");
   const [selectedPerson, setSelectedPerson] = useState<ApiPerson | null>(null);
   const [roleLabel, setRoleLabel] = useState("");
+  const [roleLabelBn, setRoleLabelBn] = useState("");
 
   // "Add someone new" — the whole point of the curated directory is that the
   // person need not have an account, so the admin types their details here.
   const [newPersonOpen, setNewPersonOpen] = useState(false);
-  const [newPerson, setNewPerson] = useState({ fullName: "", email: "", avatarUrl: "", bio: "" });
+  const [newPerson, setNewPerson] = useState({
+    fullName: "",
+    fullNameBn: "",
+    email: "",
+    avatarUrl: "",
+    bio: "",
+    bioBn: "",
+  });
 
   // Editing a person's own details (name / photo / bio), as opposed to their
   // role within one section.
   const [editingPerson, setEditingPerson] = useState<ApiPerson | null>(null);
-  const [personDraft, setPersonDraft] = useState({ fullName: "", email: "", avatarUrl: "", bio: "" });
+  const [personDraft, setPersonDraft] = useState({
+    fullName: "",
+    fullNameBn: "",
+    email: "",
+    avatarUrl: "",
+    bio: "",
+    bioBn: "",
+  });
   const [isSavingPerson, setIsSavingPerson] = useState(false);
 
   useEffect(() => {
@@ -133,7 +151,7 @@ export default function TeamPage() {
   const [isSavingSlug, setIsSavingSlug] = useState(false);
 
   /* ── Role label editing ── */
-  const [editingRole, setEditingRole] = useState<{ id: string; value: string } | null>(null);
+  const [editingRole, setEditingRole] = useState<{ id: string; value: string; valueBn: string } | null>(null);
   const [isSavingRole, setIsSavingRole] = useState(false);
 
   /* ── Delete confirm ── */
@@ -185,12 +203,14 @@ export default function TeamPage() {
         personId: selectedPerson.id,
         category: activeCategory,
         roleLabel: roleLabel.trim(),
+        roleLabelBn: roleLabelBn.trim() || undefined,
       }).unwrap();
       const cat = CATEGORIES.find((c) => c.value === activeCategory)?.label;
       toast.success(`${selectedPerson.fullName} added to ${cat}`);
       setAddOpen(false);
       setSelectedPerson(null);
       setRoleLabel("");
+      setRoleLabelBn("");
       setSearchQ("");
     } catch { /* baseApi toasts */ }
   };
@@ -201,14 +221,16 @@ export default function TeamPage() {
     try {
       const created = await createPerson({
         fullName: newPerson.fullName.trim(),
+        fullNameBn: newPerson.fullNameBn.trim() || null,
         email: newPerson.email.trim() || null,
         avatarUrl: newPerson.avatarUrl.trim() || null,
         bio: newPerson.bio.trim() || null,
+        bioBn: newPerson.bioBn.trim() || null,
       }).unwrap();
       toast.success(`${created.fullName} added to the directory`);
       setSelectedPerson(created);
       setNewPersonOpen(false);
-      setNewPerson({ fullName: "", email: "", avatarUrl: "", bio: "" });
+      setNewPerson({ fullName: "", fullNameBn: "", email: "", avatarUrl: "", bio: "", bioBn: "" });
       setSearchQ("");
     } catch { /* baseApi toasts */ }
   };
@@ -221,9 +243,11 @@ export default function TeamPage() {
         id: editingPerson.id,
         data: {
           fullName: personDraft.fullName.trim(),
+          fullNameBn: personDraft.fullNameBn.trim() || null,
           email: personDraft.email.trim() || null,
           avatarUrl: personDraft.avatarUrl.trim() || null,
           bio: personDraft.bio.trim() || null,
+          bioBn: personDraft.bioBn.trim() || null,
         },
       }).unwrap();
       toast.success("Details updated");
@@ -267,7 +291,10 @@ export default function TeamPage() {
     if (!val) return;
     setIsSavingRole(true);
     try {
-      await updateAssignment({ id: editingRole.id, data: { roleLabel: val } }).unwrap();
+      await updateAssignment({
+        id: editingRole.id,
+        data: { roleLabel: val, roleLabelBn: editingRole.valueBn.trim() || null },
+      }).unwrap();
       toast.success("Role updated");
       setEditingRole(null);
     } catch { /* baseApi toasts */ }
@@ -298,6 +325,8 @@ export default function TeamPage() {
     setEditingRole(null);
     setSelectedPerson(null);
     setNewPersonOpen(false);
+    setRoleLabel("");
+    setRoleLabelBn("");
   };
 
   return (
@@ -359,13 +388,13 @@ export default function TeamPage() {
               {!selectedPerson ? (
                 <div className="space-y-2">
                   <div className="relative">
-                    <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
                     <input
                       type="text"
                       value={searchQ}
                       onChange={(e) => setSearchQ(e.target.value)}
                       placeholder="Search by name or email…"
-                      className="field-input pl-8"
+                      className="team-search"
                       autoFocus
                     />
                   </div>
@@ -427,23 +456,34 @@ export default function TeamPage() {
                         autoFocus
                       />
                       <input
+                        type="text"
+                        value={newPerson.fullNameBn}
+                        onChange={(e) => setNewPerson((d) => ({ ...d, fullNameBn: e.target.value }))}
+                        placeholder="Name in Bangla (shown on BN toggle)"
+                        className="field-input"
+                      />
+                      <input
                         type="email"
                         value={newPerson.email}
                         onChange={(e) => setNewPerson((d) => ({ ...d, email: e.target.value }))}
                         placeholder="Email (optional)"
                         className="field-input"
                       />
-                      <input
-                        type="text"
-                        value={newPerson.avatarUrl}
-                        onChange={(e) => setNewPerson((d) => ({ ...d, avatarUrl: e.target.value }))}
-                        placeholder="Photo URL (optional)"
-                        className="field-input"
+                      <PhotoPicker
+                        url={newPerson.avatarUrl}
+                        onChange={(url) => setNewPerson((d) => ({ ...d, avatarUrl: url }))}
                       />
                       <textarea
                         value={newPerson.bio}
                         onChange={(e) => setNewPerson((d) => ({ ...d, bio: e.target.value }))}
                         placeholder="Short bio (optional)"
+                        rows={3}
+                        className="field-input resize-y"
+                      />
+                      <textarea
+                        value={newPerson.bioBn}
+                        onChange={(e) => setNewPerson((d) => ({ ...d, bioBn: e.target.value }))}
+                        placeholder="Bio in Bangla (optional)"
                         rows={3}
                         className="field-input resize-y"
                       />
@@ -487,36 +527,56 @@ export default function TeamPage() {
               )}
 
               {selectedPerson && (
-                <div className="flex gap-2 items-end">
-                  <label className="flex-1 block">
-                    <span className="block text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-1.5">
-                      Role Label
-                    </span>
-                    <input
-                      type="text"
-                      value={roleLabel}
-                      onChange={(e) => setRoleLabel(e.target.value)}
-                      placeholder="e.g. Chairperson, Head of Design…"
-                      className="field-input"
-                      autoFocus
-                      onKeyDown={(e) => { if (e.key === "Enter") handleAddMember(); }}
-                    />
-                  </label>
-                  <button
-                    onClick={handleAddMember}
-                    disabled={isCreating || !roleLabel.trim()}
-                    className="shrink-0 inline-flex items-center gap-1.5 px-4 py-[9px] rounded-xl bg-emerald-600 text-white text-sm font-semibold hover:bg-emerald-700 disabled:opacity-60 transition-colors"
-                  >
-                    {isCreating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
-                    Add
-                  </button>
-                  <button
-                    onClick={() => { setAddOpen(false); setSelectedPerson(null); setRoleLabel(""); setSearchQ(""); }}
-                    className="shrink-0 p-2 rounded-xl border border-border hover:bg-muted transition-colors"
-                    aria-label="Cancel"
-                  >
-                    <X className="h-4 w-4 text-muted-foreground" />
-                  </button>
+                <div className="space-y-2">
+                  <div className="flex flex-col sm:flex-row gap-2 items-stretch sm:items-end">
+                    <label className="flex-1 block">
+                      <span className="block text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-1.5">
+                        Role / designation
+                      </span>
+                      <input
+                        type="text"
+                        value={roleLabel}
+                        onChange={(e) => setRoleLabel(e.target.value)}
+                        placeholder="e.g. Chairperson, Head of Design…"
+                        className="field-input"
+                        autoFocus
+                        onKeyDown={(e) => { if (e.key === "Enter") handleAddMember(); }}
+                      />
+                    </label>
+                    <label className="flex-1 block">
+                      <span className="block text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-1.5">
+                        Role in Bangla
+                      </span>
+                      <input
+                        type="text"
+                        value={roleLabelBn}
+                        onChange={(e) => setRoleLabelBn(e.target.value)}
+                        placeholder="পদবি বাংলায়"
+                        className="field-input"
+                        onKeyDown={(e) => { if (e.key === "Enter") handleAddMember(); }}
+                      />
+                    </label>
+                    <div className="flex gap-2 shrink-0">
+                      <button
+                        onClick={handleAddMember}
+                        disabled={isCreating || !roleLabel.trim()}
+                        className="inline-flex items-center gap-1.5 px-4 py-[9px] rounded-xl bg-emerald-600 text-white text-sm font-semibold hover:bg-emerald-700 disabled:opacity-60 transition-colors"
+                      >
+                        {isCreating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
+                        Add
+                      </button>
+                      <button
+                        onClick={() => { setAddOpen(false); setSelectedPerson(null); setRoleLabel(""); setRoleLabelBn(""); setSearchQ(""); }}
+                        className="p-2 rounded-xl border border-border hover:bg-muted transition-colors"
+                        aria-label="Cancel"
+                      >
+                        <X className="h-4 w-4 text-muted-foreground" />
+                      </button>
+                    </div>
+                  </div>
+                  <p className="text-[11px] text-muted-foreground">
+                    Bangla name and role are what visitors see when the site is in বাংলা.
+                  </p>
                 </div>
               )}
             </div>
@@ -567,6 +627,11 @@ export default function TeamPage() {
                     <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-1.5">
                       <p className="text-sm font-semibold text-foreground truncate">{member.fullName}</p>
+                      {member.fullNameBn ? (
+                        <p className="text-[11px] text-muted-foreground truncate">{member.fullNameBn}</p>
+                      ) : (
+                        <p className="text-[10px] text-amber-600/80 dark:text-amber-400/80">Add Bangla name</p>
+                      )}
                       {/* Name/photo/bio are curated, so they are edited here —
                           not on the person's account. */}
                       <button
@@ -577,9 +642,11 @@ export default function TeamPage() {
                           setEditingPerson(person);
                           setPersonDraft({
                             fullName: person.fullName,
+                            fullNameBn: person.fullNameBn ?? "",
                             email: person.email ?? "",
                             avatarUrl: person.avatarUrl ?? "",
                             bio: person.bio ?? "",
+                            bioBn: person.bioBn ?? "",
                           });
                         }}
                         aria-label={`Edit ${member.fullName}'s details`}
@@ -647,38 +714,65 @@ export default function TeamPage() {
                   {/* Controls row - Mobile/Desktop layout */}
                   <div className="flex items-center gap-2 md:gap-3 md:shrink-0 flex-wrap md:flex-nowrap">
                     {/* Role label */}
-                    <div className="flex-1 md:flex-none md:w-36 lg:w-44">
+                    <div className="flex-1 md:flex-none md:w-44 lg:w-56">
                       {editingRole?.id === member.id ? (
-                        <div className="flex items-center gap-1">
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-1">
+                            <input
+                              type="text"
+                              value={editingRole.value}
+                              onChange={(e) => setEditingRole({ ...editingRole, value: e.target.value })}
+                              onKeyDown={(e) => {
+                                if (e.key === "Enter") handleSaveRole();
+                                if (e.key === "Escape") setEditingRole(null);
+                              }}
+                              placeholder="Role (English)"
+                              className="field-input text-xs !py-1"
+                              autoFocus
+                            />
+                            <button
+                              onClick={handleSaveRole}
+                              disabled={isSavingRole}
+                              className="p-1 rounded text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 disabled:opacity-50 shrink-0"
+                            >
+                              {isSavingRole ? <Loader2 className="h-3 w-3 animate-spin" /> : <Check className="h-3 w-3" />}
+                            </button>
+                            <button onClick={() => setEditingRole(null)} className="p-1 rounded text-muted-foreground hover:text-foreground shrink-0">
+                              <X className="h-3 w-3" />
+                            </button>
+                          </div>
                           <input
                             type="text"
-                            value={editingRole.value}
-                            onChange={(e) => setEditingRole({ ...editingRole, value: e.target.value })}
+                            value={editingRole.valueBn}
+                            onChange={(e) => setEditingRole({ ...editingRole, valueBn: e.target.value })}
                             onKeyDown={(e) => {
                               if (e.key === "Enter") handleSaveRole();
                               if (e.key === "Escape") setEditingRole(null);
                             }}
+                            placeholder="পদবি বাংলায়"
                             className="field-input text-xs !py-1"
-                            autoFocus
                           />
-                          <button
-                            onClick={handleSaveRole}
-                            disabled={isSavingRole}
-                            className="p-1 rounded text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 disabled:opacity-50 shrink-0"
-                          >
-                            {isSavingRole ? <Loader2 className="h-3 w-3 animate-spin" /> : <Check className="h-3 w-3" />}
-                          </button>
-                          <button onClick={() => setEditingRole(null)} className="p-1 rounded text-muted-foreground hover:text-foreground shrink-0">
-                            <X className="h-3 w-3" />
-                          </button>
                         </div>
                       ) : (
                         <button
-                          onClick={() => setEditingRole({ id: member.id, value: member.roleLabel })}
-                          className="group/role flex items-center gap-1 px-2 py-1 rounded-lg hover:bg-muted transition-colors w-full text-left"
+                          onClick={() =>
+                            setEditingRole({
+                              id: member.id,
+                              value: member.roleLabel,
+                              valueBn: member.roleLabelBn ?? "",
+                            })
+                          }
+                          className="group/role flex flex-col items-start gap-0.5 px-2 py-1 rounded-lg hover:bg-muted transition-colors w-full text-left"
                         >
-                          <span className="text-xs text-foreground truncate flex-1">{member.roleLabel}</span>
-                          <Pencil className="h-2.5 w-2.5 opacity-0 group-hover/role:opacity-60 transition-opacity text-muted-foreground shrink-0" />
+                          <span className="text-xs text-foreground truncate w-full flex items-center gap-1">
+                            <span className="truncate flex-1">{member.roleLabel}</span>
+                            <Pencil className="h-2.5 w-2.5 opacity-0 group-hover/role:opacity-60 transition-opacity text-muted-foreground shrink-0" />
+                          </span>
+                          {member.roleLabelBn ? (
+                            <span className="text-[11px] text-muted-foreground truncate w-full">{member.roleLabelBn}</span>
+                          ) : (
+                            <span className="text-[10px] text-amber-600/80 dark:text-amber-400/80">Add Bangla role</span>
+                          )}
                         </button>
                       )}
                     </div>
@@ -746,6 +840,16 @@ export default function TeamPage() {
           background: var(--color-background); border: 1px solid var(--color-border);
           color: var(--color-foreground); transition: border-color 0.15s, box-shadow 0.15s;
         }
+        :global(.team-search) {
+          display: block; width: 100%; box-sizing: border-box; font-size: 0.875rem;
+          padding: 0.625rem 0.75rem 0.625rem 2.5rem; border-radius: 0.625rem;
+          background: var(--color-background); border: 1px solid var(--color-border);
+          color: var(--color-foreground); transition: border-color 0.15s, box-shadow 0.15s;
+        }
+        :global(.team-search:focus) {
+          outline: none; border-color: rgb(16 185 129 / 0.7);
+          box-shadow: 0 0 0 3px rgb(16 185 129 / 0.12);
+        }
         :global(.field-input:focus) {
           outline: none; border-color: rgb(16 185 129 / 0.7);
           box-shadow: 0 0 0 3px rgb(16 185 129 / 0.12);
@@ -773,7 +877,7 @@ export default function TeamPage() {
           onClick={() => setEditingPerson(null)}
         >
           <div
-            className="w-full max-w-md rounded-2xl border border-border bg-card p-5 shadow-xl space-y-3"
+            className="w-full max-w-md max-h-[90vh] overflow-y-auto rounded-2xl border border-border bg-card p-5 shadow-xl space-y-3"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between">
@@ -808,6 +912,19 @@ export default function TeamPage() {
 
             <label className="block">
               <span className="block text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-1.5">
+                Name in Bangla
+              </span>
+              <input
+                type="text"
+                value={personDraft.fullNameBn}
+                onChange={(e) => setPersonDraft((d) => ({ ...d, fullNameBn: e.target.value }))}
+                placeholder="বাংলা নাম — shown when the site is in বাংলা"
+                className="field-input"
+              />
+            </label>
+
+            <label className="block">
+              <span className="block text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-1.5">
                 Email
               </span>
               <input
@@ -819,18 +936,10 @@ export default function TeamPage() {
               />
             </label>
 
-            <label className="block">
-              <span className="block text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-1.5">
-                Photo URL
-              </span>
-              <input
-                type="text"
-                value={personDraft.avatarUrl}
-                onChange={(e) => setPersonDraft((d) => ({ ...d, avatarUrl: e.target.value }))}
-                placeholder="Optional"
-                className="field-input"
-              />
-            </label>
+            <PhotoPicker
+              url={personDraft.avatarUrl}
+              onChange={(url) => setPersonDraft((d) => ({ ...d, avatarUrl: url }))}
+            />
 
             <label className="block">
               <span className="block text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-1.5">
@@ -841,6 +950,19 @@ export default function TeamPage() {
                 onChange={(e) => setPersonDraft((d) => ({ ...d, bio: e.target.value }))}
                 rows={4}
                 placeholder="Shown on their public page"
+                className="field-input resize-y"
+              />
+            </label>
+
+            <label className="block">
+              <span className="block text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-1.5">
+                Bio in Bangla
+              </span>
+              <textarea
+                value={personDraft.bioBn}
+                onChange={(e) => setPersonDraft((d) => ({ ...d, bioBn: e.target.value }))}
+                rows={4}
+                placeholder="বাংলা জীবনী"
                 className="field-input resize-y"
               />
             </label>
@@ -871,6 +993,102 @@ export default function TeamPage() {
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+function PhotoPicker({
+  url,
+  onChange,
+}: {
+  url: string;
+  onChange: (url: string) => void;
+}) {
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [uploadMedia, { isLoading }] = useAdminUploadMediaMutation();
+
+  const handleFile = async (file: File) => {
+    if (!file.type.startsWith("image/")) {
+      toast.error("Please choose an image file");
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("Image must be under 5 MB");
+      return;
+    }
+    const form = new FormData();
+    form.append("file", file);
+    try {
+      const result = await uploadMedia(form).unwrap();
+      onChange(result.url);
+    } catch {
+      /* baseApi toasts */
+    }
+  };
+
+  return (
+    <div>
+      <span className="block text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-1.5">
+        Photo
+      </span>
+      {url ? (
+        <div className="flex items-start gap-3">
+          <div>
+            <div className="h-24 w-24 rounded-xl overflow-hidden bg-muted ring-1 ring-border shrink-0">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={url} alt="Photo preview" className="h-full w-full object-cover" />
+            </div>
+            <p className="mt-1 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Preview</p>
+          </div>
+          <div className="flex flex-wrap gap-2 pt-1">
+            <button
+              type="button"
+              onClick={() => inputRef.current?.click()}
+              disabled={isLoading}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border text-xs font-semibold text-foreground hover:bg-muted disabled:opacity-60"
+            >
+              {isLoading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Upload className="h-3.5 w-3.5" />}
+              Replace
+            </button>
+            <button
+              type="button"
+              onClick={() => onChange("")}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30"
+            >
+              <Trash2 className="h-3.5 w-3.5" />
+              Remove
+            </button>
+          </div>
+        </div>
+      ) : (
+        <button
+          type="button"
+          onClick={() => inputRef.current?.click()}
+          disabled={isLoading}
+          className="w-full flex flex-col items-center justify-center gap-1.5 rounded-xl border-2 border-dashed border-border hover:border-emerald-500/60 bg-muted/30 hover:bg-emerald-50/30 dark:hover:bg-emerald-950/20 py-6 cursor-pointer transition-colors disabled:opacity-60"
+        >
+          {isLoading ? (
+            <Loader2 className="h-5 w-5 text-muted-foreground animate-spin" />
+          ) : (
+            <>
+              <ImageIcon className="h-5 w-5 text-muted-foreground" />
+              <span className="text-xs font-semibold text-muted-foreground">Upload from this computer</span>
+              <span className="text-[10px] text-muted-foreground/70">JPG, PNG, WebP · max 5 MB</span>
+            </>
+          )}
+        </button>
+      )}
+      <input
+        ref={inputRef}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={(e) => {
+          const file = e.target.files?.[0];
+          if (file) void handleFile(file);
+          e.target.value = "";
+        }}
+      />
     </div>
   );
 }

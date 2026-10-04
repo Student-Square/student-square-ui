@@ -85,6 +85,11 @@ const NAV: NavEntry[] = [
 
   { kind: "section", label: "Content", roles: CONTENT_ROLES },
   { kind: "item", href: "/admin/hero", label: "Hero Cards", icon: <LayoutGrid className="h-4 w-4" />, roles: EDIT_ROLES },
+  // TOP_ROLES, not FINANCE_ROLES: the page exists to create and edit, and the
+  // campaign write routes are ADMIN_ONLY on the server. A finance manager
+  // would see the buttons and get a 403 from every one of them.
+  { kind: "item", href: "/admin/projects", label: "Projects", icon: <FolderKanban className="h-4 w-4" />, roles: TOP_ROLES },
+  { kind: "item", href: "/admin/team", label: "Team", icon: <ShieldCheck className="h-4 w-4" />, roles: EDIT_ROLES },
   {
     kind: "group",
     label: "About Us",
@@ -117,13 +122,8 @@ const NAV: NavEntry[] = [
 
   { kind: "section", label: "Management", roles: [...EDIT_ROLES, "FINANCE_MANAGER"] },
   { kind: "item", href: "/admin/donation", label: "Donation", icon: <HandCoins className="h-4 w-4" />, roles: FINANCE_ROLES },
-  // TOP_ROLES, not FINANCE_ROLES: the page exists to create and edit, and the
-  // campaign write routes are ADMIN_ONLY on the server. A finance manager
-  // would see the buttons and get a 403 from every one of them.
-  { kind: "item", href: "/admin/projects", label: "Projects", icon: <FolderKanban className="h-4 w-4" />, roles: TOP_ROLES },
   { kind: "item", href: "/admin/operations", label: "All DOB", icon: <BookOpen className="h-4 w-4" />, roles: EDIT_ROLES },
   { kind: "item", href: "/admin/finance", label: "All FWB", icon: <Wallet className="h-4 w-4" />, roles: FINANCE_ROLES },
-  { kind: "item", href: "/admin/team", label: "Team", icon: <ShieldCheck className="h-4 w-4" />, roles: EDIT_ROLES },
   { kind: "item", href: "/admin/resources", label: "Resources", icon: <Library className="h-4 w-4" />, roles: EDIT_ROLES },
   { kind: "item", href: "/admin/feedback", label: "Feedback", icon: <MessageSquareText className="h-4 w-4" />, roles: [...EDIT_ROLES, "MODERATOR"] },
   { kind: "item", href: "/admin/analytics", label: "Analytics", icon: <BarChart3 className="h-4 w-4" />, roles: EDIT_ROLES },
