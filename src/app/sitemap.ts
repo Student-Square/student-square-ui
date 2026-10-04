@@ -5,6 +5,7 @@ import type { ApiStoryListItem } from "@/types/stories";
 import type { ApiEvent } from "@/types/events";
 import type { ApiCampaign } from "@/types/campaigns";
 import type { ApiReportListItem } from "@/types/reports";
+import type { ApiBoardGroups } from "@/types/content";
 
 const baseUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://studentsquare.org";
 
@@ -56,10 +57,26 @@ async function reportRoutes(): Promise<MetadataRoute.Sitemap> {
   }));
 }
 
+async function teamRoutes(): Promise<MetadataRoute.Sitemap> {
+  const groups = await serverGet<ApiBoardGroups>("/content/board/groups");
+  if (!groups) return [];
+  const slugs = new Set(
+    [...groups.board, ...groups.advisory, ...groups.leadership, ...groups.management].map((m) => m.slug)
+  );
+  return [...slugs].map((slug) => ({
+    url: `${baseUrl}/about/who-we-are/${slug}`,
+    lastModified: new Date(),
+  }));
+}
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const staticRoutes: MetadataRoute.Sitemap = [
     { url: `${baseUrl}/`, lastModified: new Date() },
     { url: `${baseUrl}/about`, lastModified: new Date() },
+    { url: `${baseUrl}/about/who-we-are`, lastModified: new Date() },
+    { url: `${baseUrl}/about/mission-vision`, lastModified: new Date() },
+    { url: `${baseUrl}/about/archive`, lastModified: new Date() },
+    { url: `${baseUrl}/what-we-do`, lastModified: new Date() },
     { url: `${baseUrl}/donate`, lastModified: new Date() },
     { url: `${baseUrl}/projects`, lastModified: new Date() },
     { url: `${baseUrl}/news`, lastModified: new Date() },
@@ -75,13 +92,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${baseUrl}/about/reports`, lastModified: new Date() },
   ];
 
-  const [projects, blogs, stories, events, reports] = await Promise.all([
+  const [projects, blogs, stories, events, reports, team] = await Promise.all([
     projectRoutes(),
     blogRoutes(),
     storyRoutes(),
     eventRoutes(),
     reportRoutes(),
+    teamRoutes(),
   ]);
 
-  return [...staticRoutes, ...projects, ...blogs, ...stories, ...events, ...reports];
+  return [...staticRoutes, ...projects, ...blogs, ...stories, ...events, ...reports, ...team];
 }
