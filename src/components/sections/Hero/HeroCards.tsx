@@ -5,7 +5,7 @@ import { AnimatePresence, motion } from "motion/react";
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useGetCardsQuery } from "@/redux/features/content/contentApi";
 import type { ApiFeatureCard } from "@/types/content";
 import { useMediaQuery } from "@/hooks/use-media-query";
@@ -16,24 +16,44 @@ const PLACEHOLDER_IMAGE = "/images/student-square-school-session.jpg";
 // Animated Progress Indicator
 const ProgressIndicator = ({ duration = 7000 }: { duration?: number }) => {
   const [progress, setProgress] = useState(0);
+  const barRef = useRef<HTMLDivElement>(null);
+  const [active, setActive] = useState(true);
+  const elapsedRef = useRef(0);
 
   useEffect(() => {
-    let animationId: number;
-    const startTime = performance.now();
+    const node = barRef.current;
+    if (!node) return;
+    let running = true;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (!entry) return;
+        const nearTop = entry.isIntersecting && entry.boundingClientRect.top > (running ? -160 : -48);
+        if (nearTop === running) return;
+        running = nearTop;
+        setActive(nearTop);
+      },
+      { threshold: [0, 0.25, 0.5, 1] }
+    );
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, []);
 
+  useEffect(() => {
+    if (!active) return;
+    let animationId = 0;
+    const origin = performance.now() - elapsedRef.current;
     const animate = (currentTime: number) => {
-      const elapsed = (currentTime - startTime) % duration;
-      const progressPercent = (elapsed / duration) * 100;
-      setProgress(progressPercent);
+      const elapsed = (currentTime - origin) % duration;
+      elapsedRef.current = elapsed;
+      setProgress((elapsed / duration) * 100);
       animationId = requestAnimationFrame(animate);
     };
-
     animationId = requestAnimationFrame(animate);
     return () => cancelAnimationFrame(animationId);
-  }, [duration]);
+  }, [active, duration]);
 
   return (
-    <div className="absolute bottom-0 left-0 h-0.5 w-full overflow-hidden bg-white/10 sm:h-1">
+    <div ref={barRef} className="absolute bottom-0 left-0 h-0.5 w-full overflow-hidden bg-white/10 sm:h-1">
       <motion.div
         className="h-full bg-white/60"
         style={{ width: `${progress}%` }}
