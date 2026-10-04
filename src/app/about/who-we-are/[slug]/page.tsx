@@ -37,8 +37,10 @@ const CATEGORY_TEXT: Record<string, string> = {
 };
 
 function RelatedCard({ member }: { member: ApiBoardAssignment }) {
-  const { tr } = useLanguage();
+  const { stored } = useLanguage();
   const href = `/about/who-we-are/${member.slug}`;
+  const name = stored(member.fullName, member.fullNameBn);
+  const role = stored(member.roleLabel, member.roleLabelBn);
   return (
     <Link
       href={href}
@@ -47,15 +49,15 @@ function RelatedCard({ member }: { member: ApiBoardAssignment }) {
       <div className="h-10 w-10 rounded-full overflow-hidden bg-muted shrink-0 ring-1 ring-border group-hover:ring-emerald-500/40 transition-all">
         <img
           src={member.avatarUrl ?? PLACEHOLDER_AVATAR}
-          alt={member.fullName}
+          alt={name}
           className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-300"
         />
       </div>
       <div className="min-w-0 flex-1">
         <p className="text-sm font-semibold text-foreground group-hover:text-emerald-600 transition-colors truncate">
-          {member.fullName}
+          {name}
         </p>
-        <p className="text-xs text-muted-foreground truncate mt-0.5">{tr(member.roleLabel)}</p>
+        <p className="text-xs text-muted-foreground truncate mt-0.5">{role}</p>
       </div>
       <ChevronRight className="h-4 w-4 text-muted-foreground/40 group-hover:text-emerald-500 group-hover:translate-x-0.5 shrink-0 transition-all" />
     </Link>
@@ -67,7 +69,7 @@ export default function MemberProfilePage() {
   const { data: user, isLoading, isError } = useGetPublicUserBySlugQuery(slug);
   const { data: groups } = useGetBoardGroupsQuery();
   const [copied, setCopied] = useState(false);
-  const { lang, t, pick, date } = useLanguage();
+  const { lang, t, pick, stored, date } = useLanguage();
 
   const news = blogData.slice(0, 3);
 
@@ -99,16 +101,16 @@ export default function MemberProfilePage() {
 
   const firstName = user?.fullName?.split(" ")[0] ?? "";
 
-  // In Bangla the Bangla name and bio lead, with the English kept underneath.
-  const nameBn = user?.profile?.fullNameBn ?? null;
-  const showBnFirst = lang === "BN";
-  const primaryName = showBnFirst ? nameBn ?? user?.fullName : user?.fullName;
-  const secondaryName = showBnFirst ? (nameBn ? user?.fullName : null) : nameBn;
+  // Selected language only. Empty Bangla columns stay English — they are not
+  // filled in from a translation table.
+  const nameEn = user?.fullName ?? "";
+  const nameBnStored = user?.profile?.fullNameBn ?? null;
+  const primaryName = stored(nameEn, nameBnStored);
   const bio = user?.profile?.bio ?? null;
   const bioBn = user?.profile?.bioBn ?? null;
-  const primaryBio = showBnFirst ? bioBn ?? bio : bio;
-  const secondaryBio = primaryBio === bioBn ? bio : bioBn;
-  const displayFirstName = showBnFirst && nameBn ? nameBn.split(" ")[0] : firstName;
+  const primaryBio = stored(bio, bioBn);
+  const displayFirstName =
+    lang === "BN" && nameBnStored?.trim() ? nameBnStored.trim().split(" ")[0] : firstName;
 
   return (
     <main className="min-h-screen bg-background">
@@ -196,11 +198,6 @@ export default function MemberProfilePage() {
                 <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-foreground leading-tight tracking-tight">
                   {primaryName}
                 </h1>
-                {secondaryName && (
-                  <p className="text-base text-muted-foreground mt-1 font-medium" dir="auto">
-                    {secondaryName}
-                  </p>
-                )}
 
                 {/* Role badges */}
                 {activeAssignments.length > 0 && (
@@ -209,7 +206,7 @@ export default function MemberProfilePage() {
                       <div key={a.id} className="flex items-center gap-1.5">
                         <div className={`h-2 w-2 rounded-full shrink-0 ${CATEGORY_DOT[a.category] ?? "bg-gray-400"}`} />
                         <span className={`text-xs font-semibold uppercase tracking-wide ${CATEGORY_TEXT[a.category] ?? "text-muted-foreground"}`}>
-                          {pick(a.roleLabel, a.roleLabelBn)}
+                          {stored(a.roleLabel, a.roleLabelBn)}
                         </span>
                       </div>
                     ))}
@@ -247,15 +244,6 @@ export default function MemberProfilePage() {
                         {para}
                       </p>
                     ))}
-                    {secondaryBio && (
-                      <div className="mt-6 pt-6 border-t border-border" dir="auto">
-                        {secondaryBio.split(/\n\n+/).map((para, i) => (
-                          <p key={i} className="text-sm text-foreground/75 leading-relaxed mb-3">
-                            {para}
-                          </p>
-                        ))}
-                      </div>
-                    )}
                   </div>
                 ) : (
                   <p className="text-sm text-muted-foreground italic">{t("member.noBio")}</p>
@@ -352,7 +340,7 @@ export default function MemberProfilePage() {
                         )}
                         <img
                           src={post.image}
-                          alt={pick(post.title, post.titleBn)}
+                          alt=""
                           className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-500"
                         />
                       </div>

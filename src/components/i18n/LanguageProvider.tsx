@@ -32,6 +32,12 @@ type LanguageContextValue = {
    * English text if it is a known seeded string; otherwise the English.
    */
   pick: (en: string | null | undefined, bn: string | null | undefined) => string;
+  /**
+   * Bilingual DB columns only. In BN, uses `bn` when it is filled; otherwise
+   * English. Does not consult the known-translations table — admin-edited
+   * names and roles must come from the database.
+   */
+  stored: (en: string | null | undefined, bn: string | null | undefined) => string;
   /** `pick` for text with no Bengali column: known Bangla in BN, else as-is. */
   tr: (en: string | null | undefined) => string;
   /** Number in the current language's digits. `grouping: false` for years. */
@@ -124,6 +130,7 @@ function buildValue(lang: Language): LanguageContextValue {
           return <Fragment key={i}>{name && name in nodes ? nodes[name] : part}</Fragment>;
         }),
     pick,
+    stored: (en, bn) => (lang === "BN" && bn?.trim() ? bn.trim() : en ?? ""),
     tr: (en) => pick(en, null),
     num: (value, grouping) => formatNumber(lang, value, grouping),
     digits: (text) => (lang === "BN" ? text.replace(/[0-9]/g, (d) => BANGLA_DIGITS[Number(d)]) : text),
