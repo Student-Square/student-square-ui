@@ -98,6 +98,8 @@ const NAV: NavEntry[] = [
     items: [
       { href: "/admin/pages/about-mission-vision", label: "Our Mission & Vision" },
       { href: "/admin/pages/about-who-we-are", label: "Who We Are" },
+      { href: "/admin/pages/about-archive", label: "Archive" },
+      { href: "/admin/blog/reports", label: "Annual Reports & Financials" },
     ],
   },
   {
@@ -110,7 +112,6 @@ const NAV: NavEntry[] = [
       { href: "/admin/blog/articles", label: "Articles", roles: AUTHOR_ROLES },
       { href: "/admin/blog/real-life-stories", label: "Real Life Stories", roles: [...AUTHOR_ROLES, "MODERATOR"] },
       { href: "/admin/blog/magazine", label: "Magazine", roles: EDIT_ROLES },
-      { href: "/admin/blog/reports", label: "Reports & Financials", roles: EDIT_ROLES },
       { href: "/admin/blog/events", label: "Events", roles: EDIT_ROLES },
       { href: "/admin/blog/categories", label: "Categories", roles: EDIT_ROLES },
     ],

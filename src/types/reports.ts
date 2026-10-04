@@ -63,6 +63,7 @@ export type ReportListFilters = {
 
 export type AdminReportWriteInput = {
   title: string;
+  titleBn?: string | null;
   category: ReportCategory;
   year: number;
   language?: string;
@@ -70,6 +71,7 @@ export type AdminReportWriteInput = {
   country?: string;
   region?: string;
   summary?: string;
+  summaryBn?: string | null;
   rights?: string;
   authors?: string[];
   topics?: string[];

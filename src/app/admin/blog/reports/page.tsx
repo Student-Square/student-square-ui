@@ -40,6 +40,7 @@ const PAGE_SIZE = CARD_PAGE_SIZE;
 
 type FormState = {
   title: string;
+  titleBn: string;
   category: ReportCategory;
   year: string;
   language: string;
@@ -47,6 +48,7 @@ type FormState = {
   country: string;
   region: string;
   summary: string;
+  summaryBn: string;
   authors: string;
   topics: string;
   keywords: string;
@@ -57,6 +59,7 @@ type FormState = {
 
 const emptyForm = (): FormState => ({
   title: "",
+  titleBn: "",
   category: "ANNUAL_REPORT",
   year: String(new Date().getFullYear()),
   language: "English",
@@ -64,6 +67,7 @@ const emptyForm = (): FormState => ({
   country: "",
   region: "",
   summary: "",
+  summaryBn: "",
   authors: "",
   topics: "",
   keywords: "",
@@ -74,6 +78,7 @@ const emptyForm = (): FormState => ({
 
 const formFrom = (r: ApiAdminReport): FormState => ({
   title: r.title,
+  titleBn: r.titleBn ?? "",
   category: r.category,
   year: String(r.year),
   language: r.language,
@@ -81,6 +86,7 @@ const formFrom = (r: ApiAdminReport): FormState => ({
   country: r.country ?? "",
   region: r.region ?? "",
   summary: r.summary ?? "",
+  summaryBn: r.summaryBn ?? "",
   authors: r.authors.join("\n"),
   topics: r.topics.join("\n"),
   keywords: r.keywords.join("\n"),
@@ -189,6 +195,7 @@ export default function AdminReportsPage() {
 
     const fields = {
       title: form.title.trim(),
+      titleBn: form.titleBn.trim() || null,
       category: form.category,
       year,
       language: form.language.trim() || "English",
@@ -196,6 +203,7 @@ export default function AdminReportsPage() {
       country: form.country.trim(),
       region: form.region.trim(),
       summary: form.summary.trim(),
+      summaryBn: form.summaryBn.trim() || null,
       rights: form.rights.trim(),
       authors: lines(form.authors),
       topics: lines(form.topics),
@@ -246,7 +254,7 @@ export default function AdminReportsPage() {
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
-            Reports &amp; Financials
+            Annual Reports &amp; Financials
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
             Upload and publish the PDFs shown on{" "}
@@ -274,6 +282,9 @@ export default function AdminReportsPage() {
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <Field label="Title *" className="sm:col-span-2">
               <input value={form.title} onChange={set("title")} maxLength={200} placeholder="Annual Report 2024" className="form-input" />
+            </Field>
+            <Field label="Title in Bangla" className="sm:col-span-2">
+              <input value={form.titleBn} onChange={set("titleBn")} maxLength={200} placeholder="বার্ষিক প্রতিবেদন ২০২৪" className="form-input" />
             </Field>
             <Field label="Section *">
               <select value={form.category} onChange={set("category")} className="form-input">
@@ -303,6 +314,9 @@ export default function AdminReportsPage() {
 
           <Field label="Abstract / summary">
             <textarea value={form.summary} onChange={set("summary")} rows={5} maxLength={10000} className="form-input" />
+          </Field>
+          <Field label="Summary in Bangla">
+            <textarea value={form.summaryBn} onChange={set("summaryBn")} rows={5} maxLength={10000} placeholder="বাংলায় সারাংশ" className="form-input" />
           </Field>
 
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">

@@ -324,6 +324,30 @@ const contentApiSlice = baseApi.injectEndpoints({
       }),
     }),
 
+    adminListPageSections: build.query<
+      { sectionKey: string; content: Record<string, unknown> | null }[],
+      string
+    >({
+      query: (pageSlug) =>
+        `/admin/content/pages/${encodeURIComponent(pageSlug)}/sections`,
+      providesTags: (_r, _e, slug) => [{ type: "AdminPages", id: slug }],
+    }),
+
+    adminUpsertPageSection: build.mutation<
+      unknown,
+      { pageSlug: string; sectionKey: string; content: Record<string, unknown> }
+    >({
+      query: ({ pageSlug, sectionKey, content }) => ({
+        url: `/admin/content/pages/${encodeURIComponent(pageSlug)}/sections/${encodeURIComponent(sectionKey)}`,
+        method: "PUT",
+        body: { content, status: "PUBLISHED" },
+      }),
+      invalidatesTags: (_r, _e, { pageSlug }) => [
+        { type: "AdminPages", id: pageSlug },
+        { type: "Content", id: pageSlug },
+      ],
+    }),
+
     // ───── Public board groups ─────
     getBoardGroups: build.query<ApiBoardGroups, void>({
       query: () => "/content/board/groups",
@@ -415,6 +439,8 @@ export const {
   useAdminGetEditablePageQuery,
   useAdminUpdateEditablePageMutation,
   useAdminUploadPageImageMutation,
+  useAdminListPageSectionsQuery,
+  useAdminUpsertPageSectionMutation,
   // people (curated team directory)
   useAdminListPeopleQuery,
   useAdminGetPersonQuery,
