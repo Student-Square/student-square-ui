@@ -43,31 +43,12 @@ export const ABOUT: Dict = {
 
   // /about/archive
   "archive.intro": {
-    EN: "Explore our past initiatives, programs, and milestones that have shaped Student Square's journey from a small initiative to a growing international organization.",
-    BN: "আমাদের অতীতের উদ্যোগ, কার্যক্রম ও মাইলফলকগুলো দেখুন, যেগুলো স্টুডেন্ট স্কয়ারকে একটি ছোট উদ্যোগ থেকে ক্রমবর্ধমান আন্তর্জাতিক সংগঠনে পরিণত করেছে।",
+    EN: "Past initiatives and records will appear here once they are added.",
+    BN: "পুরোনো উদ্যোগ ও নথি যোগ করা হলে সেগুলো এখানে দেখা যাবে।",
   },
-  "archive.item1.title": { EN: "2023 Community Building Initiative", BN: "২০২৩ কমিউনিটি গঠন উদ্যোগ" },
-  "archive.item1.desc": { EN: "Our community engagement programs that ran throughout 2023", BN: "২০২৩ সালজুড়ে চলা আমাদের কমিউনিটি সম্পৃক্ততা কার্যক্রম" },
-  "archive.item2.title": { EN: "Educational Accessibility Drive 2022", BN: "শিক্ষায় প্রবেশাধিকার কর্মসূচি ২০২২" },
-  "archive.item2.desc": {
-    EN: "Campaign to increase access to education for underprivileged students",
-    BN: "সুবিধাবঞ্চিত শিক্ষার্থীদের শিক্ষায় প্রবেশাধিকার বাড়ানোর প্রচারাভিযান",
-  },
-  "archive.item3.title": { EN: "Mental Health Awareness Program 2021", BN: "মানসিক স্বাস্থ্য সচেতনতা কার্যক্রম ২০২১" },
-  "archive.item3.desc": { EN: "Comprehensive mental health support and awareness initiative", BN: "মানসিক স্বাস্থ্য সহায়তা ও সচেতনতার সমন্বিত উদ্যোগ" },
-  "archive.item4.title": { EN: "Digital Skills Training Series", BN: "ডিজিটাল দক্ষতা প্রশিক্ষণ সিরিজ" },
-  "archive.item4.desc": { EN: "Programs designed to bridge the digital divide in communities", BN: "কমিউনিটিতে ডিজিটাল বৈষম্য কমানোর জন্য সাজানো কার্যক্রম" },
-  "archive.item5.title": { EN: "Women Empowerment Initiative", BN: "নারী ক্ষমতায়ন উদ্যোগ" },
-  "archive.item5.desc": { EN: "Focused programs on gender equality and women's rights", BN: "লিঙ্গসমতা ও নারীর অধিকার নিয়ে বিশেষ কার্যক্রম" },
-  "archive.item6.title": { EN: "Youth Leadership Conference 2020", BN: "যুব নেতৃত্ব সম্মেলন ২০২০" },
-  "archive.item6.desc": {
-    EN: "Inaugural conference bringing together young leaders from across regions",
-    BN: "বিভিন্ন অঞ্চলের তরুণ নেতাদের নিয়ে আয়োজিত প্রথম সম্মেলন",
-  },
-  "archive.journey": { EN: "Our Journey", BN: "আমাদের পথচলা" },
-  "archive.journeyBody": {
-    EN: "Since our founding, Student Square has grown from a small initiative to an organization with presence across multiple countries. Each program, campaign, and community partnership has contributed to our understanding of how best to serve and empower individuals.",
-    BN: "প্রতিষ্ঠার পর থেকে স্টুডেন্ট স্কয়ার একটি ছোট উদ্যোগ থেকে একাধিক দেশে উপস্থিতি থাকা সংগঠনে পরিণত হয়েছে। প্রতিটি কার্যক্রম, প্রচারাভিযান ও কমিউনিটি অংশীদারত্ব আমাদের শিখিয়েছে কীভাবে মানুষের পাশে থেকে তাদের সবচেয়ে ভালোভাবে ক্ষমতায়িত করা যায়।",
+  "archive.empty": {
+    EN: "Nothing has been archived yet.",
+    BN: "এখনো আর্কাইভে কিছু যোগ করা হয়নি।",
   },
 
   // /about/who-we-are
