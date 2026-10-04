@@ -10,7 +10,7 @@ import { motion } from "motion/react";
 import { fadeInWhileInView } from "@/lib/motion";
 import { useGetBoardGroupsQuery, useGetEditablePageQuery } from "@/redux/features/content/contentApi";
 import type { ApiBoardAssignment } from "@/types/content";
-import { BriefcaseBusiness, ChevronLeft, ChevronRight, Lightbulb, Loader2, ShieldCheck, Users, type LucideIcon } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import Pagination from "@/components/common/Pagination";
 import { useLanguage } from "@/components/i18n/LanguageProvider";
 
@@ -18,35 +18,21 @@ const PLACEHOLDER_AVATAR = "/images/student-square-school-session.jpg";
 
 type SectionId = "people" | "board" | "advisory" | "leadership" | "management";
 
-/** Heading text and eyebrow label are dictionary keys. */
-const SECTION_META: Record<SectionId, { icon: LucideIcon; titleKey: string; eyebrowKey: string | null }> = {
-  people: { icon: Users, titleKey: "team.ourPeople", eyebrowKey: null },
-  board: { icon: ShieldCheck, titleKey: "team.board", eyebrowKey: "team.eyebrowGovernance" },
-  advisory: { icon: Lightbulb, titleKey: "team.advisory", eyebrowKey: "team.eyebrowGuidance" },
-  leadership: { icon: Users, titleKey: "team.leadership", eyebrowKey: "team.eyebrowLeadership" },
-  management: { icon: BriefcaseBusiness, titleKey: "team.management", eyebrowKey: "team.eyebrowOperations" },
+const SECTION_TITLE: Record<SectionId, string> = {
+  people: "team.ourPeople",
+  board: "team.board",
+  advisory: "team.advisory",
+  leadership: "team.leadership",
+  management: "team.management",
 };
 
 function SectionHeading({ section, title, center = true }: { section: SectionId; title?: string; center?: boolean }) {
   const { t } = useLanguage();
-  const meta = SECTION_META[section];
-  const Icon = meta.icon;
-  const eyebrow = meta.eyebrowKey ? t(meta.eyebrowKey) : "";
 
   return (
     <div className={center ? "mb-10 text-center" : "mb-5"}>
-      {eyebrow ? (
-        <div
-          className={`inline-flex items-center gap-2 rounded-full border border-emerald-500/20 bg-emerald-500/8 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.2em] text-emerald-700 dark:text-emerald-300 ${
-            center ? "" : "mb-0"
-          }`}
-        >
-          <Icon className="h-3.5 w-3.5" />
-          <span>{eyebrow}</span>
-        </div>
-      ) : null}
-      <h2 className={`mt-4 text-2xl font-bold tracking-[0.02em] text-foreground sm:text-3xl ${center ? "" : "text-left"}`}>
-        {title ?? t(meta.titleKey)}
+      <h2 className={`text-2xl font-bold tracking-[0.02em] text-foreground sm:text-3xl ${center ? "" : "text-left"}`}>
+        {title ?? t(SECTION_TITLE[section])}
       </h2>
     </div>
   );
@@ -63,9 +49,11 @@ function MemberCard({
   member: ApiBoardAssignment;
   variant?: "board" | "grid";
 }) {
-  const { tr } = useLanguage();
+  const { stored } = useLanguage();
   const href = `/about/who-we-are/${member.slug}`;
   const isBoard = variant === "board";
+  const name = stored(member.fullName, member.fullNameBn);
+  const role = stored(member.roleLabel, member.roleLabelBn);
 
   return (
     <Link href={href} className="group block text-center">
@@ -76,7 +64,7 @@ function MemberCard({
       >
         <img
           src={member.avatarUrl ?? PLACEHOLDER_AVATAR}
-          alt={member.fullName}
+          alt={name}
           className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
         />
       </div>
@@ -87,14 +75,14 @@ function MemberCard({
             : "text-sm font-semibold leading-snug text-foreground group-hover:text-emerald-600"
         }`}
       >
-        {member.fullName}
+        {name}
       </p>
       <p
         className={`text-xs uppercase text-muted-foreground ${
           isBoard ? "mt-1 tracking-widest" : "mt-0.5 tracking-wide"
         }`}
       >
-        {tr(member.roleLabel)}
+        {role}
       </p>
     </Link>
   );
