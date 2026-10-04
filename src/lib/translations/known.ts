@@ -241,7 +241,7 @@ export const KNOWN: Record<string, string> = {
   "We provide safe homes and educational support for students forced to drop out due to poverty, ensuring they have a nurturing environment to continue their education and pursue their dreams without fear.":
     "দারিদ্র্যের কারণে পড়াশোনা ছাড়তে বাধ্য হওয়া শিক্ষার্থীদের আমরা নিরাপদ আবাস ও শিক্ষা সহায়তা দিই, যাতে তারা যত্নশীল পরিবেশে পড়াশোনা চালিয়ে নির্ভয়ে স্বপ্নের পথে এগোতে পারে।",
   // Project cards, matching seed-data/projects.ts (titleBn / summaryBn).
-  "Beyond The Journey Project": "প্রজেক্টের পেছনের গল্প",
+  "Beyond The Journey Project": "বিয়ন্ড দ্য জার্নি প্রজেক্ট",
   "A special initiative that presents accurate career information, ongoing research and prospective fields of work for the various departments of the country's public universities, in the light of the experience of faculty members, specialists and professionals.":
     "একটি বিশেষ উদ্যোগ, যা দেশের পাবলিক বিশ্ববিদ্যালয়গুলোর বিভিন্ন ডিপার্টমেন্টের ক্যারিয়ার–সংক্রান্ত সঠিক তথ্য, চলমান গবেষণা এবং সম্ভাব্য কর্মক্ষেত্রগুলো সংশ্লিষ্ট ফ্যাকাল্টি সদস্য, বিশেষজ্ঞ ও পেশাজীবীদের অভিজ্ঞতার আলোকে তুলে ধরা হয়।",
   "Project Health Care for All": "প্রজেক্ট হেলথ কেয়ার ফর অল",
