@@ -191,7 +191,9 @@ export default function Aurora({ colorStops, amplitude = 1.0, blend = 0.5, speed
     resize()
 
     let animateId = 0
+    let running = false
     const update = (t: number) => {
+      if (!running) return
       animateId = requestAnimationFrame(update)
       const { time = t * 0.01, speed = 1.0 } = propsRef.current
       program.uniforms.uTime.value = time * speed * 0.1
@@ -204,10 +206,34 @@ export default function Aurora({ colorStops, amplitude = 1.0, blend = 0.5, speed
       })
       renderer.render({ scene: mesh })
     }
-    animateId = requestAnimationFrame(update)
+
+    // Draw only while the hero is still at the top. Scrolling it away
+    // cancels the frame loop; the last frame stays until it comes back.
+    const setRunning = (next: boolean) => {
+      if (next === running) return
+      running = next
+      if (running) {
+        animateId = requestAnimationFrame(update)
+      } else {
+        cancelAnimationFrame(animateId)
+        animateId = 0
+      }
+    }
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (!entry) return
+        const top = entry.boundingClientRect.top
+        const nearTop = entry.isIntersecting && top > (running ? -160 : -48)
+        setRunning(nearTop)
+      },
+      { threshold: [0, 0.1, 0.25, 0.5, 0.75, 1] }
+    )
+    observer.observe(ctn)
 
     return () => {
+      running = false
       cancelAnimationFrame(animateId)
+      observer.disconnect()
       window.removeEventListener("resize", resize)
       if (ctn && gl.canvas.parentNode === ctn) {
         ctn.removeChild(gl.canvas)
