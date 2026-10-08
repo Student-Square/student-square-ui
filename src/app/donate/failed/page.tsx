@@ -3,6 +3,7 @@ import { XCircle, ArrowRight } from "lucide-react";
 import BreakIframe from "@/components/common/BreakIframe";
 import T from "@/components/i18n/T";
 import { NO_INDEX } from "@/lib/seo";
+import { isReceiptNo } from "@/components/features/Donate/constants";
 
 export const metadata = NO_INDEX;
 
@@ -11,7 +12,8 @@ export default async function DonateFailedPage({
 }: {
   searchParams: Promise<{ ref?: string }>;
 }) {
-  const { ref } = await searchParams;
+  const { ref: rawRef } = await searchParams;
+  const ref = isReceiptNo(rawRef) ? rawRef : undefined;
   return (
     <main className="mt-12 sm:mt-14 lg:mt-16 flex min-h-[60vh] items-center justify-center bg-background px-4 py-16">
       <BreakIframe />

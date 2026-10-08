@@ -169,3 +169,13 @@ export const heroStats: StatItem[] = [
 
 export const closestAmountKey = (amount: number): DonationPresetAmount =>
   amountOptions.reduce((prev, current) => (Math.abs(current - amount) < Math.abs(prev - amount) ? current : prev));
+
+/**
+ * Receipt numbers as the API issues them (SS-2026-1A2B3C4D). The donation
+ * result pages print `?ref=` only when it matches: the gateway redirect builds
+ * that link, but anyone can write one, and a payment page on our domain that
+ * prints whatever text it is given ("your bKash is blocked, call…") is exactly
+ * what gets a site flagged as deceptive.
+ */
+export const isReceiptNo = (value: string | undefined): value is string =>
+  !!value && /^SS-\d{4}-[0-9A-F]{8}$/.test(value);

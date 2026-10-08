@@ -86,6 +86,13 @@ function SearchResultsView() {
   );
 }
 
+// The query comes from the URL, so whoever writes the link chooses what this
+// page prints on our domain — "Your bKash account is blocked, call 01…" is a
+// known abuse of site-search pages, and it gets domains flagged as deceptive.
+// Real searches are short; a long sentence is cut before it can read as one.
+const ECHO_MAX = 40;
+const echoed = (q: string) => (q.length > ECHO_MAX ? `${q.slice(0, ECHO_MAX)}…` : q);
+
 function Results({
   data,
   q,
@@ -104,7 +111,7 @@ function Results({
       <div className="py-16 text-center">
         <SearchIcon className="mx-auto h-8 w-8 text-muted-foreground/40" />
         <p className="mt-3 text-sm text-muted-foreground">
-          {t("searchNoResults")} — <span className="font-medium text-foreground">“{q}”</span>
+          {t("searchNoResults")} — <span className="font-medium text-foreground">“{echoed(q)}”</span>
         </p>
       </div>
     );
@@ -115,7 +122,7 @@ function Results({
   return (
     <div className="mt-8 space-y-10">
       <p className="text-sm text-muted-foreground">
-        {t("resultsFor")}: <span className="font-semibold text-foreground">“{q}”</span> ({data.total})
+        {t("resultsFor")}: <span className="font-semibold text-foreground">“{echoed(q)}”</span> ({data.total})
       </p>
 
       <Group title={t("articles")} count={data.counts.blogs}>
