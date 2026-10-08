@@ -12,10 +12,26 @@ import { TestimonialsSection } from "@/components/sections/Testimonials/Testimon
 import Contact from "@/components/sections/Contact/Contact";
 import Footer from "@/components/common/Footer/Footer";
 import SectionDivider from "@/components/ui/section-divider";
+import T from "@/components/i18n/T";
+import type { Metadata } from "next";
+
+// The homepage is where the brand and the core services rank together;
+// "absolute" skips the layout's " | Student Square" suffix.
+export const metadata: Metadata = {
+  title: { absolute: "Student Square — Student Counselling & Career Guidance in Bangladesh" },
+  description:
+    "One-to-one student counselling, career guidance, scholarships and parent advocacy across Bangladesh, from a youth-led non-profit based in Rajshahi.",
+  alternates: { canonical: "/" },
+};
 
 export default function Home() {
   return (
     <main className="min-h-screen relative">
+      {/* The hero is image cards with no headline, so the page had no <h1>.
+          Screen readers and search engines both use it as the page's title. */}
+      <h1 className="sr-only">
+        <T k="home.h1" />
+      </h1>
       <div className="relative z-10">
         <Header />
         <Hero />

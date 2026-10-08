@@ -5,6 +5,8 @@ import type { ApiStory } from "@/types/stories";
 import StoryView from "./_components/StoryView";
 import { serializeJsonLd } from "@/lib/jsonLd";
 
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://studentsquare.org";
+
 type PageProps = {
   params: Promise<{ id: string }>;
 };
@@ -55,7 +57,7 @@ export default async function StoryDetailPage({ params }: PageProps) {
         description: story.summary ?? story.quote ?? undefined,
         image: story.coverImage?.url,
         datePublished: story.publishedAt ?? undefined,
-        publisher: { "@type": "Organization", name: "Student Square" },
+        publisher: { "@type": "NGO", "@id": `${siteUrl}/#organization`, name: "Student Square Foundation" },
       };
     }
   }

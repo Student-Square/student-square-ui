@@ -2,6 +2,9 @@ import Link from "next/link";
 import { XCircle, ArrowRight } from "lucide-react";
 import BreakIframe from "@/components/common/BreakIframe";
 import T from "@/components/i18n/T";
+import { NO_INDEX } from "@/lib/seo";
+
+export const metadata = NO_INDEX;
 
 export default async function DonateFailedPage({
   searchParams,

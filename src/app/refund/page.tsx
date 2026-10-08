@@ -5,9 +5,10 @@ import { NAVBAR_PAD_TOP } from "@/components/common/Header/navbarHeight";
 import RefundContent from "./_components/RefundContent";
 
 export const metadata: Metadata = {
-  title: "Return and Refund Policy | Student Square",
+  title: "Return and Refund Policy",
   description:
     "Refunds are completed within 7 to 10 working days.",
+  alternates: { canonical: "/refund" },
 };
 
 export default function RefundPage() {

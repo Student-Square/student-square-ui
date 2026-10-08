@@ -10,10 +10,11 @@ type Params = { params: Promise<{ slug: string }> };
 export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const { slug } = await params;
   const report = await serverGet<ApiReportDetail>(`/reports/${encodeURIComponent(slug)}`);
-  if (!report) return { title: "Report | Student Square" };
+  if (!report) return { title: "Report" };
   return {
-    title: `${report.title} | Student Square`,
+    title: report.title,
     description: report.summary?.slice(0, 160) ?? `${report.title} (${report.year})`,
+    alternates: { canonical: `/about/reports/${slug}` },
   };
 }
 

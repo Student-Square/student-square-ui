@@ -6,9 +6,10 @@ import T from "@/components/i18n/T";
 import ReportsLibrary from "@/components/features/Reports/ReportsLibrary";
 
 export const metadata: Metadata = {
-  title: "Annual Reports & Financials | Student Square",
+  title: "Annual Reports & Financials",
   description:
     "Annual reports, highlights, program reports and financial statements from Student Square.",
+  alternates: { canonical: "/about/reports" },
 };
 
 export default function ReportsPage() {

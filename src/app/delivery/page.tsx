@@ -5,9 +5,10 @@ import { NAVBAR_PAD_TOP } from "@/components/common/Header/navbarHeight";
 import DeliveryContent from "./_components/DeliveryContent";
 
 export const metadata: Metadata = {
-  title: "Delivery Policy | Student Square",
+  title: "Delivery Policy",
   description:
     "A confirmed donation is recorded at once and the receipt is issued immediately.",
+  alternates: { canonical: "/delivery" },
 };
 
 export default function DeliveryPage() {

@@ -5,9 +5,10 @@ import { NAVBAR_PAD_TOP } from "@/components/common/Header/navbarHeight";
 import PrivacyContent from "./_components/PrivacyContent";
 
 export const metadata: Metadata = {
-  title: "Privacy Notice | Student Square",
+  title: "Privacy Notice",
   description:
     "What Student Square collects, why, who can see it, and how long we keep it.",
+  alternates: { canonical: "/privacy" },
 };
 
 /**

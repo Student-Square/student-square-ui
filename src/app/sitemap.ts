@@ -6,6 +6,10 @@ import type { ApiEvent } from "@/types/events";
 import type { ApiCampaign } from "@/types/campaigns";
 import type { ApiReportListItem } from "@/types/reports";
 import type { ApiBoardGroups } from "@/types/content";
+import { services } from "@/data/services";
+import { locations } from "@/data/locations";
+import { partners } from "@/data/partners";
+import { CATEGORY_SEO } from "./blog/education-career/_seo";
 
 const baseUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://studentsquare.org";
 
@@ -90,7 +94,20 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${baseUrl}/blog/magazine`, lastModified: new Date() },
     { url: `${baseUrl}/blog/events`, lastModified: new Date() },
     { url: `${baseUrl}/about/reports`, lastModified: new Date() },
+    { url: `${baseUrl}/about/where-we-work`, lastModified: new Date() },
+    { url: `${baseUrl}/get-involved/partner`, lastModified: new Date() },
+    { url: `${baseUrl}/blog/education-career`, lastModified: new Date() },
   ];
+
+  // Pages built from data files in the repo. The service pages are the ones a
+  // search like "student counselling in Bangladesh" should land on. Cities are
+  // left out: they share one placeholder bio, so they would be near-duplicates.
+  const dataRoutes: MetadataRoute.Sitemap = [
+    ...services.map((s) => `/what-we-do/${s.slug}`),
+    ...locations.map((c) => `/about/where-we-work/${c.slug}`),
+    ...partners.map((p) => `/get-involved/partner/${p.slug}`),
+    ...Object.keys(CATEGORY_SEO).map((slug) => `/blog/education-career/${slug}`),
+  ].map((path) => ({ url: `${baseUrl}${path}`, lastModified: new Date() }));
 
   const [projects, blogs, stories, events, reports, team] = await Promise.all([
     projectRoutes(),
@@ -101,5 +118,5 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     teamRoutes(),
   ]);
 
-  return [...staticRoutes, ...projects, ...blogs, ...stories, ...events, ...reports, ...team];
+  return [...staticRoutes, ...dataRoutes, ...projects, ...blogs, ...stories, ...events, ...reports, ...team];
 }

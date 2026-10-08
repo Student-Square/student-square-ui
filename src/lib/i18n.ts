@@ -136,6 +136,10 @@ const CHROME: Dict = {
   },
   "footer.email": { EN: "Email", BN: "ইমেইল" },
   // Home page
+  "home.h1": {
+    EN: "Student Square — student counselling, career guidance and scholarships in Bangladesh",
+    BN: "স্টুডেন্ট স্কয়ার — বাংলাদেশে শিক্ষার্থী পরামর্শসেবা, ক্যারিয়ার নির্দেশনা ও বৃত্তি",
+  },
   "home.heroUnavailableTitle": { EN: "Featured content will be back shortly.", BN: "ফিচার করা কনটেন্ট শিগগিরই ফিরে আসবে।" },
   "home.heroUnavailableSubtitle": { EN: "We're refreshing what's on display. Check back in a moment.", BN: "আমরা প্রদর্শিত কনটেন্ট নতুন করে সাজাচ্ছি। কিছুক্ষণ পর আবার দেখুন।" },
   "home.statsHeadingLead": { EN: "A Strong Community of", BN: "আমাদের শক্তিশালী কমিউনিটিতে" },

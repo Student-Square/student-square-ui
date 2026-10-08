@@ -4,6 +4,8 @@ import type { ApiBlogPost } from "@/types/blogs";
 import ArticleView from "./_components/ArticleView";
 import { serializeJsonLd } from "@/lib/jsonLd";
 
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://studentsquare.org";
+
 type PageProps = {
   params: Promise<{ category: string; id: string }>;
 };
@@ -61,7 +63,7 @@ export default async function BlogPostPage({ params }: PageProps) {
           "@type": "Person",
           name: post.displayAuthorName ?? post.author?.fullName ?? "Student Square",
         },
-        publisher: { "@type": "Organization", name: "Student Square" },
+        publisher: { "@type": "NGO", "@id": `${siteUrl}/#organization`, name: "Student Square Foundation" },
       }
     : null;
 

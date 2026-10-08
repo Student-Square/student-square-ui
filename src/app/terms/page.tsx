@@ -5,9 +5,10 @@ import { NAVBAR_PAD_TOP } from "@/components/common/Header/navbarHeight";
 import TermsContent from "./_components/TermsContent";
 
 export const metadata: Metadata = {
-  title: "Terms of Use | Student Square",
+  title: "Terms of Use",
   description:
     "Terms of Use for Student Square Foundation membership and platform services.",
+  alternates: { canonical: "/terms" },
 };
 
 /**

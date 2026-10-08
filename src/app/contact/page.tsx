@@ -6,9 +6,10 @@ import Contact from "@/components/sections/Contact/Contact";
 import T from "@/components/i18n/T";
 
 export const metadata: Metadata = {
-  title: "Find Us | Student Square",
+  title: "Contact Us — Godagari, Rajshahi",
   description:
     "Visit our office in Godagari, Rajshahi, or send us a message about counselling support, volunteering, and partnerships.",
+  alternates: { canonical: "/contact" },
 };
 
 export default function ContactPage() {

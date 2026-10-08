@@ -7,6 +7,7 @@ import { Providers } from "@/components/common/Providers";
 import { Toaster } from "@/components/ui/sonner";
 import AnalyticsTracker from "@/components/common/AnalyticsTracker";
 import { serializeJsonLd } from "@/lib/jsonLd";
+import { siteConfig } from "@/config/site";
 import "./globals.css";
 
 const saira = Saira({
@@ -54,7 +55,13 @@ const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://studentsquare.org";
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
-  title: "Student Square | Empowering Students & Communities",
+  // Pages set only their own name; the brand is appended here. A page without
+  // a title falls back to the default — which is exactly the duplicate-title
+  // problem, so every public page should set one (see lib/seo.ts).
+  title: {
+    default: "Student Square | Empowering Students & Communities",
+    template: "%s | Student Square",
+  },
   description:
     "Student Square is a youth-led platform that provides counselling, advocacy, and community programs to help students and families thrive in their educational journey.",
   generator: "Student Square",
@@ -76,13 +83,23 @@ export const metadata: Metadata = {
       "Youth-led platform connecting students, volunteers, and communities through counselling, projects, and real-life opportunities.",
     url: "/",
     siteName: "Student Square",
+    locale: "en_US",
     type: "website",
+    images: [
+      {
+        url: "/opengraph-image",
+        width: 1200,
+        height: 630,
+        alt: "Student Square — counselling, advocacy, and community programs",
+      },
+    ],
   },
   twitter: {
     card: "summary_large_image",
     title: "Student Square | Empowering Students & Communities",
     description:
       "Youth-led platform connecting students, volunteers, and communities through counselling, projects, and real-life opportunities.",
+    images: ["/opengraph-image"],
   },
   icons: {
     icon: "/favicon.ico",
@@ -90,12 +107,47 @@ export const metadata: Metadata = {
   },
 };
 
+// The @id is what other pages' JSON-LD (Person.affiliation, BlogPosting.publisher)
+// point at, so Google joins them into one entity. sameAs is how it learns the
+// social profiles belong to this site rather than to another "StudentSquare".
 const orgJsonLd = {
   "@context": "https://schema.org",
-  "@type": "Organization",
-  name: "Student Square",
-  url: siteUrl,
-  logo: "/favicon.ico",
+  "@graph": [
+    {
+      "@type": "NGO",
+      "@id": `${siteUrl}/#organization`,
+      name: "Student Square Foundation",
+      alternateName: ["Student Square", "StudentSquare", "স্টুডেন্ট স্কয়ার"],
+      url: siteUrl,
+      logo: `${siteUrl}/images/ss-logo.png`,
+      image: `${siteUrl}/opengraph-image`,
+      description: siteConfig.description,
+      email: siteConfig.contact.email,
+      telephone: siteConfig.contact.phoneTel.replace("tel:", ""),
+      address: {
+        "@type": "PostalAddress",
+        streetAddress: "Model Thana Road",
+        addressLocality: "Godagari",
+        addressRegion: "Rajshahi",
+        addressCountry: "BD",
+      },
+      areaServed: { "@type": "Country", name: "Bangladesh" },
+      sameAs: Object.values(siteConfig.social),
+    },
+    {
+      "@type": "WebSite",
+      "@id": `${siteUrl}/#website`,
+      name: "Student Square",
+      url: siteUrl,
+      inLanguage: ["en", "bn"],
+      publisher: { "@id": `${siteUrl}/#organization` },
+      potentialAction: {
+        "@type": "SearchAction",
+        target: { "@type": "EntryPoint", urlTemplate: `${siteUrl}/search?q={search_term_string}` },
+        "query-input": "required name=search_term_string",
+      },
+    },
+  ],
 };
 
 export const viewport: Viewport = {

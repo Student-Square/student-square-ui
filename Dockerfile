@@ -22,7 +22,9 @@ COPY . .
 # Public env vars are baked in at build time by Next, so they must be present
 # here and not only at runtime.
 ARG NEXT_PUBLIC_API_BASE_URL
+ARG NEXT_PUBLIC_SITE_URL=https://studentsquare.org
 ENV NEXT_PUBLIC_API_BASE_URL=$NEXT_PUBLIC_API_BASE_URL
+ENV NEXT_PUBLIC_SITE_URL=$NEXT_PUBLIC_SITE_URL
 ENV NEXT_TELEMETRY_DISABLED=1
 
 RUN npm run build

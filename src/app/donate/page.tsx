@@ -1,4 +1,12 @@
 import DonateExperience from "@/components/features/Donate/DonateExperience";
+import { pageMetadata } from "@/lib/seo";
+
+export const metadata = pageMetadata({
+  title: "Donate",
+  description:
+    "Support student counselling, scholarships and community projects in Bangladesh. Give securely by card or mobile banking and get an instant receipt.",
+  path: "/donate",
+});
 
 /**
  * /donate starts with no project chosen. The donor picks a project (or the
